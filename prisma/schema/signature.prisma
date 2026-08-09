@@ -1,0 +1,157 @@
+// Dossier signing domain.
+//
+// Provider-agnostic models that mirror the Documenso signing engine into
+// Dossier-owned state. Signing is OPTIONAL: a Document may have zero
+// SignatureRequest rows (STORE/SHARE-only documents never touch these tables).
+//
+// Dossier owns: signature request metadata, recipients, final signed files and
+// the provider-event inbox. Documenso owns: envelope execution, PDF signing and
+// temporary signing data. We never query the Documenso database from here.
+
+enum SignatureProvider {
+  DOCUMENSO
+}
+
+enum SignatureTemplateStatus {
+  PREPARING
+  READY
+  FAILED
+  ARCHIVED
+}
+
+enum SignatureRequestStatus {
+  DRAFT
+  PREPARING
+  READY
+  SENT
+  VIEWED
+  SIGNING
+  PARTIALLY_SIGNED
+  COMPLETED
+  DECLINED
+  EXPIRED
+  CANCELLED
+  FAILED
+}
+
+enum SignatureRecipientStatus {
+  PENDING
+  VIEWED
+  SIGNING
+  SIGNED
+  DECLINED
+  EXPIRED
+}
+
+model SignatureTemplate {
+  id                 String                  @id @default(cuid())
+  teamId             String
+  documentId         String
+  name               String
+  provider           SignatureProvider       @default(DOCUMENSO)
+  providerExternalId String                  @unique
+  providerTemplateId String?
+  providerEnvelopeId String?
+  status             SignatureTemplateStatus @default(PREPARING)
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+
+  team     Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  document Document           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  requests SignatureRequest[]
+
+  @@index([teamId, createdAt(sort: Desc)])
+  @@index([documentId])
+  @@unique([provider, providerEnvelopeId])
+}
+
+model SignatureRequest {
+  id                  String                 @id @default(cuid())
+  teamId              String
+  documentId          String
+  templateId          String
+  linkId              String?
+
+  provider            SignatureProvider      @default(DOCUMENSO)
+  providerExternalId  String                 @unique
+  providerEnvelopeId  String?
+  providerDocumentId  Int?
+
+  status              SignatureRequestStatus @default(DRAFT)
+
+  sentAt              DateTime?
+  viewedAt            DateTime?
+  completedAt         DateTime?
+  cancelledAt         DateTime?
+  expiresAt           DateTime?
+
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+
+  team       Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  document   Document           @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  template   SignatureTemplate  @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  link       Link?              @relation(fields: [linkId], references: [id], onDelete: SetNull)
+
+  recipients SignatureRecipient[]
+  artifact   SignatureArtifact?
+
+  @@index([teamId, status, createdAt(sort: Desc)])
+  @@index([documentId, createdAt(sort: Desc)])
+  @@index([linkId])
+  @@unique([provider, providerEnvelopeId])
+}
+
+model SignatureRecipient {
+  id                  String                   @id @default(cuid())
+  signatureRequestId  String
+  name                String?
+  email               String?
+  phone               String?
+  signingOrder        Int                      @default(1)
+  providerRecipientId String?
+  status              SignatureRecipientStatus @default(PENDING)
+  viewedAt            DateTime?
+  signedAt            DateTime?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+
+  signatureRequest SignatureRequest @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
+
+  @@index([signatureRequestId, status])
+  @@index([email])
+}
+
+// Final signed artifact mirrored into Dossier-owned storage. IMMUTABLE: never
+// update a row once written; corrections produce a new SignatureRequest.
+model SignatureArtifact {
+  id                 String   @id @default(cuid())
+  signatureRequestId String   @unique
+  storageKey         String
+  fileName           String
+  mimeType           String   @default("application/pdf")
+  sha256             String
+  sizeBytes          BigInt
+  createdAt          DateTime @default(now())
+
+  signatureRequest SignatureRequest @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
+}
+
+// Idempotent provider-event inbox: webhook deliveries are upserted on
+// `dedupeKey` before any business processing happens.
+model SigningProviderEvent {
+  id                 String   @id @default(cuid())
+  provider           SignatureProvider
+  dedupeKey          String   @unique
+  eventType          String
+  externalId         String?
+  providerDocumentId Int?
+  payload            Json
+  processedAt        DateTime?
+  failedAt           DateTime?
+  errorCode          String?
+  createdAt          DateTime @default(now())
+
+  @@index([provider, createdAt(sort: Desc)])
+  @@index([processedAt])
+}
