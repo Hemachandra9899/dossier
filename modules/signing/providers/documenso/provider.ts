@@ -1,7 +1,7 @@
 // Documenso implementation of the SigningProvider port.
 //
 // Reuses the proven Papermark->Documenso primitives (template creation, the
-// per-visitor `templates.use` signing session, signed download URL minting)
+// per-visitor `templates.use` signing document, signed download URL minting)
 // behind the provider boundary. As the Dossier domain matures, these
 // primitives migrate INTO this module; nothing outside
 // modules/signing/providers/documenso may touch the Documenso SDK.
@@ -10,13 +10,16 @@ import { TeamError } from "@/lib/errorHandler";
 import {
   createSigningDocumentFromTemplate,
   createSigningTemplateEnvelope,
+  getReusableSigningDocumentSession,
 } from "@/lib/signing/agreements";
 import { getEnvelopeSignedDownloadUrl } from "@/lib/signing/envelopes";
 
 import type {
+  CreateProviderSigningDocumentInput,
   CreateProviderTemplateInput,
   ProviderEditorSession,
   ProviderSignedArtifact,
+  ProviderSigningDocument,
   ProviderSigningSession,
   ProviderTemplate,
   SigningProvider,
@@ -64,15 +67,73 @@ class DocumensoSigningProvider implements SigningProvider {
     };
   }
 
+  async createSigningDocument(
+    input: CreateProviderSigningDocumentInput,
+  ): Promise<ProviderSigningDocument> {
+    const documents = [];
+    let primary: { envelopeId: string; documentId: number } | null = null;
+
+    for (const recipient of input.recipients) {
+      // One per-visitor document per recipient (`templates.use`,
+      // distributionMethod "NONE" so Documenso never emails). Every document
+      // carries the Dossier request externalId for webhook correlation.
+      const session = await createSigningDocumentFromTemplate({
+        signingTemplateId: input.providerTemplateId,
+        externalId: input.externalId,
+        signerEmail: recipient.email,
+        signerName: recipient.name,
+      });
+
+      primary ??= {
+        envelopeId: session.envelopeId,
+        documentId: session.documentId,
+      };
+
+      documents.push({
+        providerRecipientId: session.recipientId,
+        providerDocumentId: session.documentId,
+      });
+    }
+
+    if (!primary) {
+      throw new TeamError(
+        "Failed to initialize the signing request: no recipients were created.",
+      );
+    }
+
+    return {
+      providerEnvelopeId: primary.envelopeId,
+      providerDocumentId: primary.documentId,
+      recipients: documents,
+    };
+  }
+
   async createSigningSession(input: {
     providerTemplateId: string;
     providerEnvelopeId: string;
+    providerDocumentId?: number | null;
     externalId: string;
     recipient: {
       email?: string | null;
       name?: string | null;
     };
   }): Promise<ProviderSigningSession> {
+    // Re-open path: reuse the recipient's existing per-visitor document token
+    // so re-visits don't spawn duplicate documents.
+    if (input.providerDocumentId) {
+      const reused = await getReusableSigningDocumentSession({
+        documentId: input.providerDocumentId,
+      });
+
+      if (reused) {
+        return {
+          host: getDocumensoHost(),
+          token: reused.token,
+          externalId: input.externalId,
+        };
+      }
+    }
+
     const session = await createSigningDocumentFromTemplate({
       signingTemplateId: input.providerTemplateId,
       externalId: input.externalId,

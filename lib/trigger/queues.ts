@@ -60,6 +60,17 @@ export const applyRedactionsQueue = queue({
   concurrencyLimit: 5,
 });
 
+// Dossier signing queues
+export const signingProviderEventQueue = queue({
+  name: "signing-provider-event",
+  concurrencyLimit: 5,
+});
+
+export const signatureArtifactMirrorQueue = queue({
+  name: "signature-artifact-mirror",
+  concurrencyLimit: 5,
+});
+
 // Plan-based conversion queues (used at trigger time)
 const concurrencyConfig: Record<string, number> = {
   free: 1,

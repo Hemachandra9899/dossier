@@ -110,6 +110,7 @@ model SignatureRecipient {
   phone               String?
   signingOrder        Int                      @default(1)
   providerRecipientId String?
+  providerDocumentId  Int?
   status              SignatureRecipientStatus @default(PENDING)
   viewedAt            DateTime?
   signedAt            DateTime?

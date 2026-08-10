@@ -489,6 +489,12 @@ Documenso: standard Postgres + S3-compatible storage + `NEXT_PRIVATE_JOBS_PROVID
 | 8 | E2E + security + non-signing regression tests | CI green |
 | 9 | Feature-flagged pilot rollout | staged |
 
+Status: **Checkpoint 4 (provider-backed backend core) is implemented and
+tested** — Prisma models, `SigningProvider` port + Documenso adapter, use-cases,
+routes, webhook ingestion, durable artifact mirror handoff and unit +
+integration suites. See `docs/dossier-signing-checkpoint-4.md`. Remaining work
+(UI, editor, recipient viewer, links-based creation) stays on the table above.
+
 Tests required: unit (status mapping, external IDs, state transitions, webhook dedupe, recipient validation, tenant authorization, artifact hashing), integration (create template/request, provider failure → `FAILED`, webhook → status, duplicate webhook no-op, completed → artifact, cancelled cannot complete), security (cross-tenant), and Playwright E2E (signing flow + the critical non-signing regression: upload → share → recipient opens → analytics recorded, **no Documenso calls**).
 
 Observability: structured fields `{ requestId, teamId, documentId, signatureTemplateId, signatureRequestId, provider, providerEnvelopeId, providerDocumentId, providerEventType }`; metrics for template/request/session create success+failure, webhook received/duplicate/failed, `signature_completed`, mirror success/failure; alert on `DOCUMENT_COMPLETED` + no artifact after 5 minutes.

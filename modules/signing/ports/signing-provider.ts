@@ -36,14 +36,48 @@ export interface CreateProviderTemplateInput {
   file: Uint8Array;
 }
 
+export interface CreateProviderSigningDocumentInput {
+  providerTemplateId: string;
+  externalId: string;
+  recipients: Array<{
+    name: string | null;
+    email: string;
+    signingOrder: number;
+  }>;
+}
+
+export interface ProviderSigningDocument {
+  /** Primary envelope for the request (the first recipient's document). */
+  providerEnvelopeId: string;
+  providerDocumentId: number;
+  recipients: Array<{
+    providerRecipientId: number;
+    providerDocumentId: number;
+  }>;
+}
+
 export interface SigningProvider {
   createTemplate(input: CreateProviderTemplateInput): Promise<ProviderTemplate>;
 
   createEditorSession(template: ProviderTemplate): Promise<ProviderEditorSession>;
 
+  /**
+   * Provisions the provider-side signing request for all recipients. Reuses
+   * the proven per-visitor document primitive (no emails sent); `externalId`
+   * ties every created document back to the Dossier request.
+   */
+  createSigningDocument(
+    input: CreateProviderSigningDocumentInput,
+  ): Promise<ProviderSigningDocument>;
+
+  /**
+   * Resolves a recipient's signing token: reuses the already-created per-visitor
+   * document when `providerDocumentId` is present, otherwise mints a fresh one.
+   */
   createSigningSession(input: {
     providerTemplateId: string;
     providerEnvelopeId: string;
+    providerDocumentId?: number | null;
     externalId: string;
     recipient: {
       email?: string | null;
