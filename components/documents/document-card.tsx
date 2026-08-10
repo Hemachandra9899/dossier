@@ -11,6 +11,7 @@ import {
   EyeIcon,
   EyeOffIcon,
   FileIcon,
+  FileSignatureIcon,
   FolderIcon,
   FolderInputIcon,
   MoreVertical,
@@ -27,6 +28,9 @@ import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, getBreadcrumbPath, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
+
+import { isDossierSigningEnabled } from "@/modules/signing/config";
+import { RequestSignatureDialog } from "@/modules/signing/ui/request-signature/request-signature-dialog";
 
 import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
@@ -75,6 +79,8 @@ export default function DocumentsCard({
   const [trialModalOpen, setTrialModalOpen] = useState<boolean>(false);
   const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
   const [previewOpen, setPreviewOpen] = useState<boolean>(false);
+  const [signatureRequestOpen, setSignatureRequestOpen] =
+    useState<boolean>(false);
 
   const { datarooms } = useDataroomsSimple();
 
@@ -453,6 +459,17 @@ export default function DocumentsCard({
                   Add to dataroom
                 </DropdownMenuItem>
               )}
+              {isDossierSigningEnabled && prismaDocument.type === "pdf" ? (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSignatureRequestOpen(true);
+                    setMenuOpen(false);
+                  }}
+                >
+                  <FileSignatureIcon className="mr-2 h-4 w-4" />
+                  Request signature
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuItem onClick={handleHideDocument}>
                 <EyeOffIcon className="mr-2 h-4 w-4" />
                 Hide from All Documents
@@ -497,6 +514,16 @@ export default function DocumentsCard({
         <DataroomTrialModal
           openModal={trialModalOpen}
           setOpenModal={setTrialModalOpen}
+        />
+      ) : null}
+      {isDossierSigningEnabled && prismaDocument.type === "pdf" ? (
+        <RequestSignatureDialog
+          open={signatureRequestOpen}
+          onOpenChange={setSignatureRequestOpen}
+          teamId={teamInfo?.currentTeam?.id ?? ""}
+          documentId={prismaDocument.id}
+          documentName={prismaDocument.name}
+          isPdf={prismaDocument.type === "pdf"}
         />
       ) : null}
       {planModalOpen ? (

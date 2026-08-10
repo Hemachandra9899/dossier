@@ -10,6 +10,7 @@ import type {
 } from "@prisma/client";
 
 import { buildRequestExternalId } from "../domain/external-id";
+import { SIGNATURE_REQUEST_TERMINAL_STATUSES } from "../domain/signature-request";
 import type { NormalizedRecipient } from "../domain/recipient-validation";
 
 export type SignatureRequestWithRecipients = SignatureRequest & {
@@ -169,6 +170,41 @@ export class SignatureRequestRepository {
   ): Promise<SignatureRequestWithRecipients | null> {
     return this.prisma.signatureRequest.findUnique({
       where: { id: requestId },
+      include: signatureRequestInclude,
+    });
+  }
+
+  /**
+   * Recipient/public lookup: the request plus the minimal document fields the
+   * public signing page needs. Never exposes recipient or team data.
+   */
+  async findByIdWithDocument(requestId: string) {
+    return this.prisma.signatureRequest.findUnique({
+      where: { id: requestId },
+      include: {
+        document: {
+          select: {
+            id: true,
+            name: true,
+            contentType: true,
+            file: true,
+            storageType: true,
+          },
+        },
+      },
+    });
+  }
+
+  /** Latest non-terminal request for a document (drives the "active request"
+   *  summary in the sender UI). */
+  async findActiveByTeamAndDocument(teamId: string, documentId: string) {
+    return this.prisma.signatureRequest.findFirst({
+      where: {
+        teamId,
+        documentId,
+        status: { notIn: [...SIGNATURE_REQUEST_TERMINAL_STATUSES] },
+      },
+      orderBy: { createdAt: "desc" },
       include: signatureRequestInclude,
     });
   }

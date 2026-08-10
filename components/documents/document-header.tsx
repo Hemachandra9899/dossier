@@ -16,6 +16,7 @@ import {
   CloudDownloadIcon,
   DownloadIcon,
   FileDownIcon,
+  FileSignatureIcon,
   FileSpreadsheetIcon,
   FolderIcon,
   FolderInputIcon,
@@ -66,6 +67,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+import { isDossierSigningEnabled } from "@/modules/signing/config";
+import { RequestSignatureDialog } from "@/modules/signing/ui/request-signature/request-signature-dialog";
 
 import PlanBadge from "../billing/plan-badge";
 import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
@@ -149,6 +153,8 @@ export default function DocumentHeader({
   const [selectedPlan, setSelectedPlan] = useState<PlanEnum>(PlanEnum.Pro);
   const [exportModalOpen, setExportModalOpen] = useState<boolean>(false);
   const [aiDialogOpen, setAiDialogOpen] = useState<boolean>(false);
+  const [signatureRequestOpen, setSignatureRequestOpen] =
+    useState<boolean>(false);
   const nameRef = useRef<HTMLHeadingElement>(null);
   const enterPressedRef = useRef<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -849,6 +855,19 @@ export default function DocumentHeader({
                 </DropdownMenuItem>
               ) : null}
 
+              {/* Dossier signing - PDFs only, behind feature flag */}
+              {isDossierSigningEnabled && primaryVersion.type === "pdf" ? (
+                <DropdownMenuItem
+                  onClick={() => {
+                    setSignatureRequestOpen(true);
+                    setMenuOpen(false);
+                  }}
+                >
+                  <FileSignatureIcon className="mr-2 h-4 w-4" />
+                  Request signature
+                </DropdownMenuItem>
+              ) : null}
+
               {onBulkImportLinks && (
                 <DropdownMenuItem
                   onClick={() => {
@@ -1196,6 +1215,17 @@ export default function DocumentHeader({
             />
           ) : null}
         </>
+      ) : null}
+
+      {isDossierSigningEnabled && primaryVersion.type === "pdf" ? (
+        <RequestSignatureDialog
+          open={signatureRequestOpen}
+          onOpenChange={setSignatureRequestOpen}
+          teamId={teamId}
+          documentId={prismaDocument.id}
+          documentName={prismaDocument.name}
+          isPdf={primaryVersion.type === "pdf"}
+        />
       ) : null}
     </header>
   );

@@ -1,0 +1,70 @@
+// Step 4 — request created. Copy the per-recipient signing link and close.
+
+import { CheckCircle2Icon, CopyIcon, LinkIcon } from "lucide-react";
+
+import type { SignatureRequestStatus } from "@/modules/signing/domain/signature-request";
+
+import { Button } from "@/components/ui/button";
+import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
+
+import { buildRecipientSigningUrl } from "../signing-api";
+import { SignatureStatusBadge } from "../signature-status-badge";export function SuccessStep({
+  requestId,
+  firstRecipientId,
+  status,
+  onClose,
+}: {
+  requestId: string;
+  firstRecipientId: string | null;
+  status: SignatureRequestStatus;
+  onClose: () => void;
+}) {
+  const { isCopied, copyToClipboard } = useCopyToClipboard({});
+
+  const signingUrl = firstRecipientId
+    ? buildRecipientSigningUrl({ requestId, recipientId: firstRecipientId })
+    : null;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col items-center gap-2 py-4 text-center">
+        <CheckCircle2Icon className="h-12 w-12 text-green-600 dark:text-green-500" />
+        <h3 className="text-lg font-semibold">Signature request created</h3>
+        <p className="text-sm text-muted-foreground">
+          Share the link below with your first signer. They can sign and pass
+          the document on.
+        </p>
+        <SignatureStatusBadge status={status} />
+      </div>
+
+      {signingUrl ? (
+        <div className="flex items-center gap-2 rounded-lg border p-2">
+          <LinkIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <code className="min-w-0 flex-1 truncate text-xs">{signingUrl}</code>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              copyToClipboard(signingUrl, "Signing link copied to clipboard.");
+            }}
+          >
+            {isCopied ? (
+              <CheckCircle2Icon className="h-4 w-4" />
+            ) : (
+              <CopyIcon className="h-4 w-4" />
+            )}
+            {isCopied ? "Copied" : "Copy"}
+          </Button>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          This request has no recipients.
+        </p>
+      )}
+
+      <div className="flex justify-end">
+        <Button onClick={onClose}>Done</Button>
+      </div>
+    </div>
+  );
+}
