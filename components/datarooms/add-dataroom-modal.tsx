@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
 import {
   Brain,
   BriefcaseIcon,
@@ -25,7 +24,6 @@ import { mutate } from "swr";
 import { z } from "zod";
 
 import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -55,8 +53,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
-
 export function AddDataroomModal({
   children,
   openModal = false,
@@ -83,7 +79,6 @@ export function AddDataroomModal({
   const [editingFolderName, setEditingFolderName] = useState<string>("");
 
   const teamInfo = useTeam();
-  const { isFree, isPro, isTrial } = usePlan();
   const analytics = useAnalytics();
 
   const useTemplate = activeTab === "generate";
@@ -345,19 +340,6 @@ export function AddDataroomModal({
       if (openModal && setOpenModal) setOpenModal(false);
     }
   };
-
-  if ((isFree || isPro) && !isTrial) {
-    if (children) {
-      return (
-        <UpgradePlanModal
-          clickedPlan={PlanEnum.DataRooms}
-          trigger={"add_dataroom_overview"}
-        >
-          {children}
-        </UpgradePlanModal>
-      );
-    }
-  }
 
   const onOpenChange = (open: boolean) => {
     if (!open) {

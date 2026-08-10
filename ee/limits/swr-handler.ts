@@ -1,24 +1,13 @@
 import { useTeam } from "@/context/team-context";
 import useSWR from "swr";
-import { z } from "zod";
 
-import { usePlan } from "@/lib/swr/use-billing";
+import { DossierLimits } from "@/modules/access/limits";
 import { fetcher } from "@/lib/utils";
 
-import { configSchema } from "./server";
-
-export type LimitProps = z.infer<typeof configSchema> & {
-  usage: {
-    documents: number;
-    links: number;
-    users: number;
-  };
-  dataroomUpload: boolean;
-};
+export type LimitProps = DossierLimits;
 
 export function useLimits() {
   const teamInfo = useTeam();
-  const { isFree, isTrial, isPaused } = usePlan();
   const teamId = teamInfo?.currentTeam?.id;
 
   const { data, error } = useSWR<LimitProps | null>(
@@ -29,21 +18,31 @@ export function useLimits() {
     },
   );
 
-  const canAddDocuments = data?.documents
-    ? data?.usage?.documents < data?.documents
-    : true;
-  const canAddLinks = data?.links ? data?.usage?.links < data?.links : true;
-  const canAddUsers = data?.users ? data?.usage?.users < data?.users : true;
-  const showUpgradePlanModal =
-    (isFree && !isTrial) || (isTrial && !canAddUsers);
+  const limits = data ?? null;
+
+  const documentLimit = limits?.documents ?? null;
+  const canAddDocuments =
+    documentLimit != null && documentLimit > 0
+      ? (limits?.usage?.documents ?? 0) < documentLimit
+      : true;
+  const linkLimit = limits?.links ?? null;
+  const canAddLinks =
+    linkLimit != null && linkLimit > 0
+      ? (limits?.usage?.links ?? 0) < linkLimit
+      : true;
+  const userLimit = limits?.users ?? null;
+  const canAddUsers =
+    userLimit != null && userLimit > 0
+      ? (limits?.usage?.users ?? 0) < userLimit
+      : true;
 
   return {
-    showUpgradePlanModal,
-    limits: data,
+    showUpgradePlanModal: false,
+    limits,
     canAddDocuments,
     canAddLinks,
     canAddUsers,
-    isPaused,
+    isPaused: false,
     error,
     loading: !data && !error,
   };

@@ -5,6 +5,7 @@
 import { isDossierSigningEnabled } from "@/modules/signing/config";
 import type { SignatureRequestStatus } from "@/modules/signing/domain/signature-request";
 import type { SignatureTemplateStatus } from "@/modules/signing/domain/signature-template";
+import type { PublicRecipientStatus } from "@/modules/signing/application/get-public-request";
 
 export interface RecipientInput {
   name?: string | null;
@@ -64,17 +65,13 @@ export interface SigningSessionDTO {
 
 export interface PublicRequestDTO {
   id: string;
-  status: SignatureRequestStatus;
-  provider: string;
+  status: PublicRecipientStatus;
+  document: { name: string };
+  recipient: { name: string | null };
   expiresAt: string | null;
   completedAt: string | null;
-  cancelledAt: string | null;
-  document: {
-    id: string;
-    name: string;
-    contentType: string | null;
-    fileUrl: string;
-  };
+  canSign: boolean;
+  canDownloadSignedCopy: boolean;
 }
 
 export interface PublicSignedArtifactDTO {
@@ -82,6 +79,12 @@ export interface PublicSignedArtifactDTO {
   downloadUrl?: string;
   fileName?: string;
   mimeType?: string;
+}
+
+export interface RecipientAccessTokenDTO {
+  token: string;
+  expiresAt: string;
+  recipientId: string;
 }
 
 export class SigningApiError extends Error {
@@ -94,8 +97,18 @@ export class SigningApiError extends Error {
   }
 }
 
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  if (!isDossierSigningEnabled) {
+/**
+ * Shared fetch wrapper. Sender endpoints are gated by the client-side CREATION
+ * flag; public recipient endpoints pass `{ public: true }` so they keep working
+ * whenever the runtime flag is on (server-side gate), regardless of the sender
+ * creation toggle.
+ */
+async function request<T>(
+  url: string,
+  init?: RequestInit,
+  opts?: { public?: boolean },
+): Promise<T> {
+  if (!opts?.public && !isDossierSigningEnabled) {
     throw new SigningApiError("Signing is not enabled.", 404);
   }
 
@@ -176,6 +189,16 @@ export const signingApi = {
     );
   },
 
+  getRecipientAccessToken(input: {
+    teamId: string;
+    requestId: string;
+    recipientId: string;
+  }) {
+    return request<{ access: RecipientAccessTokenDTO }>(
+      `/api/teams/${input.teamId}/signature-requests/${input.requestId}/recipient-access-token?recipientId=${encodeURIComponent(input.recipientId)}`,
+    );
+  },
+
   cancelRequest(input: { teamId: string; requestId: string }) {
     return request<{ request: RequestDTO }>(
       `/api/teams/${input.teamId}/signature-requests/${input.requestId}/cancel`,
@@ -186,40 +209,46 @@ export const signingApi = {
   getPublicRequest(input: { requestId: string }) {
     return request<{ request: PublicRequestDTO }>(
       `/api/signature-requests/${input.requestId}`,
+      undefined,
+      { public: true },
     );
   },
 
   getPublicSignedArtifact(input: { requestId: string }) {
     return request<PublicSignedArtifactDTO>(
       `/api/signature-requests/${input.requestId}/artifact`,
+      undefined,
+      { public: true },
     );
   },
 
-  createSigningSession(input: {
-    requestId: string;
-    recipientId: string;
-    email?: string | null;
-    name?: string | null;
-  }) {
+  exchangeRecipientAccessToken(input: { requestId: string; token: string }) {
+    return request<{ ok: boolean }>(
+      `/api/signature-requests/${input.requestId}/exchange`,
+      { method: "POST", body: JSON.stringify({ token: input.token }) },
+      { public: true },
+    );
+  },
+
+  createSigningSession(input: { requestId: string }) {
     return request<SigningSessionDTO>(
       `/api/signature-requests/${input.requestId}/session`,
-      {
-        method: "POST",
-        body: JSON.stringify({
-          recipientId: input.recipientId,
-          email: input.email ?? null,
-          name: input.name ?? null,
-        }),
-      },
+      { method: "POST", body: JSON.stringify({}) },
+      { public: true },
     );
   },
 };
 
-/** Builds the per-recipient signing link the sender copies in the success step. */
+/**
+ * Builds the per-recipient signing link the sender copies. The long-lived
+ * invitation token is embedded in the URL; the recipient page exchanges it for
+ * a short-lived HttpOnly cookie and scrubs it from the URL.
+ */
 export function buildRecipientSigningUrl(input: {
   requestId: string;
-  recipientId: string;
+  token: string;
 }): string {
   const base = process.env.NEXT_PUBLIC_MARKETING_URL ?? "";
-  return `${base}/signing/${input.requestId}?recipient=${input.recipientId}`;
+  const query = new URLSearchParams({ token: input.token }).toString();
+  return `${base}/signing/${input.requestId}?${query}`;
 }

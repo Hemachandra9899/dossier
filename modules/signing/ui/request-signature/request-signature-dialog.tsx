@@ -22,11 +22,11 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
 import {
-  buildRecipientSigningUrl,
   signingApi,
   type RequestDTO,
 } from "../signing-api";
 import { SignatureStatusBadge } from "../signature-status-badge";
+import { useRecipientSigningUrl } from "../use-recipient-signing-url";
 import { PrepareStep } from "./prepare-step";
 import {
   RequestSignatureProvider,
@@ -229,6 +229,7 @@ function RequestSignatureDialogInner({
         ) : activeRequest !== null ? (
           <ActiveRequestSummary
             request={activeRequest}
+            teamId={teamId}
             onClose={() => onOpenChange(false)}
           />
         ) : (
@@ -275,6 +276,7 @@ function RequestSignatureDialogInner({
 
             {state.step === "SUCCESS" && state.result ? (
               <SuccessStep
+                teamId={teamId}
                 requestId={state.result.requestId}
                 firstRecipientId={successRecipientId}
                 status={state.result.status}
@@ -298,26 +300,29 @@ function RequestSignatureDialogInner({
 
 function ActiveRequestSummary({
   request,
+  teamId,
   onClose,
 }: {
   request: RequestDTO;
+  teamId: string;
   onClose: () => void;
 }) {
   const { isCopied, copyToClipboard } = useCopyToClipboard({});
 
   const firstRecipient = request.recipients[0];
-  const signingUrl =
-    firstRecipient &&
-    (request.status === "READY" ||
-      request.status === "SENT" ||
-      request.status === "VIEWED" ||
-      request.status === "SIGNING" ||
-      request.status === "PARTIALLY_SIGNED")
-      ? buildRecipientSigningUrl({
-          requestId: request.id,
-          recipientId: firstRecipient.id,
-        })
-      : null;
+  const linkable =
+    request.status === "READY" ||
+    request.status === "SENT" ||
+    request.status === "VIEWED" ||
+    request.status === "SIGNING" ||
+    request.status === "PARTIALLY_SIGNED";
+
+  const { url: signingUrl, isLoading, error } = useRecipientSigningUrl({
+    teamId,
+    requestId: request.id,
+    recipientId: firstRecipient?.id ?? null,
+    enabled: linkable,
+  });
 
   return (
     <div className="space-y-4">
@@ -352,6 +357,17 @@ function ActiveRequestSummary({
           >
             {isCopied ? "Copied" : "Copy link"}
           </Button>
+        </div>
+      ) : firstRecipient && linkable ? (
+        <div className="flex items-center justify-center gap-2 rounded-lg border p-2 text-sm text-muted-foreground">
+          {isLoading ? (
+            <>
+              <LoadingSpinner className="h-4 w-4" />
+              Preparing signing link…
+            </>
+          ) : (
+            error ?? "Could not prepare the signing link."
+          )}
         </div>
       ) : null}
 

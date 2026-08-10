@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { useMemo } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
+
 import { format } from "date-fns";
 import { CircleHelpIcon, CrownIcon, WebhookIcon } from "lucide-react";
 import useSWR from "swr";
@@ -12,7 +12,6 @@ import useSWR from "swr";
 import { usePlan } from "@/lib/swr/use-billing";
 import { fetcher } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { Button } from "@/components/ui/button";
@@ -39,7 +38,6 @@ export default function WebhookSettings() {
   const teamId = teamInfo?.currentTeam?.id;
 
   const { isFree, isPro, isTrial } = usePlan();
-  const showUpgrade = (isFree || isPro) && !isTrial;
 
   const {
     data: webhooks,
@@ -65,24 +63,12 @@ export default function WebhookSettings() {
                   <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
                     Webhooks
                   </h2>
-                  {showUpgrade ? (
-                    <UpgradePlanModal
-                      clickedPlan={PlanEnum.Business}
-                      trigger="create_webhook"
-                      highlightItem={["webhooks"]}
-                    >
-                      <span className="cursor-pointer">
-                        <CrownIcon className="h-4 w-4 text-muted-foreground hover:text-foreground" />
-                      </span>
-                    </UpgradePlanModal>
-                  ) : (
                     <BadgeTooltip
                       content="Send data to external services when events happen in Papermark"
                       className="max-w-80 text-left leading-5 text-gray-600"
                     >
                       <CircleHelpIcon className="h-4 w-4 text-gray-400" />
                     </BadgeTooltip>
-                  )}
                 </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Send data to external services when events happen in

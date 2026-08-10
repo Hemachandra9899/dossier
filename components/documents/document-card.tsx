@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 
 import { TeamContextType } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
 import {
   BetweenHorizontalStartIcon,
   ChevronRight,
@@ -23,7 +22,6 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import useDataroomsSimple from "@/lib/swr/use-datarooms-simple";
-import useLimits from "@/lib/swr/use-limits";
 import { DocumentWithLinksAndLinkCountAndViewCount } from "@/lib/types";
 import { cn, getBreadcrumbPath, nFormatter, timeAgo } from "@/lib/utils";
 import { fileIcon } from "@/lib/utils/get-file-icon";
@@ -32,8 +30,6 @@ import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 import { isDossierSigningEnabled } from "@/modules/signing/config";
 import { RequestSignatureDialog } from "@/modules/signing/ui/request-signature/request-signature-dialog";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
-import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
 import { AddToDataroomModal } from "@/components/documents/add-document-to-dataroom-modal";
 import { DocumentPreviewModal } from "@/components/documents/document-preview-modal";
 import { MoveToFolderModal } from "@/components/documents/move-folder-modal";
@@ -76,8 +72,6 @@ export default function DocumentsCard({
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [moveFolderOpen, setMoveFolderOpen] = useState<boolean>(false);
   const [addDataroomOpen, setAddDataroomOpen] = useState<boolean>(false);
-  const [trialModalOpen, setTrialModalOpen] = useState<boolean>(false);
-  const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
   const [previewOpen, setPreviewOpen] = useState<boolean>(false);
   const [signatureRequestOpen, setSignatureRequestOpen] =
     useState<boolean>(false);
@@ -85,7 +79,6 @@ export default function DocumentsCard({
   const { datarooms } = useDataroomsSimple();
 
   const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const { canAddDocuments } = useLimits();
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
@@ -510,12 +503,6 @@ export default function DocumentsCard({
         />
       ) : null}
 
-      {trialModalOpen ? (
-        <DataroomTrialModal
-          openModal={trialModalOpen}
-          setOpenModal={setTrialModalOpen}
-        />
-      ) : null}
       {isDossierSigningEnabled && prismaDocument.type === "pdf" ? (
         <RequestSignatureDialog
           open={signatureRequestOpen}
@@ -524,14 +511,6 @@ export default function DocumentsCard({
           documentId={prismaDocument.id}
           documentName={prismaDocument.name}
           isPdf={prismaDocument.type === "pdf"}
-        />
-      ) : null}
-      {planModalOpen ? (
-        <UpgradePlanModal
-          clickedPlan={PlanEnum.DataRooms}
-          trigger="datarooms"
-          open={planModalOpen}
-          setOpen={setPlanModalOpen}
         />
       ) : null}
 

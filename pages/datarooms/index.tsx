@@ -1,24 +1,16 @@
-import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { useEffect, useMemo, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
-import { FilterIcon, PlusIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import { useQueryState } from "nuqs";
 
 import { useSelfMembership } from "@/lib/hooks/use-self-membership";
-import { usePlan } from "@/lib/swr/use-billing";
 import useDatarooms from "@/lib/swr/use-datarooms";
-import useLimits from "@/lib/swr/use-limits";
 import { useTags } from "@/lib/swr/use-tags";
-import { daysLeft } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { AddDataroomModal } from "@/components/datarooms/add-dataroom-modal";
 import DataroomCard from "@/components/datarooms/dataroom-card";
-import { DataroomTrialModal } from "@/components/datarooms/dataroom-trial-modal";
 import { EmptyDataroom } from "@/components/datarooms/empty-dataroom";
 import AppLayout from "@/components/layouts/app";
 import { SearchBoxPersisted } from "@/components/search-box";
@@ -27,18 +19,7 @@ import { MultiSelect } from "@/components/ui/multi-select-v2";
 import { Separator } from "@/components/ui/separator";
 
 export default function DataroomsPage() {
-  const teamInfo = useTeam();
   const { datarooms, totalCount } = useDatarooms();
-  const {
-    isFree,
-    isPro,
-    isBusiness,
-    isDatarooms,
-    isDataroomsPlus,
-    isTrial,
-    trialEndsAt,
-  } = usePlan();
-  const { limits } = useLimits();
   const router = useRouter();
 
   // Dataroom-scoped members cannot create datarooms; hide the creation controls.
@@ -58,12 +39,6 @@ export default function DataroomsPage() {
   });
 
   const totalDatarooms = totalCount ?? 0;
-  const limitDatarooms = limits?.datarooms ?? 1;
-
-  const canCreateUnlimitedDatarooms =
-    isDatarooms ||
-    isDataroomsPlus ||
-    (isBusiness && totalDatarooms < limitDatarooms);
 
   const searchQuery = router.query.search as string | undefined;
 
@@ -101,10 +76,6 @@ export default function DataroomsPage() {
 
   const hasActiveFilters = searchQuery || tagsFilter?.length;
 
-  useEffect(() => {
-    if (!isTrial && (isFree || isPro)) router.push("/documents");
-  }, [isTrial, isFree, isPro]);
-
   return (
     <AppLayout>
       <main className="p-4 sm:m-4 sm:px-4 sm:py-4">
@@ -118,77 +89,7 @@ export default function DataroomsPage() {
             </p>
           </div>
           <div className="flex items-center gap-x-1">
-            {isDataroomMember ? null : isBusiness &&
-              !canCreateUnlimitedDatarooms ? (
-              <UpgradePlanModal
-                clickedPlan={PlanEnum.DataRooms}
-                trigger="datarooms"
-              >
-                <Button
-                  className="group flex flex-1 items-center justify-start gap-x-1 whitespace-nowrap px-2 text-left sm:gap-x-3 sm:px-3"
-                  title="Upgrade to Add Data Room"
-                >
-                  <span className="text-xs sm:text-sm">
-                    Upgrade to Add Data Room
-                  </span>
-                </Button>
-              </UpgradePlanModal>
-            ) : isTrial &&
-              datarooms &&
-              !isBusiness &&
-              !isDatarooms &&
-              !isDataroomsPlus ? (
-              <div className="flex items-center gap-x-2 sm:gap-x-4">
-                <div className="text-xs text-destructive sm:text-sm">
-                  <span>Trial: </span>
-                  <span className="font-medium">
-                    {(() => {
-                      let days: number;
-                      if (trialEndsAt) {
-                        days = daysLeft(new Date(trialEndsAt), 0);
-                      } else {
-                        const startDate =
-                          datarooms && datarooms.length > 0
-                            ? datarooms[datarooms.length - 1]?.createdAt
-                            : new Date(
-                                teamInfo?.currentTeam?.createdAt ?? Date.now(),
-                              );
-                        days = daysLeft(new Date(startDate), 7);
-                      }
-                      if (days <= 0) return "Expired";
-                      const label = days === 1 ? "day" : "days";
-                      return `${days} ${label} left`;
-                    })()}
-                  </span>
-                </div>
-                {totalDatarooms < limitDatarooms ? (
-                  <AddDataroomModal>
-                    <Button
-                      className="group flex flex-1 items-center justify-start gap-x-1 whitespace-nowrap px-2 text-left sm:gap-x-3 sm:px-3"
-                      title="Create New Dataroom"
-                    >
-                      <PlusIcon
-                        className="h-5 w-5 shrink-0"
-                        aria-hidden="true"
-                      />
-                      <span className="text-xs sm:text-sm">New Dataroom</span>
-                    </Button>
-                  </AddDataroomModal>
-                ) : (
-                  <UpgradePlanModal
-                    clickedPlan={PlanEnum.DataRooms}
-                    trigger="datarooms"
-                  >
-                    <Button
-                      className="group flex flex-1 items-center justify-start gap-x-1 whitespace-nowrap px-2 text-left sm:gap-x-3 sm:px-3"
-                      title="Upgrade to Add Data Room"
-                    >
-                      <span className="text-xs sm:text-sm">Upgrade</span>
-                    </Button>
-                  </UpgradePlanModal>
-                )}
-              </div>
-            ) : isBusiness || isDatarooms || isDataroomsPlus ? (
+            {isDataroomMember ? null : (
               <AddDataroomModal>
                 <Button
                   className="group flex flex-1 items-center justify-start gap-x-1 whitespace-nowrap px-2 text-left sm:gap-x-3 sm:px-3"
@@ -198,15 +99,6 @@ export default function DataroomsPage() {
                   <span className="text-xs sm:text-sm">New Dataroom</span>
                 </Button>
               </AddDataroomModal>
-            ) : (
-              <DataroomTrialModal>
-                <Button
-                  className="group flex flex-1 items-center justify-start gap-x-1 whitespace-nowrap px-2 text-left sm:gap-x-3 sm:px-3"
-                  title="Start Data Room Trial"
-                >
-                  <span className="text-xs sm:text-sm">Start Trial</span>
-                </Button>
-              </DataroomTrialModal>
             )}
           </div>
         </section>

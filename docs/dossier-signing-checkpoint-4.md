@@ -40,8 +40,14 @@ Implemented:
 - Durable artifact mirror handoff via Trigger.dev
   (`lib/trigger/signature-artifact-mirror` task + `process-signing` event
   indexer) wired to `ArtifactMirrorHandoff.enqueue(requestId)`.
-- Feature flag `NEXT_PUBLIC_DOSSIER_SIGNING_ENABLED`
-  (`modules/signing/config`). When unset/false every signing route returns 404.
+- Feature flags `NEXT_PUBLIC_DOSSIER_SIGNING_CREATION_ENABLED` (sender surface)
+  and `DOSSIER_SIGNING_RUNTIME_ENABLED` (recipient surface + webhook)
+  (`modules/signing/config`). When a flag is unset/false the routes it gates
+  return 404.
+- Recipient-access tokens (`modules/signing/domain/recipient-access-token.ts`):
+  stateless HMAC binding `{ requestId, recipientId, expiry }`, minted on the
+  sender side, capped by the request's own expiry, verified at every public
+  endpoint, and swapped into a short-lived HttpOnly cookie on the signing page.
 - Unit + integration test suites.
 
 Deferred (later checkpoints): setup UI, embedded field editor, recipient
@@ -131,8 +137,15 @@ idempotency + immutability; cross-team access denial; idempotent cancel.
 
 ## Enabling the feature
 
-Set `NEXT_PUBLIC_DOSSIER_SIGNING_ENABLED=true` in `.env` (public, client-safe —
-it only gates route availability). Provide the existing signing env vars
-(`NEXT_PUBLIC_SIGNING_HOST`, `SIGNING_API_URL`, `SIGNING_API_KEY`,
-`SIGNING_WEBHOOK_SECRET`) plus `NEXT_PRIVATE_VERIFICATION_SECRET` for the
-recipient continuity cookie.
+Set both flags in `.env`:
+
+```
+NEXT_PUBLIC_DOSSIER_SIGNING_CREATION_ENABLED=true   # sender surface
+DOSSIER_SIGNING_RUNTIME_ENABLED=true                # recipient surface + webhook
+```
+
+Provide the existing signing env vars (`NEXT_PUBLIC_SIGNING_HOST`,
+`SIGNING_API_URL`, `SIGNING_API_KEY`, `SIGNING_WEBHOOK_SECRET`) plus
+`NEXT_PRIVATE_VERIFICATION_SECRET`, which signs both the recipient-access tokens
+and the recipient continuity cookie. To disable just new-request creation while
+keeping live links working, leave the CREATION flag off and the RUNTIME flag on.

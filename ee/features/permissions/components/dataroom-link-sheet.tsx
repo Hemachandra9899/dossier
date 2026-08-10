@@ -21,11 +21,9 @@ import z from "zod";
 import { InviteViewersModal } from "@/ee/features/dataroom-invitations/components/invite-viewers-modal";
 
 import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
 import { useDomains } from "@/lib/swr/use-domains";
-import useLimits from "@/lib/swr/use-limits";
 import { LinkWithViews } from "@/lib/types";
 import { convertDataUrlToFile, fetcher, uploadImage } from "@/lib/utils";
 
@@ -108,12 +106,9 @@ export function DataroomLinkSheet({
     mutate: mutateGroups,
   } = useDataroomGroups({ dataroomId: linkTargetId ?? undefined });
   const { currentTeamId: teamId } = useTeam();
-  const { isFree, isPro, isBusiness, isDatarooms, isDataroomsPlus, isTrial } =
-    usePlan();
-  const { limits } = useLimits();
   const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(
-    DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms),
+    DEFAULT_LINK_PROPS(linkType, groupId, true),
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -129,14 +124,9 @@ export function DataroomLinkSheet({
     useState<boolean>(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState<boolean>(false);
   const { dataroom } = useDataroom(linkTargetId);
-  const canInviteViewers = isDataroomsPlus;
+  const canInviteViewers = true;
 
-  const isPresetsAllowed =
-    isTrial ||
-    (isPro && limits?.advancedLinkControlsOnPro) ||
-    isBusiness ||
-    isDatarooms ||
-    isDataroomsPlus;
+  const isPresetsAllowed = true;
 
   // Presets
   const { data: presets } = useSWR<LinkPreset[]>(
@@ -148,7 +138,7 @@ export function DataroomLinkSheet({
   );
 
   useEffect(() => {
-    setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms));
+    setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId, true));
   }, [currentLink]);
 
   // Handle Command+Enter (Mac) or Ctrl+Enter (Windows/Linux) to submit the form
@@ -165,11 +155,6 @@ export function DataroomLinkSheet({
   );
 
   const handlePreviewLink = async (link: LinkWithViews) => {
-    if (link.domainId && isFree) {
-      toast.error("You need to upgrade to preview this link");
-      return;
-    }
-
     setIsLoading(true);
     try {
       const linkId = z.string().cuid().parse(link.id);
@@ -860,28 +845,6 @@ export function DataroomLinkSheet({
                         })
                       }
                     >
-                      {/* {linkType === LinkType.DATAROOM_LINK && !!!currentLink ? (
-                      <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value={LinkAudienceType.GENERAL}>
-                          General
-                        </TabsTrigger>
-                        {isDatarooms || isDataroomsPlus || isTrial ? (
-                          <TabsTrigger value={LinkAudienceType.GROUP}>
-                            Group
-                          </TabsTrigger>
-                        ) : (
-                          <UpgradePlanModal
-                            clickedPlan={PlanEnum.DataRooms}
-                            trigger="add_group_link"
-                          >
-                            <div className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all">
-                              Group
-                            </div>
-                          </UpgradePlanModal>
-                        )}
-                      </TabsList>
-                    ) : null} */}
-
                       {/* GENERAL LINK */}
                       <TabsContent value={LinkAudienceType.GENERAL}>
                         <div className="space-y-6 pt-2">

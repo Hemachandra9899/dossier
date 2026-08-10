@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
+import { isTeamPausedById } from "@/modules/access/is-team-paused";
 import { LinkPreset } from "@prisma/client";
 import { put } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";

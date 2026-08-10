@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 
 import { useState } from "react";
 
-import { PlanEnum } from "@/ee/stripe/constants";
 import {
   BarChart3Icon,
   FolderIcon,
@@ -14,10 +13,7 @@ import {
 } from "lucide-react";
 
 import { useSelfMembership } from "@/lib/hooks/use-self-membership";
-import { usePlan } from "@/lib/swr/use-billing";
 import { cn } from "@/lib/utils";
-
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 
 import { MobileDataroomMoreMenu } from "./mobile-dataroom-more-menu";
 import { MobileMoreMenu } from "./mobile-more-menu";
@@ -26,12 +22,8 @@ import { MobileShareFab } from "./mobile-share-fab";
 export function MobileBottomNav() {
   const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
-  const { isBusiness, isDatarooms, isDataroomsPlus, isTrial } = usePlan();
   // Dataroom-scoped members only ever see their assigned data rooms.
   const { isDataroomMember } = useSelfMembership();
-
-  const dataroomsEnabled =
-    isBusiness || isDatarooms || isDataroomsPlus || isTrial;
 
   const dataroomId = router.query.id as string | undefined;
   const inDataroomDetail =
@@ -174,23 +166,10 @@ export function MobileBottomNav() {
           <div className="flex w-12 shrink-0 items-center justify-center self-center">
             <MobileShareFab mode="global" />
           </div>
-          {dataroomsEnabled ? (
-            <Link href="/datarooms" className={tabClass(isActive("datarooms"))}>
-              <ServerIcon className="h-6 w-6" />
-              <span>Datarooms</span>
-            </Link>
-          ) : (
-            <UpgradePlanModal
-              clickedPlan={PlanEnum.Business}
-              trigger="mobile_nav_datarooms"
-              highlightItem={["datarooms"]}
-            >
-              <button type="button" className={tabClass(false)}>
-                <ServerIcon className="h-6 w-6" />
-                <span>Datarooms</span>
-              </button>
-            </UpgradePlanModal>
-          )}
+          <Link href="/datarooms" className={tabClass(isActive("datarooms"))}>
+            <ServerIcon className="h-6 w-6" />
+            <span>Datarooms</span>
+          </Link>
           <button
             type="button"
             onClick={() => setMoreOpen(true)}

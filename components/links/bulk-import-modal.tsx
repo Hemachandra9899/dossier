@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
-import useLimits from "@/lib/swr/use-limits";
 import { copyToClipboard } from "@/lib/utils";
 import {
   parseCsv,
@@ -182,7 +181,6 @@ export function BulkImportLinksModal({
   onImported?: () => void;
 }) {
   const { currentTeamId } = useTeam();
-  const { limits, canAddLinks } = useLimits();
   const analytics = useAnalytics();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -199,22 +197,6 @@ export function BulkImportLinksModal({
     [targetType],
   );
   const endpointTargetType = targetType === "DATAROOM" ? "datarooms" : "documents";
-
-  const remainingLinks = useMemo<number | null>(() => {
-    const linkLimit = limits?.links;
-    if (
-      linkLimit === undefined ||
-      linkLimit === null ||
-      !Number.isFinite(linkLimit)
-    ) {
-      return null;
-    }
-    const used = limits?.usage?.links ?? 0;
-    return Math.max(0, (linkLimit as number) - used);
-  }, [limits]);
-
-  const exceedsLimit =
-    remainingLinks !== null && parsedRows.length > remainingLinks;
 
   const reset = useCallback(() => {
     setFileName(null);
@@ -378,7 +360,6 @@ export function BulkImportLinksModal({
             targetId,
           )}/links`,
         );
-        mutate(`/api/teams/${currentTeamId}/limits`);
         onImported?.();
         toast.success(
           data.summary.failed === 0
@@ -534,31 +515,6 @@ export function BulkImportLinksModal({
             </div>
           ) : null}
 
-          {!response && !canAddLinks ? (
-            <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              <AlertCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>
-                You have reached your plan&apos;s link limit
-                {limits?.links ? ` of ${limits.links}` : ""}. Upgrade your plan
-                to create more links.
-              </span>
-            </div>
-          ) : !response && exceedsLimit && remainingLinks !== null ? (
-            <div className="flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
-              <AlertCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
-              <span>
-                Your plan allows {limits?.links} link
-                {limits?.links === 1 ? "" : "s"} and you have{" "}
-                {remainingLinks === 0
-                  ? "no remaining capacity"
-                  : `${remainingLinks} remaining`}
-                . Only the first {remainingLinks} row
-                {remainingLinks === 1 ? "" : "s"} will be created — the rest
-                will be skipped. Upgrade your plan to create more links.
-              </span>
-            </div>
-          ) : null}
-
           {response ? (
             <ResultsList
               results={response.results}
@@ -602,8 +558,7 @@ export function BulkImportLinksModal({
                   isSubmitting ||
                   parsedRows.length === 0 ||
                   !!parseError ||
-                  !targetId ||
-                  !canAddLinks
+                  !targetId
                 }
               >
                 {isSubmitting ? (

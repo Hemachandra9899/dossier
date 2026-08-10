@@ -5,13 +5,9 @@ import ErrorPage from "next/error";
 import { Suspense, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { RedactionLauncher } from "@/ee/features/redaction/components/redaction-launcher";
-import { PlanEnum } from "@/ee/stripe/constants";
 
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import { useDocumentOverview } from "@/lib/swr/use-document-overview";
-
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import DocumentHeader from "@/components/documents/document-header";
 import { DocumentPreviewButton } from "@/components/documents/document-preview-button";
 // Import placeholder components
@@ -104,29 +100,16 @@ export default function DocumentPage() {
   }
 
   const AddLinkButton = () => {
-    if (!limits?.canAddLinks) {
-      return (
-        <UpgradePlanModal
-          clickedPlan={team?.isTrial ? PlanEnum.Business : PlanEnum.Pro}
-          trigger={"limit_add_link"}
+    return (
+      <div className="flex items-center gap-2">
+        <Button
+          className="flex h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm"
+          onClick={() => setIsLinkSheetOpen(true)}
         >
-          <Button className="flex h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm">
-            Upgrade to Create Link
-          </Button>
-        </UpgradePlanModal>
-      );
-    } else {
-      return (
-        <div className="flex items-center gap-2">
-          <Button
-            className="flex h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm"
-            onClick={() => setIsLinkSheetOpen(true)}
-          >
-            Create Link
-          </Button>
-        </div>
-      );
-    }
+          Create Link
+        </Button>
+      </div>
+    );
   };
 
   // Show loading only for the initial overview load
@@ -185,12 +168,6 @@ export default function DocumentPage() {
               size="default"
               showTooltip
               className="h-8 whitespace-nowrap text-xs lg:h-9 lg:text-sm"
-            />,
-            <RedactionLauncher
-              key={"redaction-launcher"}
-              documentId={prismaDocument.id}
-              documentName={prismaDocument.name}
-              documentType={primaryVersion.type}
             />,
             <AddLinkButton key={"create-link"} />,
           ]}

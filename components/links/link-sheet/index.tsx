@@ -12,7 +12,6 @@ import {
 } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkAudienceType, LinkPreset, LinkType } from "@prisma/client";
 import { RefreshCwIcon } from "lucide-react";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -21,14 +20,11 @@ import { mutate } from "swr";
 import useSWR from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
 import { useDomains } from "@/lib/swr/use-domains";
-import useLimits from "@/lib/swr/use-limits";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { convertDataUrlToFile, fetcher, uploadImage } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -193,12 +189,9 @@ export default function LinkSheet({
         : undefined,
   });
   const teamInfo = useTeam();
-  const { isFree, isPro, isBusiness, isDatarooms, isDataroomsPlus, isTrial } =
-    usePlan();
-  const { limits } = useLimits();
   const analytics = useAnalytics();
   const [data, setData] = useState<DEFAULT_LINK_TYPE>(
-    DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms),
+    DEFAULT_LINK_PROPS(linkType, groupId, linkType !== LinkType.DATAROOM_LINK),
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -247,12 +240,7 @@ export default function LinkSheet({
     return validationErrorEntries.map(([key]) => labels[key] ?? key).join(", ");
   }, [validationErrorEntries]);
 
-  const isPresetsAllowed =
-    isTrial ||
-    (isPro && limits?.advancedLinkControlsOnPro) ||
-    isBusiness ||
-    isDatarooms ||
-    isDataroomsPlus;
+  const isPresetsAllowed = true;
 
   // Presets
   const { data: presets } = useSWR<LinkPreset[]>(
@@ -266,7 +254,10 @@ export default function LinkSheet({
   );
 
   useEffect(() => {
-    setData(currentLink || DEFAULT_LINK_PROPS(linkType, groupId, !isDatarooms));
+    setData(
+      currentLink ||
+        DEFAULT_LINK_PROPS(linkType, groupId, linkType !== LinkType.DATAROOM_LINK),
+    );
   }, [currentLink]);
 
   // Handle Command+Enter (Mac) or Ctrl+Enter (Windows/Linux) to submit the form
@@ -286,11 +277,6 @@ export default function LinkSheet({
   );
 
   const handlePreviewLink = async (link: LinkWithViews) => {
-    if (link.domainId && isFree) {
-      toast.error("You need to upgrade to preview this link");
-      return;
-    }
-
     setIsLoading(true);
     const response = await fetch(`/api/links/${link.id}/preview`, {
       method: "POST",
@@ -705,20 +691,9 @@ export default function LinkSheet({
                         <TabsTrigger value={LinkAudienceType.GENERAL}>
                           General
                         </TabsTrigger>
-                        {isDatarooms || isDataroomsPlus || isTrial ? (
-                          <TabsTrigger value={LinkAudienceType.GROUP}>
-                            Group
-                          </TabsTrigger>
-                        ) : (
-                          <UpgradePlanModal
-                            clickedPlan={PlanEnum.DataRooms}
-                            trigger="add_group_link"
-                          >
-                            <div className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all">
-                              Group
-                            </div>
-                          </UpgradePlanModal>
-                        )}
+                        <TabsTrigger value={LinkAudienceType.GROUP}>
+                          Group
+                        </TabsTrigger>
                       </TabsList>
                     ) : null}
 

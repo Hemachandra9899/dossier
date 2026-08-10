@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
 import {
   CircleHelpIcon,
   MoreHorizontalIcon,
@@ -13,13 +12,10 @@ import { toast } from "sonner";
 import { mutate } from "swr";
 
 import { useSelfMembership } from "@/lib/hooks/use-self-membership";
-import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroomMembers } from "@/lib/swr/use-dataroom-members";
-import useLimits from "@/lib/swr/use-limits";
 import { CustomUser, TeamRole } from "@/lib/types";
 import { generateGravatarHash } from "@/lib/utils";
 
-import { AddSeatModal } from "@/components/billing/add-seat-modal";
 import { AddTeamMembers } from "@/components/teams/add-team-member-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -38,7 +34,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { BadgeTooltip } from "@/components/ui/tooltip";
-import { UpgradeButton } from "@/components/ui/upgrade-button";
 
 const ROLE_LABELS: Record<TeamRole, string> = {
   ADMIN: "Admin",
@@ -63,21 +58,14 @@ export default function DataroomTeamMembers({
   } = useDataroomMembers(dataroomId);
   const { data: session } = useSession();
   const { role } = useSelfMembership();
-  const { isDataroomsUnlimited } = usePlan();
-  const { canAddUsers, showUpgradePlanModal, limits } = useLimits();
   const canManage = role === "ADMIN" || role === "MANAGER";
   // Inviting goes through the team invite endpoint, which is admin-only.
   const canInvite = role === "ADMIN";
-  const seatsUnlimited =
-    isDataroomsUnlimited ||
-    limits?.users === null ||
-    limits?.users === Infinity;
 
   const currentUserId = (session?.user as CustomUser)?.id;
 
   const [removingId, setRemovingId] = useState<string>("");
   const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [isAddSeatOpen, setIsAddSeatOpen] = useState(false);
 
   const removeMember = async (userId: string) => {
     setRemovingId(userId);
@@ -150,51 +138,24 @@ export default function DataroomTeamMembers({
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             People on your team with access to this data room.
-            {!seatsUnlimited && limits?.users ? (
-              <span className="ml-1">
-                {limits.usage?.users ?? 0}/{limits.users} seats used.
-              </span>
-            ) : null}
           </p>
         </div>
         {canInvite ? (
-          showUpgradePlanModal ? (
-            <UpgradeButton
-              text="Business"
-              clickedPlan={PlanEnum.Business}
-              trigger="dataroom_add_member"
-              highlightItem={["users", "assign"]}
-            />
-          ) : (
-            <div className="flex items-center gap-2">
-              {!seatsUnlimited ? (
-                <AddSeatModal open={isAddSeatOpen} setOpen={setIsAddSeatOpen}>
-                  <Button variant="outline" className="whitespace-nowrap">
-                    Add Seat
-                  </Button>
-                </AddSeatModal>
-              ) : null}
-              {canAddUsers ? (
-                <AddTeamMembers
-                  open={isInviteOpen}
-                  setOpen={setIsInviteOpen}
-                  defaultRole="DATAROOM_MEMBER"
-                  defaultDataroomIds={[dataroomId]}
-                  currentDataroomId={dataroomId}
-                  redirectToPeople={false}
-                  onInvited={() => mutateMembers()}
-                >
-                  <Button className="whitespace-nowrap bg-gray-900 text-gray-50 hover:bg-gray-900/90">
-                    Add team member
-                  </Button>
-                </AddTeamMembers>
-              ) : (
-                <Button disabled title="Add a seat to invite more members">
-                  Add team member
-                </Button>
-              )}
-            </div>
-          )
+          <div className="flex items-center gap-2">
+            <AddTeamMembers
+              open={isInviteOpen}
+              setOpen={setIsInviteOpen}
+              defaultRole="DATAROOM_MEMBER"
+              defaultDataroomIds={[dataroomId]}
+              currentDataroomId={dataroomId}
+              redirectToPeople={false}
+              onInvited={() => mutateMembers()}
+            >
+              <Button className="whitespace-nowrap bg-gray-900 text-gray-50 hover:bg-gray-900/90">
+                Add team member
+              </Button>
+            </AddTeamMembers>
+          </div>
         ) : null}
       </div>
 

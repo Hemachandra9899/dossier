@@ -1,9 +1,6 @@
-import Link from "next/link";
-
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { DocumentVersion } from "@prisma/client";
 import {
   AlertTriangleIcon,
@@ -24,7 +21,6 @@ import {
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { usePlan } from "@/lib/swr/use-billing";
 import { useDocumentVisits } from "@/lib/swr/use-document";
 import {
   buildTeamSignedAgreementDownloadUrl,
@@ -53,9 +49,7 @@ import { BadgeTooltip } from "@/components/ui/tooltip";
 
 import { Badge } from "@/components/ui/badge";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
-import { Pagination } from "../documents/pagination";
-import { Button } from "../ui/button";
+import { Pagination } from "../documents/pagination";import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,7 +63,6 @@ import VisitorChart from "./visitor-chart";
 import VisitorClicks from "./visitor-clicks";
 import VisitorCustomFields from "./visitor-custom-fields";
 import VisitorUserAgent from "./visitor-useragent";
-import VisitorUserAgentPlaceholder from "./visitor-useragent-placeholder";
 import VisitorVideoChart from "./visitor-video-chart";
 
 type AgreementResponseSummary = {
@@ -150,9 +143,6 @@ export default function VisitorsTable({
       ? { dataroomId, scope: viewScope }
       : undefined,
   );
-  const { plan, isTrial, isPaused } = usePlan();
-  const isFreePlan = plan === "free";
-
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -291,10 +281,7 @@ export default function VisitorsTable({
               <>
                 <TableRow className="">
                   <TableCell colSpan={5} className="text-left sm:text-center">
-                    {isPaused &&
-                    views?.hiddenFromPause &&
-                    views.hiddenFromPause > 0 ? (
-                      // Show pause-specific message if team is paused and has hidden views from pause
+                    {views?.hiddenFromPause && views.hiddenFromPause > 0 ? (
                       <div className="flex flex-col items-start justify-center gap-2 sm:flex-row sm:items-center">
                         <span className="flex items-center gap-x-1">
                           <AlertTriangleIcon className="inline-block h-4 w-4 text-orange-500" />
@@ -304,31 +291,14 @@ export default function VisitorsTable({
                           {views.hiddenFromPause !== 1 ? "are" : "is"}{" "}
                           hidden.{" "}
                         </span>
-                        <Link
-                          href="/settings/billing"
-                          className="font-medium text-orange-600 underline hover:text-orange-700"
-                        >
-                          Unpause subscription to see all visits
-                        </Link>
                       </div>
                     ) : (
-                      // Show regular free plan message
                       <div className="flex flex-col items-start justify-center gap-1 sm:flex-row sm:items-center">
                         <span className="flex items-center gap-x-1">
                           <AlertTriangleIcon className="inline-block h-4 w-4 text-yellow-500" />
                           Some older visits may not be shown because your
                           document has more than 20 views.{" "}
                         </span>
-                        <UpgradePlanModal
-                          clickedPlan={
-                            isTrial ? PlanEnum.Business : PlanEnum.Pro
-                          }
-                          trigger=""
-                        >
-                          <button className="underline hover:text-gray-800">
-                            Upgrade to see full history
-                          </button>
-                        </UpgradePlanModal>
                       </div>
                     )}
                   </TableCell>
@@ -633,21 +603,15 @@ export default function VisitorsTable({
                         <>
                           <TableRow className="hover:bg-transparent">
                             <TableCell colSpan={5}>
-                              {!isFreePlan && (
-                                <VisitorCustomFields
-                                  viewId={view.id}
-                                  teamId={view.teamId!}
-                                  documentId={view.documentId!}
-                                />
-                              )}
-                              {!isFreePlan ? (
-                                <VisitorUserAgent
-                                  viewId={view.id}
-                                  documentId={view.documentId ?? undefined}
-                                />
-                              ) : (
-                                <VisitorUserAgentPlaceholder />
-                              )}
+                              <VisitorCustomFields
+                                viewId={view.id}
+                                teamId={view.teamId!}
+                                documentId={view.documentId!}
+                              />
+                              <VisitorUserAgent
+                                viewId={view.id}
+                                documentId={view.documentId ?? undefined}
+                              />
 
                               <div className="pb-0.5 pl-0.5 md:pb-1 md:pl-1">
                                 <div className="flex items-center gap-x-1 px-1">
@@ -745,7 +709,7 @@ export default function VisitorsTable({
                                   }
                                 />
                               )}
-                              {(!isFreePlan && primaryVersion.type === "pdf") ||
+                              {primaryVersion.type === "pdf" ||
                               primaryVersion.type === "link" ? (
                                 <VisitorClicks
                                   teamId={view.teamId!}

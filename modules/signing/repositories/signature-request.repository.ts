@@ -195,6 +195,25 @@ export class SignatureRequestRepository {
     });
   }
 
+  /**
+   * Recipient/public lookup used by the access-proofed info endpoint. Selects
+   * only the fields a verified recipient may see — document name, recipient
+   * name and lifecycle timestamps — never provider or team data.
+   */
+  async findByIdForRecipient(requestId: string) {
+    return this.prisma.signatureRequest.findUnique({
+      where: { id: requestId },
+      select: {
+        id: true,
+        status: true,
+        expiresAt: true,
+        completedAt: true,
+        document: { select: { name: true } },
+        recipients: { select: { id: true, name: true } },
+      },
+    });
+  }
+
   /** Latest non-terminal request for a document (drives the "active request"
    *  summary in the sender UI). */
   async findActiveByTeamAndDocument(teamId: string, documentId: string) {

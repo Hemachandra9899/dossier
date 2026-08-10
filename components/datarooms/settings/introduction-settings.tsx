@@ -3,17 +3,12 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { CrownIcon, EyeIcon } from "lucide-react";
+import { EyeIcon } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { useSelfMembership } from "@/lib/hooks/use-self-membership";
-import { usePlan } from "@/lib/swr/use-billing";
 import { cn, uploadImage } from "@/lib/utils";
 
-import { PlanEnum } from "@/ee/stripe/constants";
-
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,7 +21,6 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
-import { ButtonTooltip } from "@/components/ui/tooltip";
 
 interface IntroductionSettingsProps {
   dataroomId: string;
@@ -479,8 +473,6 @@ export default function IntroductionSettings({
 }: IntroductionSettingsProps) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const { isDataroomsPlus, isTrial } = usePlan();
-  const { isDataroomMember } = useSelfMembership();
 
   const [isFetching, setIsFetching] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -492,7 +484,6 @@ export default function IntroductionSettings({
   const [showPreview, setShowPreview] = useState(false);
   const [dataroomName, setDataroomName] = useState<string>("Data Room");
 
-  const isFeatureAvailable = isDataroomsPlus || isTrial;
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hasInitialLoadRef = useRef(false);
   const skipNextAutosaveRef = useRef(false);
@@ -564,7 +555,7 @@ export default function IntroductionSettings({
   // Auto-save function
   const saveSettings = useCallback(
     async (enabled: boolean, content: any) => {
-      if (!teamId || !isFeatureAvailable) return;
+      if (!teamId) return;
 
       setIsSaving(true);
       try {
@@ -594,7 +585,7 @@ export default function IntroductionSettings({
         setIsSaving(false);
       }
     },
-    [teamId, dataroomId, isFeatureAvailable],
+    [teamId, dataroomId],
   );
 
   // Debounced auto-save on content change
@@ -633,10 +624,6 @@ export default function IntroductionSettings({
   };
 
   const handleToggle = (checked: boolean) => {
-    if (!isFeatureAvailable) {
-      toast.error("This feature is only available on Data Rooms Plus plan");
-      return;
-    }
     setIntroductionEnabled(checked);
   };
 
@@ -656,7 +643,7 @@ export default function IntroductionSettings({
       <div
         className={cn(
           "flex flex-col gap-4 rounded-lg border p-4 transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-5",
-          introductionEnabled && isFeatureAvailable
+          introductionEnabled
             ? "border-emerald-200 bg-emerald-50/50 dark:border-emerald-900/40 dark:bg-emerald-950/20"
             : "border-border bg-muted/30",
         )}
@@ -665,7 +652,7 @@ export default function IntroductionSettings({
           <span
             className={cn(
               "mt-1.5 inline-flex h-2 w-2 shrink-0 rounded-full ring-4 transition-colors",
-              introductionEnabled && isFeatureAvailable
+              introductionEnabled
                 ? "bg-emerald-500 ring-emerald-500/15"
                 : "bg-muted-foreground/40 ring-muted-foreground/10",
             )}
@@ -676,12 +663,12 @@ export default function IntroductionSettings({
               htmlFor="introduction-toggle"
               className="block cursor-pointer text-sm font-medium text-foreground"
             >
-              {introductionEnabled && isFeatureAvailable
+              {introductionEnabled
                 ? "Introduction page is on"
                 : "Introduction page is off"}
             </Label>
             <p className="text-xs text-muted-foreground">
-              {introductionEnabled && isFeatureAvailable
+              {introductionEnabled
                 ? "Viewers see this page when they first open the data room."
                 : "Turn on to show this page to viewers on their first visit."}
             </p>
@@ -706,43 +693,16 @@ export default function IntroductionSettings({
             <EyeIcon className="mr-1.5 h-4 w-4" />
             Preview
           </Button>
-          {isFeatureAvailable ? (
-            <Switch
-              id="introduction-toggle"
-              checked={introductionEnabled}
-              onCheckedChange={handleToggle}
-              aria-label={
-                introductionEnabled
-                  ? "Disable introduction page"
-                  : "Enable introduction page"
-              }
-            />
-          ) : isDataroomMember ? (
-            <ButtonTooltip content="Only team admins can upgrade the plan. Contact a team admin to enable this feature.">
-              <span tabIndex={0}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  disabled
-                >
-                  <CrownIcon className="h-4 w-4" />
-                  Upgrade to enable
-                </Button>
-              </span>
-            </ButtonTooltip>
-          ) : (
-            <UpgradePlanModal
-              clickedPlan={PlanEnum.DataRoomsPlus}
-              trigger="dataroom_introduction_settings"
-              highlightItem={["introduction"]}
-            >
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <CrownIcon className="h-4 w-4" />
-                Upgrade to enable
-              </Button>
-            </UpgradePlanModal>
-          )}
+          <Switch
+            id="introduction-toggle"
+            checked={introductionEnabled}
+            onCheckedChange={handleToggle}
+            aria-label={
+              introductionEnabled
+                ? "Disable introduction page"
+                : "Enable introduction page"
+            }
+          />
         </div>
       </div>
 

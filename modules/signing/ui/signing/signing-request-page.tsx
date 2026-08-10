@@ -1,7 +1,9 @@
 // SigningRequestPage: the recipient-facing signing page for a Dossier
-// SignatureRequest. Renders the document, opens the Documenso signing canvas
-// in a sheet, and polls the public API until the request reaches a terminal
-// state so completion never requires a reload.
+// SignatureRequest. Renders the request summary, opens the Documenso signing
+// canvas in a sheet, and polls the public API until the request reaches a
+// terminal state so completion never requires a reload. Access is proven by the
+// HttpOnly recipient-access cookie (set at page entry); the page itself holds
+// no secrets.
 
 "use client";
 
@@ -10,16 +12,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertCircleIcon,
   CheckCircle2Icon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   DownloadIcon,
   FileSignatureIcon,
+  FileTextIcon,
 } from "lucide-react";
-import { Document, Page, pdfjs } from "react-pdf";
 import { toast } from "sonner";
 
-import { isDossierSigningEnabled } from "@/modules/signing/config";
-import type { SignatureRequestStatus } from "@/modules/signing/domain/signature-request";
+import type { PublicRecipientStatus } from "@/modules/signing/application/get-public-request";
 
 import { Button } from "@/components/ui/button";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -33,9 +32,7 @@ import {
 import { SignatureStatusBadge } from "../signature-status-badge";
 import { SigningSheet } from "./signing-sheet";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-
-const SIGNABLE_STATUSES: SignatureRequestStatus[] = [
+const SIGNABLE_STATUSES: PublicRecipientStatus[] = [
   "READY",
   "SENT",
   "VIEWED",
@@ -43,29 +40,16 @@ const SIGNABLE_STATUSES: SignatureRequestStatus[] = [
   "PARTIALLY_SIGNED",
 ];
 
-const TERMINAL_NON_COMPLETED: SignatureRequestStatus[] = [
+const TERMINAL_NON_COMPLETED: PublicRecipientStatus[] = [
   "DECLINED",
   "EXPIRED",
   "CANCELLED",
-  "FAILED",
 ];
 
 const POLL_INTERVAL_MS = 3000;
 const POLL_TIMEOUT_MS = 90000;
 
-const pdfOptions = {
-  cMapUrl: "cmaps/",
-  cMapPacked: true,
-  standardFontDataUrl: "standard_fonts/",
-};
-
-export function SigningRequestPage({
-  requestId,
-  recipientId,
-}: {
-  requestId: string;
-  recipientId: string | null;
-}) {
+export function SigningRequestPage({ requestId }: { requestId: string }) {
   const [request, setRequest] = useState<PublicRequestDTO | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [session, setSession] = useState<SigningSessionDTO | null>(null);
@@ -74,8 +58,6 @@ export function SigningRequestPage({
   const [isCompleting, setIsCompleting] = useState(false);
   const [completionError, setCompletionError] = useState<string | null>(null);
   const [artifact, setArtifact] = useState<PublicSignedArtifactDTO | null>(null);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [numPages, setNumPages] = useState(0);
   const pollActiveRef = useRef(false);
 
   const loadRequest = useCallback(async () => {
@@ -100,7 +82,7 @@ export function SigningRequestPage({
   }, [requestId]);
 
   useEffect(() => {
-    if (!isDossierSigningEnabled || !requestId) {
+    if (!requestId) {
       setLoadError("This signature request could not be loaded.");
       return;
     }
@@ -108,12 +90,10 @@ export function SigningRequestPage({
   }, [requestId, loadRequest]);
 
   const openSigning = async () => {
-    if (!recipientId) return;
     setIsPreparingSession(true);
     try {
       const createdSession = await signingApi.createSigningSession({
         requestId,
-        recipientId,
       });
       setSession(createdSession);
       setSheetOpen(true);
@@ -179,10 +159,6 @@ export function SigningRequestPage({
     }
   };
 
-  if (!isDossierSigningEnabled) {
-    return <NotFoundState message="This signature request could not be loaded." />;
-  }
-
   if (loadError) {
     return <NotFoundState message={loadError} />;
   }
@@ -198,6 +174,10 @@ export function SigningRequestPage({
   const isSignable = SIGNABLE_STATUSES.includes(request.status);
   const isCompleted = request.status === "COMPLETED";
   const isTerminalFailed = TERMINAL_NON_COMPLETED.includes(request.status);
+  const isExpired =
+    request.status !== "EXPIRED" &&
+    !!request.expiresAt &&
+    new Date(request.expiresAt).getTime() <= Date.now();
 
   return (
     <div className="flex h-screen flex-col bg-secondary">
@@ -223,65 +203,36 @@ export function SigningRequestPage({
             message={completionError}
           />
         ) : (
-          <>
-            <div
-              className="flex h-full items-center"
-              style={{ height: "calc(100vh - 136px)" }}
-            >
-              <div className="mx-auto flex h-full justify-center">
-                <Document
-                  file={request.document.fileUrl}
-                  onLoadSuccess={({ numPages: nextNumPages }) =>
-                    setNumPages(nextNumPages)
-                  }
-                  options={pdfOptions}
-                  renderMode="canvas"
-                  className=""
-                >
-                  <Page
-                    className=""
-                    key={pageNumber}
-                    pageNumber={pageNumber}
-                    renderAnnotationLayer={false}
-                    renderTextLayer={false}
-                    width={900}
-                  />
-                </Document>
+          <div className="flex h-full items-center justify-center px-6">
+            <div className="flex w-full max-w-md flex-col items-center gap-4 rounded-xl border bg-background p-8 text-center shadow-sm">
+              <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-secondary">
+                <FileTextIcon className="h-8 w-8 text-muted-foreground" />
               </div>
+              <div className="space-y-1">
+                <h2 className="truncate text-base font-semibold">
+                  {request.document.name}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {request.recipient.name?.trim()
+                    ? `Addressed to ${request.recipient.name.trim()}`
+                    : "A signature request is waiting for you"}
+                </p>
+              </div>
+              {isExpired ? (
+                <p className="text-sm text-destructive">
+                  This signature request has expired and is no longer available.
+                </p>
+              ) : isSignable ? (
+                <p className="text-sm text-muted-foreground">
+                  Review the document and sign it to return it to the sender.
+                </p>
+              ) : null}
             </div>
-            <div className="absolute left-2 top-1/2 z-10 -translate-y-1/2">
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Previous page"
-                disabled={pageNumber <= 1}
-                onClick={() =>
-                  setPageNumber((current) => Math.max(1, current - 1))
-                }
-              >
-                <ChevronLeftIcon className="h-5 w-5" />
-              </Button>
-            </div>
-            <div className="absolute right-2 top-1/2 z-10 -translate-y-1/2">
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Next page"
-                disabled={pageNumber >= numPages}
-                onClick={() =>
-                  setPageNumber((current) =>
-                    Math.min(numPages, current + 1),
-                  )
-                }
-              >
-                <ChevronRightIcon className="h-5 w-5" />
-              </Button>
-            </div>
-          </>
+          </div>
         )}
       </main>
 
-      {isSignable ? (
+      {isSignable && !isExpired ? (
         <footer className="flex h-20 shrink-0 items-center justify-between border-t bg-background px-4 sm:px-6">
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">
@@ -296,7 +247,6 @@ export function SigningRequestPage({
           <Button
             onClick={() => void openSigning()}
             loading={isPreparingSession || isCompleting}
-            disabled={!recipientId}
           >
             {!isPreparingSession && !isCompleting ? (
               <FileSignatureIcon className="h-4 w-4" />
@@ -361,7 +311,7 @@ function TerminalState({
   status,
   message,
 }: {
-  status: SignatureRequestStatus;
+  status: PublicRecipientStatus;
   message: string | null;
 }) {
   return (

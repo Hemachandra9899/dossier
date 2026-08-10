@@ -14,10 +14,6 @@ import useSWR from "swr";
 
 import { fetcher } from "@/lib/utils";
 
-import { PlanEnum } from "@/ee/stripe/constants";
-import { CrownIcon } from "lucide-react";
-
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -492,33 +488,20 @@ export function InviteViewersModal({
             >
               Cancel
             </Button>
-            {canSend ? (
-              <Button
-                onClick={handleSend}
-                loading={loading}
-                disabled={
-                  isOverLimit ||
-                  (groupId
-                    ? !selectedLinkId || loading || recipientCount === 0
-                    : loading || recipientCount === 0)
-                }
-              >
-                {loading
-                  ? "Sending invitations..."
-                  : `Send ${recipientCount} invitation${recipientCount !== 1 ? "s" : ""}`}
-              </Button>
-            ) : (
-              <UpgradePlanModal
-                clickedPlan={PlanEnum.DataRoomsPlus}
-                trigger="invite_modal_upgrade"
-                highlightItem={["email-invite"]}
-              >
-                <Button>
-                  <CrownIcon className="h-4 w-4" />
-                  Upgrade to send invites
-                </Button>
-              </UpgradePlanModal>
-            )}
+            <Button
+              onClick={handleSend}
+              loading={loading}
+              disabled={
+                isOverLimit ||
+                (groupId
+                  ? !selectedLinkId || loading || recipientCount === 0
+                  : loading || recipientCount === 0)
+              }
+            >
+              {loading
+                ? "Sending invitations..."
+                : `Send ${recipientCount} invitation${recipientCount !== 1 ? "s" : ""}`}
+            </Button>
           </div>
         </DialogFooter>
       </DialogContent>

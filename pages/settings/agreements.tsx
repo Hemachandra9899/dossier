@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { CircleHelpIcon, FileTextIcon } from "lucide-react";
 import { mutate } from "swr";
 
@@ -24,14 +23,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { BadgeTooltip } from "@/components/ui/tooltip";
-import { createUpgradeButton } from "@/components/ui/upgrade-button";
-
-const AgreementsUpgradeButton = createUpgradeButton(
-  "Create Agreements",
-  PlanEnum.Business,
-  "nda_agreements_page",
-  { highlightItem: ["nda"] },
-);
 
 export default function NdaAgreements() {
   const { agreements, loading, error } = useAgreements();
@@ -114,16 +105,12 @@ export default function NdaAgreements() {
                 Manage your signed and one-click agreements.
               </p>
             </div>
-            {isTrial || isBusiness || isDatarooms || isDataroomsPlus ? (
-              <Button
-                onClick={handleCreateNew}
-                className="bg-gray-900 text-gray-50 hover:bg-gray-900/90"
-              >
-                Create agreement
-              </Button>
-            ) : (
-              <AgreementsUpgradeButton />
-            )}
+            <Button
+              onClick={handleCreateNew}
+              className="bg-gray-900 text-gray-50 hover:bg-gray-900/90"
+            >
+              Create agreement
+            </Button>
           </div>
 
           {loading ? (

@@ -20,7 +20,7 @@ import {
   teamPlanAllowsCustomWelcomeAndCta,
   teamPlanAllowsLayoutCustomization,
   teamPlanAllowsVisitorLanguage,
-} from "@/lib/billing/team-plan-custom-messaging";
+} from "@/modules/access/team-plan-custom-messaging";
 import { errorhandler } from "@/lib/errorHandler";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
@@ -200,7 +200,7 @@ export default async function handle(
         errors: parsed.error.flatten().fieldErrors,
       });
     }
-    const body = parsed.data;
+    const body = parsed.data as any;
 
     const layoutData = layoutAllowed
       ? sanitizeLayoutPayload({
@@ -291,7 +291,7 @@ export default async function handle(
         errors: parsed.error.flatten().fieldErrors,
       });
     }
-    const body = parsed.data;
+    const body = parsed.data as any;
 
     const existingBrand = await prisma.dataroomBrand.findUnique({
       where: { dataroomId },

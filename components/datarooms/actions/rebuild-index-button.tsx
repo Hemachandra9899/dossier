@@ -1,13 +1,8 @@
 import { useState } from "react";
 
-import { PlanEnum } from "@/ee/stripe/constants";
-import { CrownIcon, ListOrderedIcon, Trash2Icon } from "lucide-react";
+import { ListOrderedIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
 
-import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
-import { usePlan } from "@/lib/swr/use-billing";
-
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,34 +27,12 @@ export default function RebuildIndexButton({
   dataroomId,
   disabled = false,
 }: RebuildIndexButtonProps) {
-  const { isFeatureEnabled } = useFeatureFlags();
-  const { isDatarooms, isDataroomsPlus, isTrial } = usePlan();
   const [loadingAction, setLoadingAction] = useState<
     "rebuild" | "clear" | null
   >(null);
   const [isOpen, setIsOpen] = useState(false);
 
-  const isDataroomIndexEnabled = isFeatureEnabled("dataroomIndex");
-  const hasDataroomsPlan = isDatarooms || isDataroomsPlus || isTrial;
-  const hasDataroomsPlusPlan = isDataroomsPlus;
-
-  // Show button if: feature flag is enabled OR user has datarooms plan or higher
-  const shouldShowButton = isDataroomIndexEnabled || hasDataroomsPlan;
-
-  // Allow usage if: feature flag is enabled OR user has datarooms-plus plan
-  const canUseFeature = isDataroomIndexEnabled || hasDataroomsPlusPlan;
-
-  // Don't render if conditions aren't met
-  if (!shouldShowButton) {
-    return null;
-  }
-
   const handleIndexAction = async (action: "rebuild" | "clear") => {
-    if (!canUseFeature) {
-      toast.error("Upgrade to Data Rooms Plus plan to use this feature.");
-      return;
-    }
-
     if (!teamId || !dataroomId) {
       toast.error("Missing team or data room. Refresh the page and try again.");
       return;
@@ -173,49 +146,34 @@ export default function RebuildIndexButton({
         </div>
 
         <DialogFooter className="gap-2 sm:justify-between">
-          {canUseFeature ? (
-            <>
-              <Button
-                variant="ghost"
-                className="whitespace-nowrap text-destructive hover:text-destructive"
-                onClick={() => handleIndexAction("clear")}
-                loading={loadingAction === "clear"}
-                disabled={loadingAction !== null}
-              >
-                <Trash2Icon className="h-4 w-4" />
-                Remove Index
-              </Button>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsOpen(false)}
-                  disabled={loadingAction !== null}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  className="whitespace-nowrap"
-                  onClick={() => handleIndexAction("rebuild")}
-                  loading={loadingAction === "rebuild"}
-                  disabled={loadingAction !== null}
-                >
-                  <ListOrderedIcon className="h-4 w-4" />
-                  Rebuild Index
-                </Button>
-              </div>
-            </>
-          ) : (
-            <UpgradePlanModal
-              clickedPlan={PlanEnum.DataRoomsPlus}
-              trigger="datarooms_rebuild_index_button"
-              highlightItem={["indexing"]}
+          <Button
+            variant="ghost"
+            className="whitespace-nowrap text-destructive hover:text-destructive"
+            onClick={() => handleIndexAction("clear")}
+            loading={loadingAction === "clear"}
+            disabled={loadingAction !== null}
+          >
+            <Trash2Icon className="h-4 w-4" />
+            Remove Index
+          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsOpen(false)}
+              disabled={loadingAction !== null}
             >
-              <Button className="gap-1.5">
-                <CrownIcon className="h-4 w-4" />
-                Upgrade to rebuild index
-              </Button>
-            </UpgradePlanModal>
-          )}
+              Cancel
+            </Button>
+            <Button
+              className="whitespace-nowrap"
+              onClick={() => handleIndexAction("rebuild")}
+              loading={loadingAction === "rebuild"}
+              disabled={loadingAction !== null}
+            >
+              <ListOrderedIcon className="h-4 w-4" />
+              Rebuild Index
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -12,10 +12,8 @@ import { mutate } from "swr";
 
 import { useAnalytics } from "@/lib/analytics";
 import {
-  FREE_PLAN_ACCEPTED_FILE_TYPES,
   FULL_PLAN_ACCEPTED_FILE_TYPES,
   HTML_ACCEPTED_FILE_TYPES,
-  SUPPORTED_DOCUMENT_MIME_TYPES,
 } from "@/lib/constants";
 import { DocumentData, createDocument } from "@/lib/documents/create-document";
 import {
@@ -31,8 +29,7 @@ import {
   isSystemFile,
 } from "@/lib/folders/create-folder";
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
+import { useLimits } from "@/ee/limits/swr-handler";
 import { useTeamSettings } from "@/lib/swr/use-team-settings";
 import { CustomUser } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -46,12 +43,6 @@ import {
 } from "@/lib/utils/get-file-size-limits";
 import { getPagesCount } from "@/lib/utils/get-page-number-count";
 
-// These mime values are kept out of useDropzone's `accept` to keep the file
-// type fallback path in getFilesFromEvent reachable (some browsers, notably
-// Firefox, can't detect MIME type for files yielded from a dropped folder and
-// need this lookup table to fix it up).
-const acceptableDropZoneMimeTypesWhenIsFreePlanAndNotTrial =
-  FREE_PLAN_ACCEPTED_FILE_TYPES;
 const allAcceptableDropZoneMimeTypes = FULL_PLAN_ACCEPTED_FILE_TYPES;
 
 interface FileWithPaths extends File {
@@ -281,7 +272,6 @@ export default function UploadZone({
   disabled = false,
 }: UploadZoneProps) {
   const analytics = useAnalytics();
-  const { plan, isFree, isTrial } = usePlan();
   const router = useRouter();
   const teamInfo = useTeam();
   const { data: session } = useSession();
@@ -296,9 +286,10 @@ export default function UploadZone({
   // than reaching across scopes.
   const filesInputRef = useRef<HTMLInputElement | null>(null);
   const folderInputRef = useRef<HTMLInputElement | null>(null);
-  const hasDocumentLimit = limits?.documents != null && limits.documents > 0;
+  const documentLimit = limits?.documents ?? null;
+  const hasDocumentLimit = documentLimit != null && documentLimit > 0;
   const remainingDocuments = hasDocumentLimit
-    ? limits.documents - (limits?.usage?.documents ?? 0)
+    ? documentLimit - (limits?.usage?.documents ?? 0)
     : Infinity;
 
   // Fetch team settings with proper revalidation - ensures settings stay fresh across tabs
@@ -333,24 +324,16 @@ export default function UploadZone({
   }, [registerUploadTriggers, disabled]);
 
   const fileSizeLimits = useMemo(
-    () =>
-      getFileSizeLimits({
-        limits,
-        isFree,
-        isTrial,
-      }),
-    [limits, isFree, isTrial],
+    () => getFileSizeLimits({ limits }),
+    [limits],
   );
 
   const acceptableDropZoneFileTypes = useMemo(
-    () =>
-      isFree && !isTrial
-        ? acceptableDropZoneMimeTypesWhenIsFreePlanAndNotTrial
-        : {
-            ...allAcceptableDropZoneMimeTypes,
-            ...(htmlDocumentsEnabled ? HTML_ACCEPTED_FILE_TYPES : {}),
-          },
-    [isFree, isTrial, htmlDocumentsEnabled],
+    () => ({
+      ...allAcceptableDropZoneMimeTypes,
+      ...(htmlDocumentsEnabled ? HTML_ACCEPTED_FILE_TYPES : {}),
+    }),
+    [htmlDocumentsEnabled],
   );
 
   // Helper function to get or create the dataroom folder in "All Documents"
@@ -608,90 +591,21 @@ export default function UploadZone({
         let reason: RejectedFile["reason"] = "error";
         if (errors.find(({ code }) => code === "file-too-large")) {
           const fileSizeLimitMB = getFileSizeLimit(file.type, fileSizeLimits);
-          message = `File size too big (max. ${fileSizeLimitMB} MB). Upgrade to a paid plan to increase the limit.`;
+          message = `File size too big (max. ${fileSizeLimitMB} MB)`;
         } else if (errors.find(({ code }) => code === "file-invalid-type")) {
-          const isSupported = SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type);
-          // Supported on a paid plan but blocked on free → upgrading helps.
-          // Otherwise the type is simply unsupported and upgrading won't help.
-          const isPlanLimited = isFree && !isTrial && isSupported;
-          message = `File type not supported${isPlanLimited ? " on free plan" : ""}`;
-          reason = isPlanLimited ? "plan-limit" : "file-type";
+          message = "File type not supported";
+          reason = "file-type";
         }
         return { fileName: file.name, message, reason };
       });
       onUploadRejected(rejected);
     },
-    [onUploadRejected, fileSizeLimits, isFree, isTrial],
+    [onUploadRejected, fileSizeLimits],
   );
 
   const onDrop = useCallback(
     async (acceptedFiles: FileWithPaths[]) => {
-      if (isPaused) {
-        toast.error(
-          "Your subscription is paused. Resume your subscription to upload documents.",
-          {
-            action: {
-              label: "Go to Billing",
-              onClick: () => router.push("/settings/billing"),
-            },
-          },
-        );
-        onUploadAborted?.();
-        return;
-      }
-
-      if (hasDocumentLimit && remainingDocuments <= 0) {
-        toast.error(
-          `You've reached your plan's document limit (${limits?.usage?.documents}/${limits?.documents} documents). Upgrade your plan to upload more.`,
-          {
-            action: {
-              label: "Upgrade",
-              onClick: () => router.push("/settings/billing"),
-            },
-            duration: 8000,
-          },
-        );
-        onUploadAborted?.();
-        return;
-      }
-
       let filesToUpload = acceptedFiles;
-
-      if (fileLimitTruncatedRef.current) {
-        fileLimitTruncatedRef.current = false;
-        toast.warning(
-          `Your upload was limited to ${acceptedFiles.length} file${acceptedFiles.length === 1 ? "" : "s"} because your plan only allows ${remainingDocuments} more document${remainingDocuments === 1 ? "" : "s"} (${limits?.usage?.documents}/${limits?.documents} used).`,
-          {
-            action: {
-              label: "Upgrade",
-              onClick: () => router.push("/settings/billing"),
-            },
-            duration: 10000,
-          },
-        );
-      } else if (hasDocumentLimit && acceptedFiles.length > remainingDocuments) {
-        const skippedCount = acceptedFiles.length - remainingDocuments;
-        toast.warning(
-          `You're trying to upload ${acceptedFiles.length} files, but your plan only allows ${remainingDocuments} more document${remainingDocuments === 1 ? "" : "s"} (${limits?.usage?.documents}/${limits?.documents} used). ${skippedCount} file${skippedCount === 1 ? "" : "s"} will be skipped.`,
-          {
-            action: {
-              label: "Upgrade",
-              onClick: () => router.push("/settings/billing"),
-            },
-            duration: 10000,
-          },
-        );
-        filesToUpload = acceptedFiles.slice(0, remainingDocuments);
-        const skippedFiles = acceptedFiles.slice(remainingDocuments);
-        setRejectedFiles((prev) => [
-          ...skippedFiles.map((f) => ({
-            fileName: f.name,
-            message: "Document limit reached",
-            reason: "plan-limit" as const,
-          })),
-          ...prev,
-        ]);
-      }
 
       const validatedFiles = filesToUpload.reduce<{
         valid: FileWithPaths[];
@@ -704,11 +618,7 @@ export default function UploadZone({
           if (file.size > fileSizeLimit) {
             acc.invalid.push({
               fileName: file.name,
-              message: `File size too big (max. ${fileSizeLimitMB} MB)${
-                isFree && !isTrial
-                  ? ". Upgrade to a paid plan to increase the limit"
-                  : ""
-              }`,
+              message: `File size too big (max. ${fileSizeLimitMB} MB)`,
             });
           } else {
             acc.valid.push(file);
@@ -1107,7 +1017,6 @@ export default function UploadZone({
             dataroomId: dataroomId,
             $set: {
               teamId: teamInfo?.currentTeam?.id,
-              teamPlan: plan,
             },
           });
           const dataroomDocumentId = dataroomResponse?.ok
@@ -1196,9 +1105,6 @@ export default function UploadZone({
       onUploadAborted,
       endpointTargetType,
       fileSizeLimits,
-      isFree,
-      isTrial,
-      isPaused,
       hasDocumentLimit,
       remainingDocuments,
       dataroomId,
@@ -1572,10 +1478,7 @@ export default function UploadZone({
       // walker does so consistent files reach `onDrop`.
       const inputFiles: File[] = [];
       const relByFile = new Map<File, string>();
-      const rejectedTypePerTopLevel = new Map<
-        string,
-        { paths: string[]; supportedOnPaid: boolean }
-      >();
+      const rejectedTypePerTopLevel = new Map<string, string[]>();
       for (const raw of rawFiles) {
         const rel = (raw as any).webkitRelativePath || raw.name;
         const segments = rel.split("/").filter((s: string) => s.length > 0);
@@ -1596,19 +1499,8 @@ export default function UploadZone({
           acceptableDropZoneFileTypes,
         );
         if (!isAcceptableForPlan(candidate, acceptableDropZoneFileTypes)) {
-          const supportedOnPaid = isAcceptableForPlan(
-            candidate,
-            allAcceptableDropZoneMimeTypes,
-          );
-          const entry = rejectedTypePerTopLevel.get(top) ?? {
-            paths: [],
-            supportedOnPaid: false,
-          };
-          entry.paths.push(rel);
-          // Treat the group as "paid-only" if ANY rejected file in it would
-          // be accepted on a paid plan — surfaces the upgrade-friendly
-          // message instead of a generic "unsupported" one.
-          entry.supportedOnPaid = entry.supportedOnPaid || supportedOnPaid;
+          const entry = rejectedTypePerTopLevel.get(top) ?? [];
+          entry.push(rel);
           rejectedTypePerTopLevel.set(top, entry);
           continue;
         }
@@ -1618,19 +1510,13 @@ export default function UploadZone({
 
       if (rejectedTypePerTopLevel.size > 0) {
         const rejectedEntries: RejectedFile[] = [];
-        for (const [name, { paths, supportedOnPaid }] of rejectedTypePerTopLevel) {
-          // Only a genuine plan limit when the file type would be accepted on a
-          // paid plan and the user is actually on a free plan. Otherwise the
-          // type is simply unsupported, so upgrading wouldn't help.
-          const isPlanLimited = isFree && !isTrial && supportedOnPaid;
+        for (const [name, paths] of rejectedTypePerTopLevel) {
           rejectedEntries.push({
             fileName: `${name}: ${paths.length} file${
               paths.length !== 1 ? "s" : ""
             } not uploaded`,
-            message: isPlanLimited
-              ? "File type not supported on free plan"
-              : "File type not supported",
-            reason: isPlanLimited ? "plan-limit" : "file-type",
+            message: "File type not supported",
+            reason: "file-type",
             skippedFileNames: paths,
           });
         }
@@ -1786,8 +1672,6 @@ export default function UploadZone({
       fileSizeLimits,
       hasDocumentLimit,
       remainingDocuments,
-      isFree,
-      isTrial,
       onDrop,
       onTraversalStart,
       onUploadAborted,
@@ -1885,9 +1769,7 @@ export default function UploadZone({
                   Drop your file(s) here
                 </span>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  {isFree && !isTrial
-                    ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.tsv, *.ods, *.png, *.jpeg, *.jpg`
-                    : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.tsv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.md, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg, *.log${htmlDocumentsEnabled ? ", *.html, *.htm" : ""}`}
+                  {`Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.csv, *.tsv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.md, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg, *.log${htmlDocumentsEnabled ? ", *.html, *.htm" : ""}`}
                 </p>
               </div>
             </div>

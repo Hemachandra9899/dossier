@@ -2,16 +2,13 @@ import Link from "next/link";
 
 import { Dispatch, SetStateAction, useMemo, useState } from "react";
 
-import { PlanEnum } from "@/ee/stripe/constants";
 import { CircleHelpIcon, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { usePlan } from "@/lib/swr/use-billing";
 import { useTags } from "@/lib/swr/use-tags";
 import { TagColorProps } from "@/lib/types";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -68,12 +65,9 @@ export default function DataroomTagSection({
   const [selectedValues, setSelectedValues] = useState<string[]>(
     initialTags?.map((t) => t.tag.id) || [],
   );
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { isFree } = usePlan();
 
   const {
-    tagCount,
     tags: availableTags,
     loading: loadingTags,
   } = useTags({
@@ -135,12 +129,6 @@ export default function DataroomTagSection({
   };
 
   const createTag = async (tag: string) => {
-    if (isFree && tagCount && tagCount >= 5) {
-      setShowUpgradeModal(true);
-      toast.error("You have reached the maximum number of tags.");
-      return false;
-    }
-
     const res = await fetch(`/api/teams/${teamId}/tags`, {
       method: "POST",
       headers: {
@@ -171,10 +159,9 @@ export default function DataroomTagSection({
   };
 
   return (
-    <>
-      <Card className="bg-transparent">
-        <CardHeader>
-          <CardTitle>Tags</CardTitle>
+    <Card className="bg-transparent">
+      <CardHeader>
+        <CardTitle>Tags</CardTitle>
           <CardDescription>
             Organize your dataroom by adding tags for better categorization and
             filtering
@@ -219,20 +206,11 @@ export default function DataroomTagSection({
             </Button>
           </div>
         </CardContent>
-        <CardFooter className="flex items-center justify-between rounded-b-lg border-t bg-muted px-6 py-3">
-          <p className="text-sm text-muted-foreground transition-colors">
-            Tags help you organize and filter datarooms across your workspace.
-          </p>
-        </CardFooter>
-      </Card>
-      {showUpgradeModal && (
-        <UpgradePlanModal
-          clickedPlan={PlanEnum.Pro}
-          trigger="create_tag"
-          open={showUpgradeModal}
-          setOpen={setShowUpgradeModal}
-        />
-      )}
-    </>
+      <CardFooter className="flex items-center justify-between rounded-b-lg border-t bg-muted px-6 py-3">
+        <p className="text-sm text-muted-foreground transition-colors">
+          Tags help you organize and filter datarooms across your workspace.
+        </p>
+      </CardFooter>
+    </Card>
   );
 }

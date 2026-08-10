@@ -5,7 +5,6 @@ import { authOptions } from "@/lib/auth/auth-options";
 import { getServerSession } from "next-auth/next";
 
 import { getFeatureFlags } from "@/lib/featureFlags";
-import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";
 
 export default async function handle(
@@ -23,27 +22,11 @@ export default async function handle(
     const userId = (session.user as CustomUser).id;
 
     try {
-      // TODO: move this to a cache layer
-      const team = await prisma.team.findUnique({
-        where: {
-          id: teamId,
-          users: {
-            some: {
-              userId: userId,
-            },
-          },
-        },
-        select: {
-          plan: true,
-        },
-      });
-
       const limits = await getLimits({ teamId, userId });
-      const isTrial = team?.plan.includes("drtrial");
       const featureFlags = await getFeatureFlags({ teamId });
       const conversationsInDataroom =
-        featureFlags.conversations || limits.conversationsInDataroom || isTrial;
-      const dataroomUpload = featureFlags.dataroomUpload || isTrial;
+        featureFlags.conversations || limits.conversationsInDataroom;
+      const dataroomUpload = featureFlags.dataroomUpload || limits.dataroomUpload;
 
       return res.status(200).json({
         ...limits,

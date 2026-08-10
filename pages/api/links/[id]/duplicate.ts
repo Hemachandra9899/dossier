@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
+import { isTeamPausedById } from "@/modules/access/is-team-paused";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { Prisma } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";

@@ -2,10 +2,8 @@ import { useCallback, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { useFreezeProgress } from "@/ee/features/dataroom-freeze/lib/swr/use-freeze-progress";
-import { PlanEnum } from "@/ee/stripe/constants";
 import {
   AlertTriangleIcon,
-  CrownIcon,
   DownloadIcon,
   Loader2Icon,
   MailIcon,
@@ -15,9 +13,6 @@ import {
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { usePlan } from "@/lib/swr/use-billing";
-
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -62,7 +57,6 @@ export default function FreezeSettings({
 }: FreezeSettingsProps) {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
-  const { isDataroomsPlus } = usePlan();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [step, setStep] = useState<DialogStep>("confirm-text");
@@ -380,26 +374,14 @@ export default function FreezeSettings({
             Freezing creates a tamper-proof archive with SHA-256 integrity
             verification.
           </p>
-          {isDataroomsPlus ? (
-            <Button
-              variant="destructive"
-              className="gap-2"
-              onClick={() => setDialogOpen(true)}
-            >
-              <SnowflakeIcon className="h-4 w-4" />
-              Freeze Data Room
-            </Button>
-          ) : (
-            <UpgradePlanModal
-              clickedPlan={PlanEnum.DataRoomsPlus}
-              trigger="datarooms_freeze_button"
-            >
-              <Button className="gap-2">
-                <CrownIcon className="h-4 w-4" />
-                Upgrade to freeze
-              </Button>
-            </UpgradePlanModal>
-          )}
+          <Button
+            variant="destructive"
+            className="gap-2"
+            onClick={() => setDialogOpen(true)}
+          >
+            <SnowflakeIcon className="h-4 w-4" />
+            Freeze Data Room
+          </Button>
         </CardFooter>
       </Card>
 

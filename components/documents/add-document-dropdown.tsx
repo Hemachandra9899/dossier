@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
 
-import { PlanEnum } from "@/ee/stripe/constants";
 import {
   ChevronDownIcon,
   FileUpIcon,
@@ -14,11 +13,8 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 
 import { useUploadProgress } from "@/context/upload-progress-context";
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
 import { cn } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { AddDocumentModal } from "@/components/documents/add-document-modal";
 import { AddFolderModal } from "@/components/folders/add-folder-modal";
 import { ImportFoldersModal } from "@/components/folders/import-folders-modal";
@@ -57,8 +53,6 @@ export function AddDocumentDropdown({
   className,
   variant = "unified",
 }: AddDocumentDropdownProps) {
-  const { isFree, isTrial } = usePlan();
-  const { canAddDocuments } = useLimits();
   const { uploadTriggers } = useUploadProgress();
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -69,55 +63,16 @@ export function AddDocumentDropdown({
     defaultTab: "document",
     defaultUploadMode: "file",
   });
-  const [upgradeModal, setUpgradeModal] = useState<{
-    open: boolean;
-    trigger: string;
-    highlight: string[];
-  }>({ open: false, trigger: "", highlight: [] });
-
-  const requiresUpgradeForFolders = isFree && !isTrial;
-  const requiresUpgradeForWebLink = isFree && !isTrial;
-
-  const enforceDocumentLimit = useCallback((): boolean => {
-    // Paused subscriptions still surface a toast via AddDocumentModal /
-    // UploadZone, so we only handle the plan-limit gate here.
-    if (!canAddDocuments) {
-      setUpgradeModal({
-        open: true,
-        trigger: "limit_upload_documents",
-        highlight: ["documents"],
-      });
-      return false;
-    }
-    return true;
-  }, [canAddDocuments]);
 
   const handleCreateFolder = useCallback(() => {
-    if (requiresUpgradeForFolders) {
-      setUpgradeModal({
-        open: true,
-        trigger: "add_folder_button",
-        highlight: ["folder", "folder-sharing", "datarooms"],
-      });
-      return;
-    }
     setFolderOpen(true);
-  }, [requiresUpgradeForFolders]);
+  }, []);
 
   const handleImportFolders = useCallback(() => {
-    if (requiresUpgradeForFolders) {
-      setUpgradeModal({
-        open: true,
-        trigger: "import_folders_button",
-        highlight: ["folder", "folder-sharing", "datarooms"],
-      });
-      return;
-    }
     setImportFoldersOpen(true);
-  }, [requiresUpgradeForFolders]);
+  }, []);
 
   const handleUploadFiles = useCallback(() => {
-    if (!enforceDocumentLimit()) return;
     if (uploadTriggers) {
       uploadTriggers.openFilesPicker();
       return;
@@ -130,10 +85,9 @@ export function AddDocumentDropdown({
       defaultTab: "document",
       defaultUploadMode: "file",
     });
-  }, [enforceDocumentLimit, uploadTriggers]);
+  }, [uploadTriggers]);
 
   const handleUploadFolder = useCallback(() => {
-    if (!enforceDocumentLimit()) return;
     if (uploadTriggers) {
       uploadTriggers.openFolderPicker();
       return;
@@ -142,33 +96,23 @@ export function AddDocumentDropdown({
     // UploadZone; no modal fallback exists. Tell the user how to recover
     // (typically: clear the active search) rather than failing silently.
     toast.info("Clear the search to upload a folder here.");
-  }, [enforceDocumentLimit, uploadTriggers]);
+  }, [uploadTriggers]);
 
   const handleAddNotion = useCallback(() => {
-    if (!enforceDocumentLimit()) return;
     setDocModal({
       open: true,
       defaultTab: "notion",
       defaultUploadMode: "file",
     });
-  }, [enforceDocumentLimit]);
+  }, []);
 
   const handleAddWebLink = useCallback(() => {
-    if (requiresUpgradeForWebLink) {
-      setUpgradeModal({
-        open: true,
-        trigger: "add_web_link_document",
-        highlight: ["link"],
-      });
-      return;
-    }
-    if (!enforceDocumentLimit()) return;
     setDocModal({
       open: true,
       defaultTab: "document",
       defaultUploadMode: "link",
     });
-  }, [enforceDocumentLimit, requiresUpgradeForWebLink]);
+  }, []);
 
   // Google Drive-style "N then …" sequences: press N, then F / U / I within
   // the library's default sequence timeout. Plain letters (no ctrl/cmd) keep
@@ -407,19 +351,6 @@ export function AddDocumentDropdown({
         defaultUploadMode={docModal.defaultUploadMode}
         isDataroom={isDataroom}
         dataroomId={dataroomId}
-      />
-
-      <UpgradePlanModal
-        clickedPlan={PlanEnum.Pro}
-        trigger={upgradeModal.trigger}
-        highlightItem={upgradeModal.highlight}
-        open={upgradeModal.open}
-        setOpen={(open) =>
-          setUpgradeModal((prev) => ({
-            ...prev,
-            open: typeof open === "function" ? open(prev.open) : open,
-          }))
-        }
       />
     </>
   );

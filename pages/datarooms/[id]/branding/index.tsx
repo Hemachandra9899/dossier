@@ -22,7 +22,6 @@ import {
   asDataroomViewerHeaderStyle,
   inferDataroomViewerLayoutPreset,
 } from "@/ee/features/branding/lib/dataroom-viewer-layout";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { Check, CircleHelpIcon, CrownIcon, UploadIcon } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import sanitizeHtml from "sanitize-html";
@@ -40,7 +39,6 @@ import { useBrand, useDataroomBrand } from "@/lib/swr/use-brand";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import { cn, convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,7 +56,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { BadgeTooltip } from "@/components/ui/tooltip";
-import { UpgradeButton } from "@/components/ui/upgrade-button";
+
 import { DataroomBannerMedia } from "@/components/view/dataroom/dataroom-banner-media";
 
 const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
@@ -420,7 +418,7 @@ export default function DataroomBrandPage() {
         dataroom: dataroomBrand,
         team: globalBrand,
       });
-      setLogo(logoFields.logo);
+      setLogo(logoFields.logo ?? null);
       setHideLogoOverride(dataroomBrand.hideLogo ?? null);
       const bannerValue = dataroomBrand.banner || globalBrand?.banner || null;
       setBanner(bannerValue);
@@ -499,7 +497,7 @@ export default function DataroomBrandPage() {
       setApplyAccentColorToDataroomView(
         (globalBrand as any)?.applyAccentColorToDataroomView ?? false,
       );
-      setLogo(logoFields.logo);
+      setLogo(logoFields.logo ?? null);
       setHideLogoOverride(null);
       const bannerValue = globalBrand.banner || null;
       setBanner(bannerValue);
@@ -787,7 +785,7 @@ export default function DataroomBrandPage() {
         team: globalBrand,
       });
 
-      setLogo(inheritedLogoFields.logo);
+      setLogo(inheritedLogoFields.logo ?? null);
       setHideLogoOverride(null);
       setBanner(inheritedBanner);
       setOriginalBanner(inheritedBanner);
@@ -1652,7 +1650,7 @@ export default function DataroomBrandPage() {
                         <CardContent className="pt-6">
                           <BrandingLinkPreviewForm
                             enabled={linkPreviewEnabled}
-                            onEnabledChange={(v) => {
+                            onEnabledChange={(v: boolean) => {
                               setLinkPreviewEnabled(v);
                               if (v) setPreviewTab("shared-link-preview");
                             }}
@@ -1805,35 +1803,14 @@ export default function DataroomBrandPage() {
 
             {/* Action Buttons - Always Visible */}
             <div className="flex items-center gap-4 border-t bg-background pt-4 lg:sticky lg:bottom-0 lg:z-10 lg:shrink-0 lg:pb-2">
-              {blocksSave ? (
-                <UpgradeButton
-                  text={languageBlocksSave ? "save changes" : "Save changes"}
-                  clickedPlan={
-                    languageBlocksSave
-                      ? PlanEnum.DataRoomsPlus
-                      : PlanEnum.DataRooms
-                  }
-                  trigger={
-                    languageBlocksSave
-                      ? "dataroom_branding_language_save"
-                      : "dataroom_branding_layouts_save"
-                  }
-                  highlightItem={[
-                    ...(layoutBlocksSave ? ["dataroom-viewer-layouts"] : []),
-                    ...(languageBlocksSave ? ["dataroom-localisation"] : []),
-                  ]}
-                  hideItems={["datarooms"]}
-                />
-              ) : (
-                <Button
-                  onClick={saveBranding}
-                  loading={isLoading}
-                  disabled={hasBusinessMessagingAccess && !!welcomeMessageError}
-                  className="bg-black text-white hover:bg-gray-800"
-                >
-                  Save changes
-                </Button>
-              )}
+              <Button
+                onClick={saveBranding}
+                loading={isLoading}
+                disabled={hasBusinessMessagingAccess && !!welcomeMessageError}
+                className="bg-black text-white hover:bg-gray-800"
+              >
+                Save changes
+              </Button>
               <Button
                 variant="ghost"
                 onClick={handleDelete}
@@ -1842,30 +1819,6 @@ export default function DataroomBrandPage() {
                 Reset branding
               </Button>
             </div>
-            <UpgradePlanModal
-              clickedPlan={
-                languageBlocksSave ? PlanEnum.DataRoomsPlus : PlanEnum.DataRooms
-              }
-              trigger={
-                languageBlocksSave
-                  ? "dataroom_branding_language_save"
-                  : "dataroom_branding_layouts_save"
-              }
-              highlightItem={[
-                ...(layoutBlocksSave ? ["dataroom-viewer-layouts"] : []),
-                ...(languageBlocksSave ? ["dataroom-localisation"] : []),
-              ]}
-              hideItems={["datarooms"]}
-              open={upgradeLayoutsModalOpen}
-              setOpen={setUpgradeLayoutsModalOpen}
-            />
-            <UpgradePlanModal
-              clickedPlan={PlanEnum.Business}
-              trigger="dataroom_branding_welcome_cta"
-              highlightItem={["custom-welcome-message", "custom-cta"]}
-              open={upgradeMessagingModalOpen}
-              setOpen={setUpgradeMessagingModalOpen}
-            />
           </div>
 
           {/* Separator Line */}

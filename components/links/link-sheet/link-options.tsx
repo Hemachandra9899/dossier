@@ -1,17 +1,12 @@
 import { useState } from "react";
 
-import ConfidentialViewSection from "@/ee/features/permissions/components/confidential-view/confidential-view-section";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkAudienceType, LinkType } from "@prisma/client";
 import { LinkPreset } from "@prisma/client";
 import { ChevronDown } from "lucide-react";
 
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
 import { cn } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
 import AllowBlockListSection from "@/components/links/link-sheet/allow-block-list-section";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
@@ -120,15 +115,6 @@ export const LinkOptions = ({
    */
   dataroomStyle?: boolean;
 }) => {
-  const {
-    isStarter,
-    isPro,
-    isBusiness,
-    isDatarooms,
-    isDataroomsPlus,
-    isTrial,
-  } = usePlan();
-  const { limits } = useLimits();
   const { isFeatureEnabled } = useFeatureFlags();
   const isAIFeatureEnabled = isFeatureEnabled("ai");
   // The "Advanced controls" section only renders content for data room links
@@ -140,30 +126,10 @@ export const LinkOptions = ({
   // via the `dataroomStyle` prop (e.g. the create/edit link modal).
   const useDataroomStyleLayout =
     linkType === LinkType.DATAROOM_LINK || dataroomStyle;
-  const allowAdvancedLinkControls = limits
-    ? limits?.advancedLinkControlsOnPro
-    : false;
-  const allowWatermarkOnBusiness = limits?.watermarkOnBusiness ?? false;
-  const allowAgreementOnBusiness = limits?.agreementOnBusiness ?? false;
 
-  const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
-  const [trigger, setTrigger] = useState<string>("");
-  const [upgradePlan, setUpgradePlan] = useState<PlanEnum>(PlanEnum.Business);
-  const [highlightItem, setHighlightItem] = useState<string[]>([]);
-
-  const handleUpgradeStateChange = ({
-    state,
-    trigger,
-    plan,
-    highlightItem,
-  }: LinkUpgradeOptions) => {
-    setOpenUpgradeModal(state);
-    setTrigger(trigger);
-    if (plan) {
-      setUpgradePlan(plan as PlanEnum);
-    }
-    setHighlightItem(highlightItem || []);
-  };
+  // `handleUpgradeStateChange` is passed to feature sections as a required
+  // prop. With billing removed, every feature is unlocked, so it is a no-op.
+  const handleUpgradeStateChange = () => {};
 
   const securityControls = (
     <div>
@@ -176,33 +142,18 @@ export const LinkOptions = ({
       )}
       <ScreenshotProtectionSection
         {...{ data, setData }}
-        isAllowed={
-          isTrial ||
-          (isPro && allowAdvancedLinkControls) ||
-          isBusiness ||
-          isDatarooms ||
-          isDataroomsPlus
-        }
-        handleUpgradeStateChange={handleUpgradeStateChange}
-      />
-      <ConfidentialViewSection
-        {...{ data, setData }}
-        isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
+        isAllowed={true}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <WatermarkSection
         {...{ data, setData }}
-        isAllowed={
-          isTrial || isDatarooms || isDataroomsPlus || allowWatermarkOnBusiness
-        }
+        isAllowed={true}
         handleUpgradeStateChange={handleUpgradeStateChange}
         presets={currentPreset}
       />
       <AgreementSection
         {...{ data, setData }}
-        isAllowed={
-          isTrial || isDatarooms || isDataroomsPlus || allowAgreementOnBusiness
-        }
+        isAllowed={true}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
     </div>
@@ -223,13 +174,7 @@ export const LinkOptions = ({
         // clear and save vertical space.
         <EmailAccessSection
           {...{ data, setData }}
-          isAllowed={
-            isTrial ||
-            (isPro && allowAdvancedLinkControls) ||
-            isBusiness ||
-            isDatarooms ||
-            isDataroomsPlus
-          }
+          isAllowed={true}
           handleUpgradeStateChange={handleUpgradeStateChange}
         />
       ) : (
@@ -237,13 +182,7 @@ export const LinkOptions = ({
           <EmailProtectionSection {...{ data, setData }} />
           <EmailAuthenticationSection
             {...{ data, setData }}
-            isAllowed={
-              isTrial ||
-              (isPro && allowAdvancedLinkControls) ||
-              isBusiness ||
-              isDatarooms ||
-              isDataroomsPlus
-            }
+            isAllowed={true}
             handleUpgradeStateChange={handleUpgradeStateChange}
           />
         </>
@@ -261,13 +200,7 @@ export const LinkOptions = ({
           <AllowBlockListSection
             key={`allow-block-${data.id ?? "new"}`}
             {...{ data, setData }}
-            isAllowed={
-              isTrial ||
-              (isPro && allowAdvancedLinkControls) ||
-              isBusiness ||
-              isDatarooms ||
-              isDataroomsPlus
-            }
+            isAllowed={true}
             handleUpgradeStateChange={handleUpgradeStateChange}
             presets={currentPreset}
             setValidationError={setValidationError}
@@ -277,13 +210,7 @@ export const LinkOptions = ({
             <AllowListSection
               key={`allow-list-${data.id ?? "new"}`}
               {...{ data, setData }}
-              isAllowed={
-                isTrial ||
-                (isPro && allowAdvancedLinkControls) ||
-                isBusiness ||
-                isDatarooms ||
-                isDataroomsPlus
-              }
+              isAllowed={true}
               handleUpgradeStateChange={handleUpgradeStateChange}
               presets={currentPreset}
               setValidationError={setValidationError}
@@ -291,13 +218,7 @@ export const LinkOptions = ({
             <DenyListSection
               key={`deny-list-${data.id ?? "new"}`}
               {...{ data, setData }}
-              isAllowed={
-                isTrial ||
-                (isPro && allowAdvancedLinkControls) ||
-                isBusiness ||
-                isDatarooms ||
-                isDataroomsPlus
-              }
+              isAllowed={true}
               handleUpgradeStateChange={handleUpgradeStateChange}
               presets={currentPreset}
               setValidationError={setValidationError}
@@ -322,45 +243,26 @@ export const LinkOptions = ({
         <div>
           <CustomFieldsSection
             {...{ data, setData }}
-            isAllowed={
-              isTrial ||
-              isBusiness ||
-              isDatarooms ||
-              isDataroomsPlus ||
-              (limits?.linkCustomFields ?? 0) > 0
-            }
+            isAllowed={true}
             handleUpgradeStateChange={handleUpgradeStateChange}
             presets={currentPreset}
           />
           <WelcomeMessageSection
             data={data}
             setData={setData}
-            isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
+            isAllowed={true}
             handleUpgradeStateChange={handleUpgradeStateChange}
           />
           <OGSection
             {...{ data, setData }}
-            isAllowed={
-              isTrial ||
-              (isPro && allowAdvancedLinkControls) ||
-              isBusiness ||
-              isDatarooms ||
-              isDataroomsPlus
-            }
+            isAllowed={true}
             handleUpgradeStateChange={handleUpgradeStateChange}
             editLink={editLink ?? false}
             presets={currentPreset}
           />
           <ProBannerSection
             {...{ data, setData }}
-            isAllowed={
-              isTrial ||
-              isPro ||
-              isBusiness ||
-              isDatarooms ||
-              isDataroomsPlus ||
-              isStarter
-            }
+            isAllowed={true}
             handleUpgradeStateChange={handleUpgradeStateChange}
           />
         </div>
@@ -376,9 +278,7 @@ export const LinkOptions = ({
             {/* AI Agents - Available for both document and dataroom links */}
             <AIAgentsSection
               {...{ data, setData }}
-              isAllowed={
-                isTrial || isBusiness || isDatarooms || isDataroomsPlus
-              }
+              isAllowed={true}
               handleUpgradeStateChange={handleUpgradeStateChange}
             />
 
@@ -388,11 +288,7 @@ export const LinkOptions = ({
                 {targetId ? (
                   <UploadSection
                     {...{ data, setData }}
-                    isAllowed={
-                      isTrial ||
-                      isDataroomsPlus ||
-                      (isDatarooms && limits?.dataroomUpload === true)
-                    }
+                    isAllowed={true}
                     handleUpgradeStateChange={handleUpgradeStateChange}
                     targetId={targetId}
                   />
@@ -400,18 +296,13 @@ export const LinkOptions = ({
 
                 <IndexFileSection
                   {...{ data, setData }}
-                  isAllowed={isTrial || isDataroomsPlus}
+                  isAllowed={true}
                   handleUpgradeStateChange={handleUpgradeStateChange}
                 />
 
                 <ConversationSection
                   {...{ data, setData }}
-                  isAllowed={
-                    isTrial ||
-                    isDataroomsPlus ||
-                    ((isBusiness || isDatarooms) &&
-                      !!limits?.conversationsInDataroom)
-                  }
+                  isAllowed={true}
                   handleUpgradeStateChange={handleUpgradeStateChange}
                 />
               </>
@@ -419,14 +310,6 @@ export const LinkOptions = ({
           </div>
         </CollapsibleSection>
       )}
-
-      <UpgradePlanModal
-        clickedPlan={upgradePlan}
-        open={openUpgradeModal}
-        setOpen={setOpenUpgradeModal}
-        trigger={trigger}
-        highlightItem={highlightItem}
-      />
     </div>
   );
 };

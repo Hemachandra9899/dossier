@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
+import { isTeamPausedById } from "@/modules/access/is-team-paused";
 import type { convertFilesToPdfTask } from "@/ee/features/conversions/lib/trigger/convert-files";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { tasks } from "@trigger.dev/sdk";

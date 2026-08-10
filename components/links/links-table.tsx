@@ -6,7 +6,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTeam } from "@/context/team-context";
 import { InviteViewersModal } from "@/ee/features/dataroom-invitations/components/invite-viewers-modal";
 import { invitationEmailSchema } from "@/ee/features/dataroom-invitations/lib/schema/dataroom-invitations";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { DocumentVersion, LinkAudienceType } from "@prisma/client";
 import { isWithinInterval, subMinutes } from "date-fns";
 import {
@@ -18,7 +17,6 @@ import {
   CopyCheckIcon,
   CopyIcon,
   CopyPlusIcon,
-  CrownIcon,
   EyeIcon,
   EyeOffIcon,
   FileSlidersIcon,
@@ -36,15 +34,11 @@ import { useQueryState } from "nuqs";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
 import { buildLinkFormData } from "@/lib/links/build-link-form-data";
 import { LinkWithViews, WatermarkConfig } from "@/lib/types";
 import { cn, copyToClipboard, nFormatter, timeAgo } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/utils/use-media-query";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -131,7 +125,6 @@ const getDisplayUrl = (link: LinkWithViews) => {
 // Link URL cell component - displays URL with click-to-copy hover overlay
 const LinkUrlCell = ({
   link,
-  isFree,
   onCopy,
   isProcessing,
   primaryVersion,
@@ -139,7 +132,6 @@ const LinkUrlCell = ({
   isPopoverOpen,
 }: {
   link: LinkWithViews;
-  isFree: boolean;
   onCopy: (url: string) => void;
   isProcessing: boolean;
   primaryVersion?: DocumentVersion;
@@ -153,9 +145,7 @@ const LinkUrlCell = ({
     <div
       className={cn(
         "group/url relative min-w-0 flex-1 cursor-pointer overflow-hidden rounded-md px-3 py-1.5 text-sm transition-all group-hover/row:ring-1 group-hover/row:ring-gray-400 group-hover/row:dark:ring-gray-100",
-        link.domainId && isFree
-          ? "bg-destructive/10 text-destructive hover:bg-red-700 hover:dark:bg-red-200"
-          : "bg-secondary text-secondary-foreground hover:bg-emerald-700 hover:dark:bg-emerald-200",
+        "bg-secondary text-secondary-foreground hover:bg-emerald-700 hover:dark:bg-emerald-200",
         isPopoverOpen && "ring-1 ring-gray-400 dark:ring-gray-100",
       )}
       onClick={() => onCopy(fullUrl)}
@@ -305,7 +295,6 @@ export default function LinksTable({
 
   const now = Date.now();
   const router = useRouter();
-  const { isFree, isTrial, isDatarooms, isDataroomsPlus } = usePlan();
   const { currentTeamId } = useTeam();
   const { id: targetId, groupId } = router.query as {
     id: string;
@@ -313,10 +302,7 @@ export default function LinksTable({
   };
 
   const { isMobile } = useMediaQuery();
-  const { isFeatureEnabled } = useFeatureFlags();
-  const canInviteViewers =
-    isDataroomsPlus ||
-    ((isDatarooms || isTrial) && isFeatureEnabled("dataroomInvitations"));
+  const canInviteViewers = true;
 
   let processedLinks = useMemo(() => {
     if (!links?.length) return [];
@@ -354,8 +340,6 @@ export default function LinksTable({
     });
   }, [links, processedLinks, selectedTagNames]);
 
-  const { canAddLinks } = useLimits();
-
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingLinks, setLoadingLinks] = useState<Set<string>>(new Set());
   const [isLinkSheetVisible, setIsLinkSheetVisible] = useState<boolean>(false);
@@ -391,7 +375,6 @@ export default function LinksTable({
     targetType,
   });
   const [isInviteModalOpen, setIsInviteModalOpen] = useState<boolean>(false);
-  const [showInviteUpgrade, setShowInviteUpgrade] = useState<boolean>(false);
   const [inviteLink, setInviteLink] = useState<LinkWithViews | null>(null);
   const [inviteDefaultEmails, setInviteDefaultEmails] = useState<string[]>([]);
 
@@ -427,11 +410,6 @@ export default function LinksTable({
   };
 
   const handlePreviewLink = async (link: LinkWithViews) => {
-    if (link.domainId && isFree) {
-      toast.error("You need to upgrade to preview this link");
-      return;
-    }
-
     if (isDocumentProcessing(primaryVersion)) {
       toast.error(
         "Document is still processing. Please wait a moment and try again.",
@@ -533,43 +511,32 @@ export default function LinksTable({
   };
 
   const AddLinkButton = () => {
-    if (!canAddLinks) {
-      return (
-        <UpgradePlanModal
-          clickedPlan={isTrial ? PlanEnum.Business : PlanEnum.Pro}
-          trigger={"limit_add_link"}
-        >
-          <Button>Upgrade to Create Link</Button>
-        </UpgradePlanModal>
-      );
-    } else {
-      return (
-        <div className="flex items-center gap-2">
-          <Button onClick={() => setIsLinkSheetVisible(true)}>
-            Create link to share
-          </Button>
-          {targetId ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  aria-label="More link actions"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={openBulkImport}>
-                  <FileSpreadsheetIcon className="mr-2 h-4 w-4" />
-                  Bulk import from CSV
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : null}
-        </div>
-      );
-    }
+    return (
+      <div className="flex items-center gap-2">
+        <Button onClick={() => setIsLinkSheetVisible(true)}>
+          Create link to share
+        </Button>
+        {targetId ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="More link actions"
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={openBulkImport}>
+                <FileSpreadsheetIcon className="mr-2 h-4 w-4" />
+                Bulk import from CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
+      </div>
+    );
   };
 
   const handleArchiveLink = async (
@@ -771,11 +738,6 @@ export default function LinksTable({
                               </span>
                             </TimestampTooltip>
                           ))}
-                        {link.domainId && isFree ? (
-                          <span className="ml-2 rounded-full bg-destructive px-2.5 py-0.5 text-xs text-foreground ring-1 ring-destructive">
-                            Inactive
-                          </span>
-                        ) : null}
                       </div>
                     </TableCell>
                     {/* Link URL Cell */}
@@ -783,7 +745,6 @@ export default function LinksTable({
                       <div className="flex flex-row gap-x-1">
                         <LinkUrlCell
                           link={link}
-                          isFree={isFree}
                           onCopy={handleCopyToClipboard}
                           isProcessing={isDocumentProcessing(primaryVersion)}
                           primaryVersion={primaryVersion}
@@ -1002,26 +963,13 @@ export default function LinksTable({
                           {/* Dataroom-only: Send Invitations */}
                           {isDataroom && (
                             <DropdownMenuItem
-                              onClick={() =>
-                                canInviteViewers
-                                  ? handleSendInvitations(link)
-                                  : setShowInviteUpgrade(true)
-                              }
+                              onClick={() => handleSendInvitations(link)}
                             >
-                              {canInviteViewers ? (
-                                <SendIcon className="mr-2 h-4 w-4" />
-                              ) : (
-                                <CrownIcon className="mr-2 h-4 w-4" />
-                              )}
-                              {canInviteViewers
-                                ? "Send Invitations"
-                                : "Upgrade to send via email"}
+                              <SendIcon className="mr-2 h-4 w-4" />
+                              Send Invitations
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem
-                            disabled={!canAddLinks}
-                            onClick={() => handleDuplicateLink(link)}
-                          >
+                          <DropdownMenuItem onClick={() => handleDuplicateLink(link)}>
                             <CopyPlusIcon className="mr-2 h-4 w-4" />
                             Duplicate Link
                           </DropdownMenuItem>
@@ -1050,21 +998,17 @@ export default function LinksTable({
                             <Code2Icon className="mr-2 h-4 w-4" />
                             Get Embed Code
                           </DropdownMenuItem>
-                          {!isFree && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setLinkToDelete(link);
-                                  setShowDeleteLinkModal(true);
-                                }}
-                                className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
-                              >
-                                <Trash2Icon className="mr-2 h-4 w-4" />
-                                Delete Link
-                              </DropdownMenuItem>
-                            </>
-                          )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setLinkToDelete(link);
+                              setShowDeleteLinkModal(true);
+                            }}
+                            className="text-destructive focus:bg-destructive focus:text-destructive-foreground"
+                          >
+                            <Trash2Icon className="mr-2 h-4 w-4" />
+                            Delete Link
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -1192,13 +1136,6 @@ export default function LinksTable({
                 }}
               />
             ) : null}
-            <UpgradePlanModal
-              clickedPlan={PlanEnum.DataRoomsPlus}
-              trigger="links_table_invite_upgrade"
-              highlightItem={["email-invite"]}
-              open={showInviteUpgrade}
-              setOpen={setShowInviteUpgrade}
-            />
           </>
         ) : (
           <LinkSheet

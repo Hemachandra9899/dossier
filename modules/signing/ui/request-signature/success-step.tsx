@@ -5,25 +5,31 @@ import { CheckCircle2Icon, CopyIcon, LinkIcon } from "lucide-react";
 import type { SignatureRequestStatus } from "@/modules/signing/domain/signature-request";
 
 import { Button } from "@/components/ui/button";
+import LoadingSpinner from "@/components/ui/loading-spinner";
 import { useCopyToClipboard } from "@/lib/utils/use-copy-to-clipboard";
 
-import { buildRecipientSigningUrl } from "../signing-api";
-import { SignatureStatusBadge } from "../signature-status-badge";export function SuccessStep({
+import { SignatureStatusBadge } from "../signature-status-badge";
+import { useRecipientSigningUrl } from "../use-recipient-signing-url";
+
+export function SuccessStep({
+  teamId,
   requestId,
   firstRecipientId,
   status,
   onClose,
 }: {
+  teamId: string;
   requestId: string;
   firstRecipientId: string | null;
   status: SignatureRequestStatus;
   onClose: () => void;
 }) {
   const { isCopied, copyToClipboard } = useCopyToClipboard({});
-
-  const signingUrl = firstRecipientId
-    ? buildRecipientSigningUrl({ requestId, recipientId: firstRecipientId })
-    : null;
+  const { url: signingUrl, isLoading, error } = useRecipientSigningUrl({
+    teamId,
+    requestId,
+    recipientId: firstRecipientId,
+  });
 
   return (
     <div className="space-y-4">
@@ -55,6 +61,17 @@ import { SignatureStatusBadge } from "../signature-status-badge";export function
             )}
             {isCopied ? "Copied" : "Copy"}
           </Button>
+        </div>
+      ) : firstRecipientId ? (
+        <div className="flex items-center justify-center gap-2 rounded-lg border p-2 text-sm text-muted-foreground">
+          {isLoading ? (
+            <>
+              <LoadingSpinner className="h-4 w-4" />
+              Preparing signing link…
+            </>
+          ) : (
+            error ?? "Could not prepare the signing link."
+          )}
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">

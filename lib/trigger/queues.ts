@@ -1,7 +1,5 @@
 import { queue } from "@trigger.dev/sdk";
 
-import type { BasePlan } from "../swr/use-billing";
-
 // Task-specific queues
 export const convertFilesToPdfQueue = queue({
   name: "convert-files-to-pdf",
@@ -121,6 +119,6 @@ export const conversionDataroomsUnlimitedQueue = queue({
  * The queue must be pre-defined above (v4 requirement).
  */
 export const conversionQueueName = (plan: string): string => {
-  const planName = plan.split("+")[0] as BasePlan;
+  const planName = plan.split("+")[0];
   return `conversion-${planName}`;
 };

@@ -4,12 +4,7 @@ import { ArrowLeft as ArrowLeftIcon } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 
 import { Button } from "@/components/ui/button";
-import Dataroom from "@/components/welcome/dataroom";
-import DataroomTrial from "@/components/welcome/dataroom-trial";
-import Intro from "@/components/welcome/intro";
-import Next from "@/components/welcome/next";
 import DeckGeneratorUpload from "@/components/welcome/special-upload";
-import Upload from "@/components/welcome/upload";
 
 export default function DocumentNew() {
   const router = useRouter();

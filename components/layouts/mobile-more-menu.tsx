@@ -4,7 +4,6 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
 import {
   BrushIcon,
   ChevronDownIcon,
@@ -15,14 +14,9 @@ import {
 
 import { useIsAdmin } from "@/lib/hooks/use-is-admin";
 import { useSelfMembership } from "@/lib/hooks/use-self-membership";
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
 import { useSlackIntegration } from "@/lib/swr/use-slack-integration";
 import { Team } from "@/lib/types";
-import { cn, nFormatter } from "@/lib/utils";
-
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
-import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 import { SlackIcon } from "../shared/icons/slack-icon";
 import { MobileTeamSwitcher } from "./mobile-team-switcher";
@@ -35,8 +29,6 @@ interface MobileMoreMenuProps {
 export function MobileMoreMenu({ open, onClose }: MobileMoreMenuProps) {
   const router = useRouter();
   const { currentTeam, teams, setCurrentTeam } = useTeam() || {};
-  const { isFree, isTrial } = usePlan();
-  const { limits } = useLimits();
   const { isAdmin } = useIsAdmin();
   // Scoped members can't reach team-wide areas (visitors, branding, settings).
   const { isDataroomMember } = useSelfMembership();
@@ -67,9 +59,6 @@ export function MobileMoreMenu({ open, onClose }: MobileMoreMenuProps) {
 
   if (!open) return null;
 
-  const linksLimit = limits?.links;
-  const documentsLimit = limits?.documents;
-
   const settingsSubItems = [
     { label: "General", href: "/settings/general" },
     { label: "Team", href: "/settings/people" },
@@ -78,7 +67,6 @@ export function MobileMoreMenu({ open, onClose }: MobileMoreMenuProps) {
     { label: "Webhooks", href: "/settings/webhooks" },
     { label: "Slack", href: "/settings/slack" },
     ...(isAdmin ? [{ label: "Security", href: "/settings/security" }] : []),
-    { label: "Billing", href: "/settings/billing" },
   ];
 
   return (
@@ -106,32 +94,19 @@ export function MobileMoreMenu({ open, onClose }: MobileMoreMenuProps) {
         <div className="space-y-1">
           {!isDataroomMember && (
             <>
-              {isFree && !isTrial ? (
-                <UpgradePlanModal
-                  clickedPlan={PlanEnum.Pro}
-                  trigger="mobile_more_visitors"
-                  highlightItem={["visitors"]}
-                >
-                  <button className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-                    <ContactIcon className="h-5 w-5" />
-                    Visitors
-                  </button>
-                </UpgradePlanModal>
-              ) : (
-                <Link
-                  href="/visitors"
-                  onClick={onClose}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors",
-                    router.pathname.includes("visitors")
-                      ? "bg-muted text-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  )}
-                >
-                  <ContactIcon className="h-5 w-5" />
-                  Visitors
-                </Link>
-              )}
+              <Link
+                href="/visitors"
+                onClick={onClose}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors",
+                  router.pathname.includes("visitors")
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                <ContactIcon className="h-5 w-5" />
+                Visitors
+              </Link>
 
               <Link
                 href="/branding"
@@ -203,75 +178,6 @@ export function MobileMoreMenu({ open, onClose }: MobileMoreMenuProps) {
             </>
           )}
         </div>
-
-        {(linksLimit || documentsLimit) && (
-          <div className="mt-6 space-y-3 rounded-lg border border-border p-4">
-            <p className="text-xs font-medium text-muted-foreground">Usage</p>
-            {linksLimit ? (
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-foreground">Links</span>
-                  <span className="text-muted-foreground">
-                    {nFormatter(limits?.usage?.links ?? 0)} /{" "}
-                    {nFormatter(linksLimit)}
-                  </span>
-                </div>
-                <Progress
-                  value={
-                    limits?.usage?.links
-                      ? (limits.usage.links / linksLimit) * 100
-                      : 0
-                  }
-                  className="h-1 bg-muted"
-                  max={100}
-                />
-              </div>
-            ) : null}
-            {documentsLimit ? (
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-foreground">Documents</span>
-                  <span className="text-muted-foreground">
-                    {nFormatter(limits?.usage?.documents ?? 0)} /{" "}
-                    {nFormatter(documentsLimit)}
-                  </span>
-                </div>
-                <Progress
-                  value={
-                    limits?.usage?.documents
-                      ? (limits.usage.documents / documentsLimit) * 100
-                      : 0
-                  }
-                  className="h-1 bg-muted"
-                  max={100}
-                />
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        {isTrial && (
-          <div className="mt-4">
-            <Link
-              href="/settings/billing/upgrade?view=business-datarooms"
-              onClick={onClose}
-              className="flex w-full items-center justify-center rounded-lg bg-foreground px-4 py-3 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
-            >
-              Upgrade Plan
-            </Link>
-          </div>
-        )}
-        {isFree && !isTrial && (
-          <div className="mt-4">
-            <Link
-              href="/settings/billing"
-              onClick={onClose}
-              className="flex w-full items-center justify-center rounded-lg bg-foreground px-4 py-3 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
-            >
-              Upgrade Papermark
-            </Link>
-          </div>
-        )}
       </div>
     </div>
   );

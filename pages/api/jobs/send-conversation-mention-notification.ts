@@ -1,2 +1,8 @@
-// API route: /api/jobs/send-conversation-mention-notification
-export { default } from "@/ee/features/conversations/api/send-conversation-mention-notification";
+import { NextApiRequest, NextApiResponse } from "next";
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse,
+) {
+  return res.status(200).json({ status: "skipped" });
+}

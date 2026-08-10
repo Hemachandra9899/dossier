@@ -9,18 +9,16 @@ import {
 } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { Domain, LinkType } from "@prisma/client";
 import { ShuffleIcon } from "lucide-react";
 import { customAlphabet } from "nanoid";
 import { mutate } from "swr";
 
 import { BLOCKED_PATHNAMES } from "@/lib/constants";
-import { BasePlan, usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
+import { useLimits } from "@/ee/limits/swr-handler";
 import { cn } from "@/lib/utils";
+import { useEntitlements } from "@/modules/access";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { AddDomainModal } from "@/components/domains/add-domain-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,21 +54,19 @@ export default function DomainSection({
   editLink?: boolean;
 }) {
   const [isModalOpen, setModalOpen] = useState(false);
-  const [isUpgradeModalOpen, setUpgradeModalOpen] = useState(false);
   // Initialize displayValue from data.domain when editing, otherwise "papermark.com"
   const [displayValue, setDisplayValue] = useState<string>(
     editLink && data.domain ? data.domain : "papermark.com",
   );
   const teamInfo = useTeam();
   const { limits } = useLimits();
+  const { entitlements } = useEntitlements();
 
-  const { isBusiness, isDatarooms, isDataroomsPlus } = usePlan();
-
-  // Check plan eligibility for custom domains
+  // Custom domains are available to every workspace.
   const canUseCustomDomainForDocument =
-    isBusiness || isDatarooms || isDataroomsPlus || limits?.customDomainOnPro;
+    entitlements.customDomains || !!limits?.customDomainOnPro;
   const canUseCustomDomainForDataroom =
-    isDatarooms || isDataroomsPlus || limits?.customDomainInDataroom;
+    entitlements.customDomains || !!limits?.customDomainInDataroom;
 
   // Check if we're editing a link with a custom domain
   const isEditingCustomDomain =
@@ -102,17 +98,6 @@ export default function DomainSection({
 
     // Check if this is a custom domain selection (not papermark.com)
     if (value !== "papermark.com") {
-      // Show upgrade modal if user doesn't have the right plan
-      if (
-        (linkType === "DOCUMENT_LINK" && !canUseCustomDomainForDocument) ||
-        (linkType === "DATAROOM_LINK" && !canUseCustomDomainForDataroom)
-      ) {
-        setUpgradeModalOpen(true);
-        setData((prev) => ({ ...prev, domain: "papermark.com" }));
-        setDisplayValue("papermark.com");
-        return;
-      }
-
       // Auto-generate a slug if there isn't one yet
       setData((prev) => ({
         ...prev,
@@ -158,15 +143,7 @@ export default function DomainSection({
 
       setDisplayValue(domainValue);
     }
-  }, [
-    domains,
-    editLink,
-    linkType,
-    isBusiness,
-    isDatarooms,
-    isDataroomsPlus,
-    limits,
-  ]);
+  }, [domains, editLink, linkType, canUseCustomDomainForDocument, canUseCustomDomainForDataroom, limits]);
 
   // Set defaultDomain based on plan type and link type
   const defaultDomain = editLink
@@ -224,15 +201,9 @@ export default function DomainSection({
                   <SelectItem
                     key={slug}
                     value={slug}
-                    className={cn(
-                      "hover:bg-muted hover:dark:bg-gray-700",
-                      !canUseCustomDomainForDocument && "opacity-50",
-                    )}
+                    className="hover:bg-muted hover:dark:bg-gray-700"
                   >
                     {slug}
-                    {canUseCustomDomainForDocument || isEditingCustomDomain
-                      ? ""
-                      : " (upgrade to use)"}
                   </SelectItem>
                 ))}
               </>
@@ -243,15 +214,9 @@ export default function DomainSection({
                   <SelectItem
                     key={slug}
                     value={slug}
-                    className={cn(
-                      "hover:bg-muted hover:dark:bg-gray-700",
-                      !canUseCustomDomainForDataroom && "opacity-50",
-                    )}
+                    className="hover:bg-muted hover:dark:bg-gray-700"
                   >
                     {slug}
-                    {canUseCustomDomainForDataroom || isEditingCustomDomain
-                      ? ""
-                      : " (upgrade to use)"}
                   </SelectItem>
                 ))}
               </>
@@ -348,17 +313,6 @@ export default function DomainSection({
         ) : null}
       </div>
 
-      {isDisabled && (
-        <div
-          className="mt-2 text-sm text-muted-foreground"
-          onClick={() => {
-            setUpgradeModalOpen(true);
-          }}
-        >
-          Custom domain and path cannot be changed on an unsupported plan.
-        </div>
-      )}
-
       {data.domain && data.domain !== "papermark.com" && !isDomainVerified ? (
         <div className="mt-4 text-sm text-red-500">
           Your domain is not verified yet!{" "}
@@ -377,21 +331,6 @@ export default function DomainSection({
         open={isModalOpen}
         setOpen={setModalOpen}
         linkType={linkType}
-      />
-
-      {/* Upgrade plan modal when trying to use custom domains without the right plan */}
-      <UpgradePlanModal
-        clickedPlan={
-          linkType === "DATAROOM_LINK" ? PlanEnum.DataRooms : PlanEnum.Business
-        }
-        open={isUpgradeModalOpen}
-        setOpen={setUpgradeModalOpen}
-        trigger={
-          linkType === "DATAROOM_LINK"
-            ? "select_custom_domain_dataroom"
-            : "select_custom_domain_document"
-        }
-        highlightItem={["custom-domain"]}
       />
     </>
   );

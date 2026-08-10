@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { AgentsSettingsCard } from "@/ee/features/ai/components/agents-settings-card";
-import { RequestListSettingsCard } from "@/ee/features/request-lists/components/request-list-settings-card";
 import { useRequestListFeatureEnabled } from "@/ee/features/request-lists/lib/use-request-list-feature";
 import { Check, CircleHelpIcon, Copy } from "lucide-react";
 import { toast } from "sonner";
@@ -173,14 +172,7 @@ export default function Settings() {
               vectorStoreId={dataroom.vectorStoreId}
             />
 
-            {/* Request List Settings */}
-            {isRequestListEnabled && (
-              <RequestListSettingsCard
-                dataroomId={dataroom.id}
-                teamId={teamId!}
-                requestListEnabled={dataroom.requestListEnabled}
-              />
-            )}
+
 
             {!isDataroomMember && (
               <DuplicateDataroom dataroomId={dataroom.id} teamId={teamId} />

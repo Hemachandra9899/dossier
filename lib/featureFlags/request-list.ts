@@ -1,4 +1,4 @@
-import { teamPlanIsDataroomPlusTier } from "@/lib/billing/team-plan-custom-messaging";
+import { teamPlanIsDataroomPlusTier } from "@/modules/access/team-plan-custom-messaging";
 import { getFeatureFlags } from "@/lib/featureFlags";
 
 /**

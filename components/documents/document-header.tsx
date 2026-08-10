@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import { DocumentAIDialog } from "@/ee/features/ai/components/document-ai-dialog";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { Document, DocumentVersion } from "@prisma/client";
 import {
   ArchiveXIcon,
@@ -35,7 +34,6 @@ import { mutate } from "swr";
 import { getFile } from "@/lib/files/get-file";
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
 import { useSelfMembership } from "@/lib/hooks/use-self-membership";
-import { usePlan } from "@/lib/swr/use-billing";
 import useDataroomsSimple from "@/lib/swr/use-datarooms-simple";
 import { useTeamAI } from "@/lib/swr/use-team-ai";
 import {
@@ -70,9 +68,6 @@ import {
 
 import { isDossierSigningEnabled } from "@/modules/signing/config";
 import { RequestSignatureDialog } from "@/modules/signing/ui/request-signature/request-signature-dialog";
-
-import PlanBadge from "../billing/plan-badge";
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 
 // Redaction dialogs are only opened on demand from the 3-dot menu. Dynamic
 // imports keep their (lucide + radix + feature code) off the document-page
@@ -134,7 +129,6 @@ export default function DocumentHeader({
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
-  const { isPro, isFree, isTrial, isBusiness, isDatarooms } = usePlan();
   const { canUseAI, isAIEnabled } = useTeamAI();
   const { isFeatureEnabled } = useFeatureFlags();
   const isRedactionEnabled = isFeatureEnabled("redaction");
@@ -148,9 +142,6 @@ export default function DocumentHeader({
   const [openAddDocModal, setOpenAddDocModal] = useState<boolean>(false);
   const [redactionJobsOpen, setRedactionJobsOpen] = useState<boolean>(false);
   const [redactionConfigOpen, setRedactionConfigOpen] = useState<boolean>(false);
-  const [planModalOpen, setPlanModalOpen] = useState<boolean>(false);
-  const [planModalTrigger, setPlanModalTrigger] = useState<string>("");
-  const [selectedPlan, setSelectedPlan] = useState<PlanEnum>(PlanEnum.Pro);
   const [exportModalOpen, setExportModalOpen] = useState<boolean>(false);
   const [aiDialogOpen, setAiDialogOpen] = useState<boolean>(false);
   const [signatureRequestOpen, setSignatureRequestOpen] =
@@ -169,12 +160,6 @@ export default function DocumentHeader({
 
   // Check if document is in any datarooms
   const dataroomCount = prismaDocument.datarooms?.length || 0;
-
-  const handleUpgradeClick = (plan: PlanEnum, trigger: string) => {
-    setSelectedPlan(plan);
-    setPlanModalTrigger(trigger);
-    setPlanModalOpen(true);
-  };
 
   const handleCloseAlert = (id: string) => {
     const alert = document.getElementById(id);
@@ -398,10 +383,6 @@ export default function DocumentHeader({
 
   // export method to fetch the visits data and convert to csv.
   const exportVisitCounts = (document: Document) => {
-    if (isFree) {
-      toast.error("This feature is not available for your plan");
-      return;
-    }
     setExportModalOpen(true);
   };
 
@@ -806,8 +787,7 @@ export default function DocumentHeader({
                 <DropdownMenuSeparator />
               </DropdownMenuGroup>
               {prismaDocument.type === "sheet" &&
-                supportsAdvancedExcelMode(primaryVersion.contentType) &&
-                (isPro || isBusiness || isDatarooms || isTrial) && (
+                supportsAdvancedExcelMode(primaryVersion.contentType) && (
                   <DropdownMenuItem
                     onClick={() =>
                       toggleAdvancedExcel(
@@ -915,14 +895,7 @@ export default function DocumentHeader({
                 primaryVersion.type !== "map" &&
                 primaryVersion.type !== "email" && (
                   <DropdownMenuItem
-                    onClick={() =>
-                      isFree
-                        ? handleUpgradeClick(
-                            PlanEnum.Business,
-                            "download-only-document",
-                          )
-                        : toggleDownloadOnly()
-                    }
+                    onClick={() => toggleDownloadOnly()}
                   >
                     {prismaDocument.downloadOnly ? (
                       <>
@@ -932,8 +905,7 @@ export default function DocumentHeader({
                     ) : (
                       <>
                         <CloudDownloadIcon className="mr-2 h-4 w-4" />
-                        Set download only{" "}
-                        {isFree && <PlanBadge className="ml-2" plan="pro" />}
+                        Set download only
                       </>
                     )}
                   </DropdownMenuItem>
@@ -962,16 +934,9 @@ export default function DocumentHeader({
               <DropdownMenuSeparator />
 
               {/* Export views in CSV */}
-              <DropdownMenuItem
-                onClick={() =>
-                  isFree
-                    ? handleUpgradeClick(PlanEnum.Pro, "export-document-visits")
-                    : exportVisitCounts(prismaDocument)
-                }
-              >
+              <DropdownMenuItem onClick={() => exportVisitCounts(prismaDocument)}>
                 <FileDownIcon className="mr-2 h-4 w-4" />
-                Export views{" "}
-                {isFree && <PlanBadge className="ml-2" plan="pro" />}
+                Export views
               </DropdownMenuItem>
 
               {/* Download latest version */}
@@ -1073,61 +1038,9 @@ export default function DocumentHeader({
         </div>
       )}
 
-      {isFree && prismaDocument.hasPageLinks && (
-        <AlertBanner
-          id="in-document-links-alert"
-          variant="default"
-          title="In-document links detected"
-          iconClassName="h-4 w-4 text-foreground"
-          description={
-            <>
-              In-document links are disabled for viewers on the free plan.{" "}
-              <span
-                className="cursor-pointer font-bold text-[#fb7a00] underline underline-offset-4 hover:text-[#fb7a00]/80"
-                onClick={() =>
-                  handleUpgradeClick(PlanEnum.Pro, "in-document-links")
-                }
-              >
-                Upgrade
-              </span>{" "}
-              to make them clickable.
-            </>
-          }
-          onClose={() => handleCloseAlert("in-document-links-alert")}
-        />
-      )}
-
-      {prismaDocument.type === "sheet" &&
-        supportsAdvancedExcelMode(primaryVersion.contentType) &&
-        isFree &&
-        !isTrial && (
-          <AlertBanner
-            id="advanced-excel-alert"
-            variant="default"
-            title="Advanced Excel mode"
-            description={
-              <>
-                You can turn on advanced excel mode by{" "}
-                <span
-                  className="hover:text-primary/ 80 cursor-pointer underline underline-offset-4"
-                  onClick={() =>
-                    handleUpgradeClick(PlanEnum.Pro, "advanced-excel-mode")
-                  }
-                >
-                  upgrading
-                </span>{" "}
-                to Pro plan to preserve the file formatting. This uses the
-                Microsoft Office viewer.
-              </>
-            }
-            onClose={() => handleCloseAlert("advanced-excel-alert")}
-          />
-        )}
-
       {prismaDocument.type === "sheet" &&
         !prismaDocument.advancedExcelEnabled &&
-        supportsAdvancedExcelMode(primaryVersion.contentType) &&
-        (isPro || isBusiness || isDatarooms || isTrial) && (
+        supportsAdvancedExcelMode(primaryVersion.contentType) && (
           <AlertBanner
             id="enable-advanced-excel-alert"
             variant="default"
@@ -1165,15 +1078,6 @@ export default function DocumentHeader({
           documentIds={[prismaDocument.id]}
           itemName={prismaDocument.name}
           folderParentId={prismaDocument.folderId!}
-        />
-      ) : null}
-
-      {planModalOpen ? (
-        <UpgradePlanModal
-          clickedPlan={selectedPlan}
-          trigger={planModalTrigger}
-          open={planModalOpen}
-          setOpen={setPlanModalOpen}
         />
       ) : null}
 

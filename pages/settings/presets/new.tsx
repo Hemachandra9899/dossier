@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
 import ConfidentialViewSection from "@/ee/features/permissions/components/confidential-view/confidential-view-section";
-import { PlanEnum } from "@/ee/stripe/constants";
+
 import { LinkType } from "@prisma/client";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import { usePlan } from "@/lib/swr/use-billing";
 import useLimits from "@/lib/swr/use-limits";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import {
   DEFAULT_LINK_PROPS,
@@ -65,24 +64,7 @@ export default function NewPreset() {
     : false;
   const allowWatermarkOnBusiness = limits?.watermarkOnBusiness ?? false;
 
-  const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
-  const [trigger, setTrigger] = useState<string>("");
-  const [upgradePlan, setUpgradePlan] = useState<PlanEnum>(PlanEnum.Business);
-  const [highlightItem, setHighlightItem] = useState<string[]>([]);
-
-  const handleUpgradeStateChange = ({
-    state,
-    trigger,
-    plan,
-    highlightItem,
-  }: LinkUpgradeOptions) => {
-    setOpenUpgradeModal(state);
-    setTrigger(trigger);
-    if (plan) {
-      setUpgradePlan(plan as PlanEnum);
-    }
-    setHighlightItem(highlightItem || []);
-  };
+  const handleUpgradeStateChange = () => {};
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -364,13 +346,7 @@ export default function NewPreset() {
           </div>
         </form>
       </main>
-      <UpgradePlanModal
-        clickedPlan={upgradePlan}
-        open={openUpgradeModal}
-        setOpen={setOpenUpgradeModal}
-        trigger={trigger}
-        highlightItem={highlightItem}
-      />
+
     </AppLayout>
   );
 }

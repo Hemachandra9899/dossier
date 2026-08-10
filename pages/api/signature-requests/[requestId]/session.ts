@@ -1,7 +1,9 @@
 // POST /api/signature-requests/:requestId/session
-// Recipient-facing signing session creation. Reuses the legacy protections:
-// per-request + per-IP rate limiting and an HMAC continuity cookie so re-visits
-// are provably bound to the already-authorized recipient.
+// Recipient-facing signing session creation. The caller must first present the
+// recipient-access proof (HttpOnly cookie from the invitation link); the bound
+// recipientId is derived from that proof, never trusted from the body. Reuses
+// the legacy protections: per-request + per-IP rate limiting and an HMAC
+// continuity cookie so re-visits are provably bound to the authorized recipient.
 
 import { NextApiRequest, NextApiResponse } from "next";
 import { parse as parseCookieHeader } from "cookie";
@@ -12,14 +14,14 @@ import { ratelimit } from "@/lib/redis";
 import { getIpAddress } from "@/lib/utils/ip";
 import { createSigningContext } from "@/modules/signing/application/context";
 import { createSigningSession } from "@/modules/signing/application/create-signing-session";
-import { isDossierSigningEnabled } from "@/modules/signing/config";
+import { isDossierSigningRuntimeEnabled } from "@/modules/signing/config";
 import {
   mintRequestSessionContinuityToken,
   verifyRequestSessionContinuityToken,
 } from "@/modules/signing/domain/continuity-token";
+import { readRecipientAccessFromCookies } from "@/modules/signing/domain/recipient-access-token";
 
 const bodySchema = z.object({
-  recipientId: z.string().min(1, "Recipient ID is required."),
   email: z
     .preprocess((value) => {
       if (typeof value !== "string") return value;
@@ -45,7 +47,7 @@ export default async function handle(
     res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
-  if (!isDossierSigningEnabled) {
+  if (!isDossierSigningRuntimeEnabled) {
     return res.status(404).end();
   }
 
@@ -57,7 +59,20 @@ export default async function handle(
       return res.status(400).json({ message: "A valid signing session request is required." });
     }
 
-    const { recipientId, email, name } = parsed.data;
+    const { email, name } = parsed.data;
+
+    // Access proof first: the HttpOnly recipient-access cookie must be present,
+    // valid, and bound to this request. The recipient identity is derived from
+    // the signed token, never from the request body. Uniform 404 keeps the
+    // requestId from acting as an existence oracle.
+    const access = readRecipientAccessFromCookies(req.headers.cookie, {
+      signatureRequestId: requestId,
+    });
+    if (!access.ok) {
+      return res.status(404).end();
+    }
+    const recipientId = access.recipientId;
+
     const ipAddressValue = getIpAddress(req.headers);
 
     const [requestLimit, ipLimit] = await Promise.all([

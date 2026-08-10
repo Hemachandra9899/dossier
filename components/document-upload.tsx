@@ -1,5 +1,3 @@
-import { useRouter } from "next/router";
-
 import { useMemo } from "react";
 
 import { UploadIcon } from "lucide-react";
@@ -8,14 +6,11 @@ import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 
 import {
-  FREE_PLAN_ACCEPTED_FILE_TYPES,
   FULL_PLAN_ACCEPTED_FILE_TYPES,
   HTML_ACCEPTED_FILE_TYPES,
-  SUPPORTED_DOCUMENT_MIME_TYPES,
 } from "@/lib/constants";
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
+import { useLimits } from "@/ee/limits/swr-handler";
 import { bytesToSize } from "@/lib/utils";
 import { isHtmlFile } from "@/lib/utils/get-content-type";
 import { fileIcon } from "@/lib/utils/get-file-icon";
@@ -38,16 +33,14 @@ export default function DocumentUpload({
   maxSizeBytes?: number;
   maxSizeErrorMessage?: string;
 }) {
-  const router = useRouter();
   const { theme, systemTheme } = useTheme();
   const isLight =
     theme === "light" || (theme === "system" && systemTheme === "light");
-  const { isFree, isTrial } = usePlan();
   const { limits } = useLimits();
   const { isFeatureEnabled } = useFeatureFlags();
   const htmlDocumentsEnabled = isFeatureEnabled("htmlDocuments");
 
-  const fullPlanAcceptedFileTypes = useMemo(
+  const acceptedFileTypes = useMemo(
     () => ({
       ...FULL_PLAN_ACCEPTED_FILE_TYPES,
       ...(htmlDocumentsEnabled ? HTML_ACCEPTED_FILE_TYPES : {}),
@@ -55,28 +48,16 @@ export default function DocumentUpload({
     [htmlDocumentsEnabled],
   );
 
-  const fileSizeLimits = useMemo(
-    () =>
-      getFileSizeLimits({
-        limits,
-        isFree,
-        isTrial,
-      }),
-    [limits, isFree, isTrial],
-  );
+  const fileSizeLimits = useMemo(() => getFileSizeLimits({ limits }), [limits]);
 
-  // When an explicit byte limit is provided (e.g. NDA signing template), use it instead of the plan limit.
+  // When an explicit byte limit is provided (e.g. NDA signing template), use it instead of the default limit.
   const maxSizeMB =
     typeof maxSizeBytes === "number"
       ? Math.floor(maxSizeBytes / (1024 * 1024))
       : undefined;
 
   const { getRootProps, getInputProps } = useDropzone({
-    accept: pdfOnly
-      ? { "application/pdf": [".pdf"] }
-      : isFree && !isTrial
-        ? FREE_PLAN_ACCEPTED_FILE_TYPES
-        : fullPlanAcceptedFileTypes,
+    accept: pdfOnly ? { "application/pdf": [".pdf"] } : acceptedFileTypes,
     multiple: false,
     onDropAccepted: (acceptedFiles) => {
       if (acceptedFiles.length === 0) {
@@ -92,18 +73,7 @@ export default function DocumentUpload({
         const message =
           maxSizeErrorMessage ||
           `File size too big for ${fileType} (max. ${limitMB} MB)`;
-        if (!maxSizeErrorMessage && isFree && !isTrial) {
-          toast.error(message, {
-            description: "Upgrade to a paid plan to increase the limit",
-            action: {
-              label: "Upgrade",
-              onClick: () => router.push("/settings/billing/upgrade"),
-            },
-            duration: 10000,
-          });
-        } else {
-          toast.error(message);
-        }
+        toast.error(message);
         return;
       }
 
@@ -136,31 +106,8 @@ export default function DocumentUpload({
         const limitMB = maxSizeMB ?? getFileSizeLimit(file.type, fileSizeLimits);
         message =
           maxSizeErrorMessage || `File size too big (max. ${limitMB} MB)`;
-        if (!maxSizeErrorMessage && isFree && !isTrial) {
-          toast.error(message, {
-            description: "Upgrade to a paid plan to increase the limit",
-            action: {
-              label: "Upgrade",
-              onClick: () => router.push("/settings/billing/upgrade"),
-            },
-            duration: 10000,
-          });
-          return;
-        }
       } else if (errors[0].code === "file-invalid-type") {
-        const isSupported = SUPPORTED_DOCUMENT_MIME_TYPES.includes(file.type);
         message = "File type not supported";
-        if (isFree && !isTrial && isSupported) {
-          toast.error(`${message} on free plan`, {
-            description: `Upgrade to a paid plan to upload ${file.type} files`,
-            action: {
-              label: "Upgrade",
-              onClick: () => router.push("/settings/billing/upgrade"),
-            },
-            duration: 10000,
-          });
-          return;
-        }
       } else {
         message = errors[0].message;
       }
@@ -227,9 +174,7 @@ export default function DocumentUpload({
                 ? "Replace file?"
                 : pdfOnly
                   ? `Only *.pdf`
-                  : isFree && !isTrial
-                    ? `Only *.pdf, *.xls, *.xlsx, *.csv, *.tsv, *.ods, *.png, *.jpeg, *.jpg`
-                    : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.tsv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.rtf, *.txt, *.md, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg, *.log${htmlDocumentsEnabled ? ", *.html, *.htm" : ""}`}
+                  : `Only *.pdf, *.pptx, *.docx, *.xlsx, *.xls, *.xlsm, *.csv, *.tsv, *.ods, *.ppt, *.odp, *.doc, *.odt, *.rtf, *.txt, *.md, *.dwg, *.dxf, *.png, *.jpg, *.jpeg, *.mp4, *.mov, *.avi, *.webm, *.ogg, *.log${htmlDocumentsEnabled ? ", *.html, *.htm" : ""}`}
             </p>
           </div>
         </div>

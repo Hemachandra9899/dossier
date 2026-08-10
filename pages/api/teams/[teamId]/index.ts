@@ -1,7 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { cancelSubscription } from "@/ee/stripe";
-import { isOldAccount } from "@/ee/stripe/utils";
 import { DocumentStorageType } from "@prisma/client";
 import { getServerSession } from "next-auth";
 
@@ -224,9 +222,6 @@ export default async function handle(
       await Promise.all([
         // delete domains, if exists on team
         team.domains && domainPromises,
-        // delete subscription, if exists on team
-        team.stripeId &&
-        cancelSubscription(team.stripeId, isOldAccount(team.plan)),
         // delete user from contact book
         unsubscribe((session.user as CustomUser).email ?? ""),
         // delete user, if no other teams

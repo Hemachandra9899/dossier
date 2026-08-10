@@ -2,18 +2,15 @@ import Link from "next/link";
 
 import { Dispatch, SetStateAction, useMemo, useState } from "react";
 
-import { PlanEnum } from "@/ee/stripe/constants";
 import { Tag } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { usePlan } from "@/lib/swr/use-billing";
 import { useTags } from "@/lib/swr/use-tags";
 import { TagProps } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import { MultiSelect } from "@/components/ui/multi-select-v2";
 import { ButtonTooltip } from "@/components/ui/tooltip";
@@ -52,11 +49,8 @@ export default function InlineTagSelector({
   const [selectedValues, setSelectedValues] = useState<string[]>(
     data.tags || [],
   );
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const { isFree } = usePlan();
 
   const {
-    tagCount,
     tags: availableTags,
     loading: loadingTags,
   } = useTags({
@@ -80,12 +74,6 @@ export default function InlineTagSelector({
   };
 
   const createTag = async (tag: string) => {
-    if (isFree && tagCount && tagCount >= 5) {
-      setShowUpgradeModal(true);
-      toast.error("You have reached the maximum number of tags.");
-      return false;
-    }
-
     const res = await fetch(`/api/teams/${teamId}/tags`, {
       method: "POST",
       headers: {
@@ -188,15 +176,6 @@ export default function InlineTagSelector({
           ) : null}
         </Button>
       </ButtonTooltip>
-
-      {showUpgradeModal && (
-        <UpgradePlanModal
-          clickedPlan={PlanEnum.Pro}
-          trigger="create_tag"
-          open={showUpgradeModal}
-          setOpen={setShowUpgradeModal}
-        />
-      )}
     </div>
   );
 }

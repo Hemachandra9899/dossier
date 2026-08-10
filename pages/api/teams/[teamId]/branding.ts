@@ -15,7 +15,7 @@ import {
 import {
   teamPlanAllowsCustomWelcomeAndCta,
   teamPlanAllowsLayoutCustomization,
-} from "@/lib/billing/team-plan-custom-messaging";
+} from "@/modules/access/team-plan-custom-messaging";
 import { validateRedirectUrl } from "@/lib/api/domains/validate-redirect-url";
 import { errorhandler } from "@/lib/errorHandler";
 import { getFeatureFlags } from "@/lib/featureFlags";
@@ -201,7 +201,7 @@ export default async function handle(
         errors: parsed.error.flatten().fieldErrors,
       });
     }
-    const body = parsed.data;
+    const body = parsed.data as any;
 
     const layoutData = layoutAllowed
       ? sanitizeLayoutPayload({
@@ -325,7 +325,7 @@ export default async function handle(
         errors: parsed.error.flatten().fieldErrors,
       });
     }
-    const body = parsed.data;
+    const body = parsed.data as any;
 
     const existingBrand = await prisma.brand.findUnique({
       where: { teamId },

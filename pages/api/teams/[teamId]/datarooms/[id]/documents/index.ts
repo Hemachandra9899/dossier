@@ -5,7 +5,7 @@ import {
   addFileToVectorStoreTask,
   processDocumentForAITask,
 } from "@/ee/features/ai/lib/trigger";
-import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
+import { isTeamPausedById } from "@/modules/access/is-team-paused";
 import { runs } from "@trigger.dev/sdk";
 import { waitUntil } from "@vercel/functions";
 

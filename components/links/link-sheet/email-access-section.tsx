@@ -1,6 +1,5 @@
 import { CircleHelpIcon } from "lucide-react";
 
-import PlanBadge from "@/components/billing/plan-badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
@@ -12,7 +11,6 @@ type EmailAccessLevel = "none" | "email" | "verified";
 const SEGMENTS: {
   value: EmailAccessLevel;
   label: string;
-  gated?: boolean;
   tooltip: string;
 }[] = [
   {
@@ -28,7 +26,6 @@ const SEGMENTS: {
   {
     value: "verified",
     label: "Verified email",
-    gated: true,
     tooltip:
       "Data room visitors must enter their email and confirm it with a one-time verification code.",
   },
@@ -58,17 +55,6 @@ export default function EmailAccessSection({
 
   const handleSelect = (next: EmailAccessLevel) => {
     if (next === level) return;
-
-    // Verified email requires a paid plan
-    if (next === "verified" && !isAllowed) {
-      handleUpgradeStateChange({
-        state: true,
-        trigger: "link_sheet_email_auth_section",
-        plan: "Business",
-        highlightItem: ["email-verify"],
-      });
-      return;
-    }
 
     setData((prev) => {
       if (next === "none") {
@@ -122,14 +108,11 @@ export default function EmailAccessSection({
         >
           <TabsList className="px-1">
             {SEGMENTS.map((segment) => {
-              const showBadge = segment.gated && !isAllowed;
-
               return (
                 <BadgeTooltip content={segment.tooltip} key={segment.value}>
                   <span className="inline-flex">
                     <TabsTrigger value={segment.value} className="gap-1 px-6">
                       <span>{segment.label}</span>
-                      {showBadge ? <PlanBadge plan="business" /> : null}
                     </TabsTrigger>
                   </span>
                 </BadgeTooltip>

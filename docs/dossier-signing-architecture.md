@@ -446,12 +446,27 @@ Add automated cross-tenant tests (Team A cannot load / session / download / edit
 
 ### 6.10 Feature flag
 
+The capability is split into two independent switches so a rollout can disable
+sender-side creation without invalidating recipient links that have already been
+distributed:
+
 ```ts
-export const isDossierSigningEnabled =
-  process.env.NEXT_PUBLIC_DOSSIER_SIGNING_ENABLED === "true";
+export const isDossierSigningCreationEnabled =
+  process.env.NEXT_PUBLIC_DOSSIER_SIGNING_CREATION_ENABLED === "true";
+export const isDossierSigningRuntimeEnabled =
+  process.env.DOSSIER_SIGNING_RUNTIME_ENABLED === "true";
 ```
 
-Gates: `Request Signature`, `Signatures` sidebar, `Review & Sign`, new signing APIs. Legacy signing stays until the new flow is proven.
+- **CREATION** (`NEXT_PUBLIC_DOSSIER_SIGNING_CREATION_ENABLED`): gates `Request
+  signature`, the request-signature wizard, the sender APIs and link minting.
+  Flipping it OFF hides new-request creation while already-sent recipient links
+  keep working.
+- **RUNTIME** (`DOSSIER_SIGNING_RUNTIME_ENABLED`): gates the recipient surface —
+  public request info, artifact download, signing sessions and the provider
+  webhook ingestion. Flipping it OFF is the kill switch; it strands in-flight
+  requests, so it must stay ON while live requests exist.
+
+Legacy signing stays until the new flow is proven.
 
 ---
 
@@ -468,7 +483,7 @@ Gates: `Request Signature`, `Signatures` sidebar, `Review & Sign`, new signing A
 
 ## 8. Environment variables
 
-Dossier (new): `NEXT_PUBLIC_DOSSIER_SIGNING_ENABLED`.
+Dossier (new): `NEXT_PUBLIC_DOSSIER_SIGNING_CREATION_ENABLED` (sender surface) and `DOSSIER_SIGNING_RUNTIME_ENABLED` (recipient surface + webhook).
 Existing signing vars to document in `.env.example`: `NEXT_PUBLIC_SIGNING_HOST`, `SIGNING_API_URL`, `SIGNING_API_KEY`, `SIGNING_WEBHOOK_SECRET`.
 Documenso: standard Postgres + S3-compatible storage + `NEXT_PRIVATE_JOBS_PROVIDER` + `NEXT_PRIVATE_ENCRYPTION_KEY`; configure `emailSettings`/`distributionMethod` so Documenso does not send duplicate customer emails.
 

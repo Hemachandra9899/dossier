@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import Dataroom from "@/components/welcome/dataroom";
 import DataroomAIGenerate from "@/components/welcome/dataroom-ai-generate";
 import DataroomChoice from "@/components/welcome/dataroom-choice";
-import DataroomTrial from "@/components/welcome/dataroom-trial";
 import DataroomUpload from "@/components/welcome/dataroom-upload";
 import Intro from "@/components/welcome/intro";
 import Next from "@/components/welcome/next";
@@ -106,9 +105,6 @@ export default function Welcome() {
           )}
           {router.query.type === "notion" && <NotionForm key="notion" />}
           {router.query.type === "dataroom" && <Dataroom key="dataroom" />}
-          {router.query.type === "dataroom-trial" && (
-            <DataroomTrial key="dataroom-trial" />
-          )}
           {router.query.type === "dataroom-choice" &&
             router.query.dataroomId && (
               <DataroomChoice

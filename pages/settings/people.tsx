@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
 import {
   CircleHelpIcon,
   MoreHorizontalIcon,
@@ -26,8 +25,6 @@ import { useTeams } from "@/lib/swr/use-teams";
 import { CustomUser, TeamRole } from "@/lib/types";
 import { cn, generateGravatarHash } from "@/lib/utils";
 
-import { AddSeatModal } from "@/components/billing/add-seat-modal";
-import { UnlimitedPlanModal } from "@/components/billing/unlimited-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { AddTeamMembers } from "@/components/teams/add-team-member-modal";
@@ -63,7 +60,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { BadgeTooltip } from "@/components/ui/tooltip";
-import { UpgradeButton } from "@/components/ui/upgrade-button";
 
 const ROLE_LABELS: Record<TeamRole, string> = {
   ADMIN: "Admin",
@@ -327,48 +323,20 @@ export default function Billing() {
                         {limits.usage?.users ?? 0}/{limits.users} seats used.{" "}
                       </span>
                     ) : null}
-                    <UnlimitedPlanModal>
-                      <span className="cursor-pointer underline underline-offset-4 hover:text-foreground">
-                        Need unlimited seats?
-                      </span>
-                    </UnlimitedPlanModal>
                   </>
                 )}
               </p>
             </div>
-            {showUpgradePlanModal ? (
-              <UpgradeButton
-                text="Invite Members"
-                clickedPlan={PlanEnum.Business}
-                trigger="invite_team_members"
-                highlightItem={["users"]}
-              />
-            ) : (
+            {showInvite && (
               <div className="flex items-center gap-2">
-                {!isDataroomsUnlimited && (
-                  <AddSeatModal
-                    open={isAddSeatModalOpen}
-                    setOpen={setAddSeatModalOpen}
-                  >
-                    <Button variant="outline" className="whitespace-nowrap">
-                      Add Seat
-                    </Button>
-                  </AddSeatModal>
-                )}
-                {showInvite ? (
-                  <AddTeamMembers
-                    open={isTeamMemberInviteModalOpen}
-                    setOpen={setTeamMemberInviteModalOpen}
-                  >
-                    <Button className="bg-gray-900 text-gray-50 hover:bg-gray-900/90">
-                      Invite
-                    </Button>
-                  </AddTeamMembers>
-                ) : (
-                  <Button disabled title="Add a seat to invite more members">
+                <AddTeamMembers
+                  open={isTeamMemberInviteModalOpen}
+                  setOpen={setTeamMemberInviteModalOpen}
+                >
+                  <Button className="bg-gray-900 text-gray-50 hover:bg-gray-900/90">
                     Invite
                   </Button>
-                )}
+                </AddTeamMembers>
               </div>
             )}
           </div>

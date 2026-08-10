@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPaused } from "@/ee/features/billing/cancellation/lib/is-team-paused";
+import { isTeamPaused } from "@/modules/access/is-team-paused";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { Prisma, View } from "@prisma/client";
 import { JsonValue } from "@prisma/client/runtime/library";

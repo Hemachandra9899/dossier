@@ -6,7 +6,6 @@ import { redis } from "@/lib/redis";
  * Simple rate limiters for core endpoints
  */
 export const rateLimiters = {
-  // 3 auth attempts per hour per IP
   auth: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(10, "20 m"),
@@ -14,13 +13,16 @@ export const rateLimiters = {
     enableProtection: true,
     analytics: true,
   }),
-
-  // 5 billing operations per hour per IP
-  billing: new Ratelimit({
+  domainVerification: new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(10, "20 m"),
-    prefix: "rl:billing",
-    enableProtection: true,
+    limiter: Ratelimit.slidingWindow(20, "1 m"),
+    prefix: "rl:domainVerification",
+    analytics: true,
+  }),
+  bulkLinkImport: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, "1 m"),
+    prefix: "rl:bulkLinkImport",
     analytics: true,
   }),
 };

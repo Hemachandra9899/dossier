@@ -5,7 +5,6 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -21,7 +20,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UpgradeButton } from "@/components/ui/upgrade-button";
+
 
 interface WebhookEvent {
   id: string;
@@ -337,21 +336,9 @@ export default function NewWebhook() {
             </div>
 
             <div className="flex space-x-4">
-              {(isFree || isPro) && !isTrial ? (
-                <UpgradeButton
-                  text="Save Webhook"
-                  clickedPlan={PlanEnum.Business}
-                  trigger="create_webhook"
-                  highlightItem={["webhooks"]}
-                  type="submit"
-                  disabled={isLoading}
-                  key="create-webhook"
-                />
-              ) : (
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Creating..." : "Create Webhook"}
-                </Button>
-              )}
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Creating..." : "Create Webhook"}
+              </Button>
               <Button
                 type="button"
                 variant="outline"

@@ -6,7 +6,6 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 import { useRequestListFeatureEnabled } from "@/ee/features/request-lists/lib/use-request-list-feature";
-import { PlanEnum } from "@/ee/stripe/constants";
 import {
   BarChart3Icon,
   BrushIcon,
@@ -24,12 +23,9 @@ import {
   XIcon,
 } from "lucide-react";
 
-import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroom } from "@/lib/swr/use-dataroom";
-import useLimits from "@/lib/swr/use-limits";
 import { cn } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DataroomLinkSheet } from "@/components/links/link-sheet/dataroom-link-sheet";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -57,8 +53,6 @@ export function MobileDataroomMoreMenu({
   dataroomId,
 }: MobileDataroomMoreMenuProps) {
   const router = useRouter();
-  const { isTrial } = usePlan();
-  const { limits } = useLimits();
   const { dataroom } = useDataroom(dataroomId);
   const isRequestListFeatureEnabled = useRequestListFeatureEnabled();
   const [settingsExpanded, setSettingsExpanded] = useState(() =>
@@ -250,29 +244,14 @@ export function MobileDataroomMoreMenu({
 
               <Separator className="my-3" />
 
-              {!limits?.conversationsInDataroom ? (
-                <UpgradePlanModal
-                  clickedPlan={PlanEnum.DataRoomsPlus}
-                  trigger="mobile_dataroom_more_qa"
-                  highlightItem={["qa"]}
-                >
-                  <button type="button" className={rowClass(false)}>
-                    <MessagesSquareIcon className="h-5 w-5" />
-                    Q&A
-                  </button>
-                </UpgradePlanModal>
-              ) : (
-                <Link
-                  href={`${base}/conversations`}
-                  onClick={onClose}
-                  className={rowClass(
-                    router.pathname.includes("conversations"),
-                  )}
-                >
-                  <MessagesSquareIcon className="h-5 w-5" />
-                  Q&A
-                </Link>
-              )}
+              <Link
+                href={`${base}/conversations`}
+                onClick={onClose}
+                className={rowClass(router.pathname.includes("conversations"))}
+              >
+                <MessagesSquareIcon className="h-5 w-5" />
+                Q&A
+              </Link>
 
               {isRequestListFeatureEnabled && dataroom?.requestListEnabled ? (
                 <Link
@@ -333,18 +312,6 @@ export function MobileDataroomMoreMenu({
                   </div>
                 )}
               </div>
-
-              {isTrial && (
-                <div className="mt-4">
-                  <Link
-                    href="/settings/billing/upgrade?view=datarooms"
-                    onClick={onClose}
-                    className="flex w-full items-center justify-center rounded-lg bg-foreground px-4 py-3 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
-                  >
-                    Upgrade Plan
-                  </Link>
-                </div>
-              )}
             </div>
           </div>
         </div>

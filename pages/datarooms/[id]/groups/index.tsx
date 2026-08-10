@@ -2,10 +2,8 @@ import Link from "next/link";
 
 import { useState } from "react";
 
-import { PlanEnum } from "@/ee/stripe/constants";
 import { CircleHelpIcon, UsersIcon } from "lucide-react";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { AddGroupModal } from "@/components/datarooms/groups/add-group-modal";
 import GroupCard from "@/components/datarooms/groups/group-card";
 import { GroupCardPlaceholder } from "@/components/datarooms/groups/group-card-placeholder";
@@ -14,13 +12,11 @@ import { TabMenu } from "@/components/tab-menu";
 import { Button } from "@/components/ui/button";
 import { BadgeTooltip } from "@/components/ui/tooltip";
 
-import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroom } from "@/lib/swr/use-dataroom";
 import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
 import { cn } from "@/lib/utils";
 
 export default function DataroomGroupPage() {
-  const { isDatarooms, isDataroomsPlus, isTrial } = usePlan();
   const { dataroom } = useDataroom();
   const { viewerGroups, loading } = useDataroomGroups();
 
@@ -31,17 +27,7 @@ export default function DataroomGroupPage() {
   }
 
   const ButtonComponent = () => {
-    if (isDatarooms || isDataroomsPlus || isTrial) {
-      return <Button onClick={() => setModalOpen(true)}>Create group</Button>;
-    }
-    return (
-      <UpgradePlanModal
-        clickedPlan={PlanEnum.DataRooms}
-        trigger="create_group_button"
-      >
-        <Button>Upgrade to create group</Button>
-      </UpgradePlanModal>
-    );
+    return <Button onClick={() => setModalOpen(true)}>Create group</Button>;
   };
 
   return (

@@ -1,14 +1,8 @@
 import { useState } from "react";
 
-import ConfidentialViewSection from "@/ee/features/permissions/components/confidential-view/confidential-view-section";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { LinkAudienceType, LinkType } from "@prisma/client";
 import { LinkPreset } from "@prisma/client";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
-
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
 import AgreementSection from "@/components/links/link-sheet/agreement-section";
 import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
@@ -52,41 +46,12 @@ export const OnboardingLinkOptions = ({
   editLink?: boolean;
   currentPreset?: LinkPreset | null;
 }) => {
-  const {
-    isStarter,
-    isPro,
-    isBusiness,
-    isDatarooms,
-    isDataroomsPlus,
-    isTrial,
-  } = usePlan();
-  const { limits } = useLimits();
-  const allowAdvancedLinkControls = limits
-    ? limits?.advancedLinkControlsOnPro
-    : false;
-  const allowWatermarkOnBusiness = limits?.watermarkOnBusiness ?? false;
-  const allowAgreementOnBusiness = limits?.agreementOnBusiness ?? false;
-
-  const [openUpgradeModal, setOpenUpgradeModal] = useState<boolean>(false);
-  const [trigger, setTrigger] = useState<string>("");
-  const [upgradePlan, setUpgradePlan] = useState<PlanEnum>(PlanEnum.Business);
   const [showAdvancedSettings, setShowAdvancedSettings] =
     useState<boolean>(false);
-  const [highlightItem, setHighlightItem] = useState<string[]>([]);
 
-  const handleUpgradeStateChange = ({
-    state,
-    trigger,
-    plan,
-    highlightItem,
-  }: LinkUpgradeOptions) => {
-    setOpenUpgradeModal(state);
-    setTrigger(trigger);
-    if (plan) {
-      setUpgradePlan(plan as PlanEnum);
-    }
-    setHighlightItem(highlightItem || []);
-  };
+  // `handleUpgradeStateChange` is passed to feature sections as a required
+  // prop. With billing removed, every feature is unlocked, so it is a no-op.
+  const handleUpgradeStateChange = () => {};
 
   // Basic settings that are always shown
   const basicSettings = (
@@ -122,50 +87,30 @@ export const OnboardingLinkOptions = ({
   // Advanced settings that are shown only when showAdvancedSettings is true
   const advancedSettings = (
     <>
-      {limits?.dataroomUpload &&
-      linkType === LinkType.DATAROOM_LINK &&
-      targetId ? (
+      {linkType === LinkType.DATAROOM_LINK && targetId ? (
         <UploadSection
           {...{ data, setData }}
-          isAllowed={isTrial || isDatarooms || isDataroomsPlus}
+          isAllowed={true}
           handleUpgradeStateChange={handleUpgradeStateChange}
           targetId={targetId}
         />
       ) : null}
       <OGSection
         {...{ data, setData }}
-        isAllowed={
-          isTrial ||
-          (isPro && allowAdvancedLinkControls) ||
-          isBusiness ||
-          isDatarooms ||
-          isDataroomsPlus
-        }
+        isAllowed={true}
         handleUpgradeStateChange={handleUpgradeStateChange}
         editLink={editLink ?? false}
         presets={currentPreset}
       />
       <EmailAuthenticationSection
         {...{ data, setData }}
-        isAllowed={
-          isTrial ||
-          (isPro && allowAdvancedLinkControls) ||
-          isBusiness ||
-          isDatarooms ||
-          isDataroomsPlus
-        }
+        isAllowed={true}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       {data.audienceType === LinkAudienceType.GENERAL ? (
         <AllowListSection
           {...{ data, setData }}
-          isAllowed={
-            isTrial ||
-            (isPro && allowAdvancedLinkControls) ||
-            isBusiness ||
-            isDatarooms ||
-            isDataroomsPlus
-          }
+          isAllowed={true}
           handleUpgradeStateChange={handleUpgradeStateChange}
           presets={currentPreset}
         />
@@ -173,56 +118,31 @@ export const OnboardingLinkOptions = ({
       {data.audienceType === LinkAudienceType.GENERAL ? (
         <DenyListSection
           {...{ data, setData }}
-          isAllowed={
-            isTrial ||
-            (isPro && allowAdvancedLinkControls) ||
-            isBusiness ||
-            isDatarooms ||
-            isDataroomsPlus
-          }
+          isAllowed={true}
           handleUpgradeStateChange={handleUpgradeStateChange}
           presets={currentPreset}
         />
       ) : null}
       <ScreenshotProtectionSection
         {...{ data, setData }}
-        isAllowed={
-          isTrial ||
-          (isPro && allowAdvancedLinkControls) ||
-          isBusiness ||
-          isDatarooms ||
-          isDataroomsPlus
-        }
-        handleUpgradeStateChange={handleUpgradeStateChange}
-      />
-      <ConfidentialViewSection
-        {...{ data, setData }}
-        isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
+        isAllowed={true}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       <WatermarkSection
         {...{ data, setData }}
-        isAllowed={
-          isTrial || isDatarooms || isDataroomsPlus || allowWatermarkOnBusiness
-        }
+        isAllowed={true}
         handleUpgradeStateChange={handleUpgradeStateChange}
         presets={currentPreset}
       />
       <AgreementSection
         {...{ data, setData }}
-        isAllowed={
-          isTrial || isDatarooms || isDataroomsPlus || allowAgreementOnBusiness
-        }
+        isAllowed={true}
         handleUpgradeStateChange={handleUpgradeStateChange}
       />
       {linkType === LinkType.DATAROOM_LINK ? (
         <ConversationSection
           {...{ data, setData }}
-          isAllowed={
-            isTrial ||
-            isDataroomsPlus ||
-            ((isBusiness || isDatarooms) && !!limits?.conversationsInDataroom)
-          }
+          isAllowed={true}
           handleUpgradeStateChange={handleUpgradeStateChange}
         />
       ) : null}
@@ -231,34 +151,21 @@ export const OnboardingLinkOptions = ({
           <FeedbackSection {...{ data, setData }} />
           <QuestionSection
             {...{ data, setData }}
-            isAllowed={
-              isTrial ||
-              (isPro && allowAdvancedLinkControls) ||
-              isBusiness ||
-              isDatarooms ||
-              isDataroomsPlus
-            }
+            isAllowed={true}
             handleUpgradeStateChange={handleUpgradeStateChange}
           />
         </>
       ) : null}
       <CustomFieldsSection
         {...{ data, setData }}
-        isAllowed={isTrial || isBusiness || isDatarooms || isDataroomsPlus}
+        isAllowed={true}
         handleUpgradeStateChange={handleUpgradeStateChange}
         presets={currentPreset}
       />
       {linkType === LinkType.DOCUMENT_LINK ? (
         <ProBannerSection
           {...{ data, setData }}
-          isAllowed={
-            isTrial ||
-            isPro ||
-            isBusiness ||
-            isDatarooms ||
-            isDataroomsPlus ||
-            isStarter
-          }
+          isAllowed={true}
           handleUpgradeStateChange={handleUpgradeStateChange}
         />
       ) : null}
@@ -269,13 +176,6 @@ export const OnboardingLinkOptions = ({
     <div>
       {basicSettings}
       {showAdvancedSettings && advancedSettings}
-      <UpgradePlanModal
-        clickedPlan={upgradePlan}
-        open={openUpgradeModal}
-        setOpen={setOpenUpgradeModal}
-        trigger={trigger}
-        highlightItem={highlightItem}
-      />
     </div>
   );
 };

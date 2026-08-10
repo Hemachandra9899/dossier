@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import { useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { toast } from "sonner";
 import { mutate } from "swr";
 import { z } from "zod";
@@ -16,7 +15,6 @@ import {
 } from "@/lib/constants/folder-constants";
 import { safeSlugify } from "@/lib/utils";
 import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +29,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { UpgradePlanModal } from "../billing/upgrade-plan-modal";
 import { FolderIconColorPicker } from "./folder-icon-picker";
 
 export function AddFolderModal({
@@ -65,13 +62,7 @@ export function AddFolderModal({
   };
 
   const teamInfo = useTeam();
-  const { isFree, isTrial } = usePlan();
   const analytics = useAnalytics();
-
-  // Free plans (outside of trial) can't create folders. Centralize the gate
-  // so it applies to both trigger usage (`children`) and controlled usage
-  // (`open`/`onOpenChange`); otherwise a programmatic open would bypass it.
-  const isCreationAllowed = !(isFree && !isTrial);
 
   /** current folder name */
   const currentFolderPath = router.query.name as string[] | undefined;
@@ -97,13 +88,6 @@ export function AddFolderModal({
   const handleSubmit = async (event: any) => {
     event.preventDefault();
     event.stopPropagation();
-
-    // Defense in depth: the form isn't rendered when creation is blocked,
-    // but guard the creation path so a stale/leaked submission can't slip past.
-    if (!isCreationAllowed) {
-      setOpen(false);
-      return;
-    }
 
     if (!validation.success) {
       toast.error(validation.error.errors[0].message);
@@ -175,36 +159,6 @@ export function AddFolderModal({
     }
   };
 
-  // If the team is on a free plan, show the upgrade modal regardless of how
-  // the consumer opens the dialog (trigger child or controlled props).
-  if (!isCreationAllowed) {
-    if (children) {
-      return (
-        <UpgradePlanModal
-          clickedPlan={PlanEnum.Pro}
-          trigger={"add_folder_button"}
-          highlightItem={["folder", "folder-sharing", "datarooms"]}
-        >
-          {children}
-        </UpgradePlanModal>
-      );
-    }
-    // Controlled/programmatic usage: surface the upgrade modal in place of the
-    // create-folder dialog so callers can't bypass the gate by passing `open`.
-    return (
-      <UpgradePlanModal
-        clickedPlan={PlanEnum.Pro}
-        trigger={"add_folder_button"}
-        highlightItem={["folder", "folder-sharing", "datarooms"]}
-        open={open}
-        setOpen={(next) => {
-          const value = typeof next === "function" ? next(open) : next;
-          setOpen(value);
-        }}
-      />
-    );
-  }
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {children ? <DialogTrigger asChild>{children}</DialogTrigger> : null}
@@ -248,7 +202,7 @@ export function AddFolderModal({
             <Button
               type="submit"
               className="h-9 w-full"
-              disabled={!validation.success || !isCreationAllowed}
+              disabled={!validation.success}
               loading={loading}
             >
               Create

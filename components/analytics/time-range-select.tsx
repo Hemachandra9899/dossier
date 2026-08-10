@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
 
-import { PlanEnum } from "@/ee/stripe/constants";
-import { differenceInDays, format, startOfDay, subDays } from "date-fns";
-import { CalendarIcon, ChevronDown, CrownIcon } from "lucide-react";
+import { format, startOfDay, subDays } from "date-fns";
+import { CalendarIcon, ChevronDown } from "lucide-react";
 import { DateRange } from "react-day-picker";
-import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -60,6 +57,10 @@ interface TimeRangeSelectProps<T extends TimeRange> {
   onCustomRangeComplete?: (range: CustomRange) => void;
   /** Dashboard-only latch recording that the user has picked a range. */
   slug?: React.MutableRefObject<boolean>;
+  /**
+   * @deprecated Billing removed; all teams have every feature. Kept for
+   * compatibility with existing callers, no longer gates anything.
+   */
   isPremium?: boolean;
 }
 
@@ -71,7 +72,6 @@ export function TimeRangeSelect<T extends TimeRange>({
   setCustomRange,
   onCustomRangeComplete,
   slug,
-  isPremium = false,
 }: TimeRangeSelectProps<T>) {
   const selectedRange = ranges.find((range) => range.value === value);
   const [date, setDate] = useState<DateRange | undefined>({
@@ -80,20 +80,11 @@ export function TimeRangeSelect<T extends TimeRange>({
   });
   const [open, setOpen] = useState(false);
 
-  // Calculate the minimum allowed date (30 days ago for non-premium)
-  const minDate = isPremium ? undefined : subDays(new Date(), 30);
-
   useEffect(() => {
     setDate({ from: customRange.start, to: customRange.end });
   }, [customRange]);
 
   const handleSelectOption = (selected: T) => {
-    // Prevent selecting custom range for non-premium users
-    if (selected === "custom" && !isPremium) {
-      toast.error("Upgrade to view data beyond 30 days");
-      return;
-    }
-
     onChange(selected);
 
     // Update date range based on selected preset
@@ -136,16 +127,6 @@ export function TimeRangeSelect<T extends TimeRange>({
   const handleRangeChange = (range: DateRange | undefined) => {
     setDate(range);
     if (range?.from && range?.to) {
-      // Check if the selected range is within limits for non-premium users
-      if (
-        !isPremium &&
-        (differenceInDays(new Date(), range.from) > 30 ||
-          differenceInDays(new Date(), range.to) > 30)
-      ) {
-        toast.error("Upgrade to view data beyond 30 days");
-        return;
-      }
-
       const newRange = { start: range.from, end: range.to };
       setCustomRange(newRange);
       onChange("custom");
@@ -194,38 +175,23 @@ export function TimeRangeSelect<T extends TimeRange>({
               selected={date}
               onSelect={handleRangeChange}
               numberOfMonths={2}
-              disabled={
-                !isPremium
-                  ? (date) => {
-                      if (!date) return false;
-                      return differenceInDays(new Date(), date) > 30;
-                    }
-                  : undefined
-              }
-              fromDate={minDate}
             />
           </div>
           <div className="flex flex-col gap-2">
             <div className="grid gap-1">
-              {ranges.map((range) => {
-                if (isPremium || range.value !== "custom") {
-                  return (
-                    <Button
-                      key={range.value}
-                      variant={range.value === value ? "secondary" : "ghost"}
-                      className="justify-between"
-                      onClick={() => handleSelectOption(range.value)}
-                    >
-                      <span>{range.label}</span>
-                      {/* <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-                        {range.shortcut}
-                      </kbd> */}
-                    </Button>
-                  );
-                } else {
-                  return <UpgradeButton key={range.value} />;
-                }
-              })}
+              {ranges.map((range) => (
+                <Button
+                  key={range.value}
+                  variant={range.value === value ? "secondary" : "ghost"}
+                  className="justify-between"
+                  onClick={() => handleSelectOption(range.value)}
+                >
+                  <span>{range.label}</span>
+                  {/* <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                    {range.shortcut}
+                  </kbd> */}
+                </Button>
+              ))}
             </div>
           </div>
         </div>
@@ -233,26 +199,3 @@ export function TimeRangeSelect<T extends TimeRange>({
     </Popover>
   );
 }
-
-const UpgradeButton = () => {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <Button
-        variant="ghost"
-        className="justify-between text-muted-foreground"
-        onClick={() => setOpen(true)}
-        title="Upgrade to view data beyond 30 days"
-      >
-        Custom Date <CrownIcon className="!size-4" />
-      </Button>
-      <UpgradePlanModal
-        clickedPlan={PlanEnum.Pro}
-        trigger="dashboard_time_range_custom_select"
-        open={open}
-        setOpen={setOpen}
-      />
-    </>
-  );
-};

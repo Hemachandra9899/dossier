@@ -10,10 +10,9 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getServerSession } from "next-auth";
 import path from "node:path";
 
-import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
+import { isTeamPausedById } from "@/modules/access/is-team-paused";
 import { getLimits } from "@/ee/limits/server";
 import {
-  FREE_PLAN_ACCEPTED_FILE_TYPES,
   ONE_HOUR,
   ONE_SECOND,
   SUPPORTED_DOCUMENT_MIME_TYPES,
@@ -30,8 +29,6 @@ import { MultipartUploadSchema } from "@/lib/zod/schemas/multipart";
 
 import { authOptions } from "../../auth/[...nextauth]";
 
-const FREE_PLAN = "free";
-const FREE_TRIAL_PLAN = "free+drtrial";
 const BYTES_PER_MEGABYTE = 1024 * 1024;
 
 export default async function handler(
@@ -65,11 +62,10 @@ export default async function handler(
     const { action, fileName, contentType, teamId, docId } = data;
     const userId = (session.user as CustomUser).id;
 
-    // Verify team access (and grab `plan` for the upload-time plan/size gates
-    // applied below). `initiate` and `get-part-urls` are the points at which
-    // server resources (multipart upload id, pre-signed PUT URLs) are issued,
-    // so the gates run there; `complete` only ratifies an already-uploaded
-    // object and doesn't need to re-run them.
+    // Verify team access. `initiate` and `get-part-urls` are the points at
+    // which server resources (multipart upload id, pre-signed PUT URLs) are
+    // issued, so the size gates run there; `complete` only ratifies an
+    // already-uploaded object and doesn't need to re-run them.
     const team = await prisma.team.findUnique({
       where: {
         id: teamId,
@@ -79,7 +75,7 @@ export default async function handler(
           },
         },
       },
-      select: { id: true, plan: true },
+      select: { id: true },
     });
 
     if (!team) {
@@ -110,26 +106,13 @@ export default async function handler(
         });
       }
 
-      const isFree =
-        team.plan === FREE_PLAN || team.plan === FREE_TRIAL_PLAN;
-      const isTrial = team.plan.includes("drtrial");
-
-      // Plan-eligibility gate. The client-side dropzone enforces the same
-      // rule, but the folder picker bypasses dropzone and the multipart
-      // endpoint signs PUT URLs that S3 will accept independently of any
-      // later document-creation check — so we must re-enforce server-side.
+      // MIME gate. The client-side dropzone enforces the same rule, but the
+      // folder picker bypasses dropzone and the multipart endpoint signs PUT
+      // URLs that S3 will accept independently of any later document-creation
+      // check — so we must re-enforce server-side.
       if (!SUPPORTED_DOCUMENT_MIME_TYPES.includes(contentType)) {
         return res.status(415).json({
           error: `File type ${contentType} is not supported`,
-        });
-      }
-      if (
-        isFree &&
-        !isTrial &&
-        !(contentType in FREE_PLAN_ACCEPTED_FILE_TYPES)
-      ) {
-        return res.status(415).json({
-          error: `File type ${contentType} is not available on the free plan`,
         });
       }
 
@@ -149,8 +132,6 @@ export default async function handler(
             : undefined;
         const fileSizeLimits = getFileSizeLimits({
           limits: teamFileSizeLimitConfig,
-          isFree,
-          isTrial,
         });
         const fileSizeLimitMb = getFileSizeLimit(contentType, fileSizeLimits);
         const fileSizeLimitBytes = fileSizeLimitMb * BYTES_PER_MEGABYTE;

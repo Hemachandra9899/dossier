@@ -2,9 +2,6 @@ import { useCallback } from "react";
 
 import { CustomField, CustomFieldType } from "@prisma/client";
 import { Plus } from "lucide-react";
-import { toast } from "sonner";
-
-import useLimits from "@/lib/swr/use-limits";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -46,18 +43,7 @@ export default function CustomFieldsPanel({
   requireAgreement?: boolean;
   welcomeMessage?: string | null;
 }) {
-  const { limits } = useLimits();
-
-  const fieldLimit = limits?.linkCustomFields ?? 0;
-
   const addField = useCallback(() => {
-    if (fields.length >= fieldLimit) {
-      toast.error(
-        `You can only add up to ${fieldLimit} custom field${fieldLimit === 1 ? "" : "s"} on your current plan`,
-      );
-      return;
-    }
-
     const newField: CustomFieldData = {
       type: "SHORT_TEXT",
       identifier: "",
@@ -68,7 +54,7 @@ export default function CustomFieldsPanel({
       orderIndex: fields.length,
     };
     onChange([...fields, newField]);
-  }, [fields, fieldLimit, onChange]);
+  }, [fields, onChange]);
 
   const updateField = useCallback(
     (index: number, updatedField: CustomFieldData) => {
@@ -123,12 +109,6 @@ export default function CustomFieldsPanel({
           <SheetTitle>Configure Custom Form Fields</SheetTitle>
           <SheetDescription>
             Configure the custom fields that will be shown to viewers.
-            {fieldLimit > 0 && (
-              <span className="mt-1 block text-sm text-muted-foreground">
-                You can add up to {fieldLimit} custom field
-                {fieldLimit === 1 ? "" : "s"} on your current plan.
-              </span>
-            )}
           </SheetDescription>
         </SheetHeader>
 
@@ -137,7 +117,7 @@ export default function CustomFieldsPanel({
           <div className="flex min-h-0 flex-1 flex-col gap-4 lg:w-[360px] lg:flex-none">
             <div className="flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                {fields.length} of {fieldLimit} custom field
+                {fields.length} custom field
                 {fields.length === 1 ? "" : "s"}
               </div>
               <Button
@@ -145,7 +125,6 @@ export default function CustomFieldsPanel({
                 size="sm"
                 onClick={addField}
                 className="flex items-center gap-2"
-                disabled={fields.length >= fieldLimit}
               >
                 <Plus className="h-4 w-4" />
                 Add Field

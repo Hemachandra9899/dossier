@@ -5,10 +5,8 @@ import { useTeam } from "@/context/team-context";
 import { PlusIcon } from "lucide-react";
 import useSWR from "swr";
 
-import { usePlan } from "@/lib/swr/use-billing";
 import { fetcher } from "@/lib/utils";
 
-import PlanBadge from "@/components/billing/plan-badge";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
 
@@ -35,7 +33,6 @@ interface Workflow {
 export default function WorkflowsPage() {
   const router = useRouter();
   const teamInfo = useTeam();
-  const { isFree, isPro, isTrial } = usePlan();
   const teamId = teamInfo?.currentTeam?.id;
 
   const { data: workflows, error } = useSWR<Workflow[]>(
@@ -44,7 +41,6 @@ export default function WorkflowsPage() {
   );
 
   const isLoading = !workflows && !error;
-  const requiresUpgrade = (isFree || isPro) && !isTrial;
 
   return (
     <AppLayout>
@@ -54,28 +50,20 @@ export default function WorkflowsPage() {
             <div className="space-y-1">
               <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                 Workflows
-                {requiresUpgrade ? <PlanBadge plan="Business" /> : null}
               </h1>
               <p className="text-sm text-muted-foreground">
                 Route visitors to different links based on their email or domain
               </p>
             </div>
-            {!requiresUpgrade && (
-              <Link href="/workflows/new">
-                <Button>
-                  <PlusIcon className="mr-2 h-4 w-4" />
-                  Create Workflow
-                </Button>
-              </Link>
-            )}
+            <Link href="/workflows/new">
+              <Button>
+                <PlusIcon className="mr-2 h-4 w-4" />
+                Create Workflow
+              </Button>
+            </Link>
           </div>
 
-          {requiresUpgrade ? (
-            <WorkflowEmptyState
-              title="Workflows require an upgrade"
-              description="Upgrade to Business or Data Rooms plan to create routing workflows. Click the button below to upgrade your plan."
-            />
-          ) : isLoading ? (
+          {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-sm text-muted-foreground">
                 Loading workflows...

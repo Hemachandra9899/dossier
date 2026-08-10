@@ -9,7 +9,6 @@ import { useSelfMembership } from "@/lib/hooks/use-self-membership";
 import { AppBreadcrumb } from "@/components/layouts/breadcrumb";
 import { MobileBottomNav } from "@/components/layouts/mobile-bottom-nav";
 import { MobileHeader } from "@/components/layouts/mobile-header";
-import TrialBanner from "@/components/layouts/trial-banner";
 import { SidebarPanels } from "@/components/sidebar/sidebar-panels";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -19,8 +18,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-
-import { BlockingModal } from "./blocking-modal";
 
 const DEFAULT_SIDEBAR_OPEN = true;
 
@@ -126,8 +123,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <AppBreadcrumb />
               </div>
             </header>
-            <TrialBanner />
-            <BlockingModal />
             <main className="min-w-0 flex-1 overflow-x-hidden pt-[calc(3.5rem+env(safe-area-inset-top,0px))] pb-[calc(4rem+env(safe-area-inset-bottom,0px))] md:pt-0 md:pb-0">
               {children}
             </main>

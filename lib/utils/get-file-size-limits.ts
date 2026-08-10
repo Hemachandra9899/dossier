@@ -18,21 +18,18 @@ const resolveFileSizeLimit = (
 
 export function getFileSizeLimits({
   limits,
-  isFree,
-  isTrial,
 }: {
   limits?: { fileSizeLimits?: PartialFileSizeLimits } | null;
-  isFree: boolean;
-  isTrial: boolean;
 }): FileSizeLimits {
-  // Default limits based on plan type
+  // Operational defaults shared by every workspace (no plans). These match
+  // DOSSIER_OPERATIONAL_LIMITS and may be overridden by server-side limits.
   const defaultLimits: FileSizeLimits = {
     video: 500, // 500MB
-    document: isFree && !isTrial ? 100 : 350, // 100MB free, 350MB paid
-    image: isFree && !isTrial ? 30 : 100, // 30MB free, 100MB paid
-    excel: 40, // 40MB
-    maxFiles: 150,
-    maxPages: isFree && !isTrial ? 100 : 500,
+    document: 100, // 100MB
+    image: 25, // 25MB
+    excel: 100, // 100MB
+    maxFiles: 100,
+    maxPages: 1000,
   };
 
   // If no custom limits are set, return default limits

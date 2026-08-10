@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import { teamPlanIsDataroomPlusTier } from "@/lib/billing/team-plan-custom-messaging";
+import { teamPlanIsDataroomPlusTier } from "@/modules/access/team-plan-custom-messaging";
 import { getFeatureFlags } from "@/lib/featureFlags";
 import prisma from "@/lib/prisma";
 import { CustomUser } from "@/lib/types";

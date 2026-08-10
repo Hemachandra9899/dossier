@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
+
 import { LinkPreset } from "@prisma/client";
 import { format } from "date-fns";
 import { CircleHelpIcon, SettingsIcon } from "lucide-react";
@@ -12,7 +12,6 @@ import useSWR from "swr";
 import { usePlan } from "@/lib/swr/use-billing";
 import { fetcher } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { SettingsHeader } from "@/components/settings/settings-header";
 import { Button } from "@/components/ui/button";
@@ -64,21 +63,12 @@ export default function Presets() {
                 Configure and save presets for your links.
               </p>
             </div>
-            {isTrial || isBusiness || isDatarooms || isDataroomsPlus ? (
-              <Button
-                onClick={() => router.push("/settings/presets/new")}
-                className="shrink-0 whitespace-nowrap bg-gray-900 text-gray-50 hover:bg-gray-900/90"
-              >
-                Create Preset
-              </Button>
-            ) : (
-              <Button
-                onClick={() => setShowUpgradeModal(true)}
-                className="shrink-0 whitespace-nowrap bg-gray-900 text-gray-50 hover:bg-gray-900/90"
-              >
-                Upgrade
-              </Button>
-            )}
+            <Button
+              onClick={() => router.push("/settings/presets/new")}
+              className="shrink-0 whitespace-nowrap bg-gray-900 text-gray-50 hover:bg-gray-900/90"
+            >
+              Create Preset
+            </Button>
           </div>
 
           {/* Presets List */}
@@ -149,12 +139,7 @@ export default function Presets() {
           )}
         </div>
       </main>
-      <UpgradePlanModal
-        clickedPlan={PlanEnum.Business}
-        trigger="presets_page"
-        open={showUpgradeModal}
-        setOpen={setShowUpgradeModal}
-      />
+
     </AppLayout>
   );
 }

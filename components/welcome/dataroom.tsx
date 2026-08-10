@@ -1,5 +1,8 @@
 import { useRouter } from "next/router";
 
+import { useState } from "react";
+
+import { useTeam } from "@/context/team-context";
 import { motion } from "motion/react";
 
 import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
@@ -8,6 +11,42 @@ import { Button } from "../ui/button";
 
 export default function Dataroom() {
   const router = useRouter();
+  const teamInfo = useTeam();
+  const [isCreating, setIsCreating] = useState(false);
+
+  const createDataroom = async () => {
+    setIsCreating(true);
+    try {
+      const response = await fetch(
+        `/api/teams/${teamInfo?.currentTeam?.id}/datarooms`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name: "My Data Room" }),
+        },
+      );
+      if (!response.ok) {
+        const { message } = await response.json();
+        console.error(message || "Failed to create dataroom");
+        return;
+      }
+      const { dataroom } = await response.json();
+      router.push({
+        pathname: "/welcome",
+        query: {
+          type: "dataroom-choice",
+          dataroomId: dataroom.id,
+        },
+      });
+    } catch (error) {
+      console.error("Error creating dataroom", error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <motion.div
       className="z-10 mx-5 flex flex-col items-center space-y-10 text-center sm:mx-auto"
@@ -65,21 +104,13 @@ export default function Dataroom() {
       >
         <Button
           className="px-10 text-base font-medium"
-          onClick={() =>
-            router.push({
-              pathname: "/welcome",
-              query: {
-                type: "dataroom-trial",
-              },
-            })
-          }
+          disabled={isCreating}
+          onClick={createDataroom}
         >
-          Get a Data Rooms Plus trial
+          {isCreating ? "Creating..." : "Create your data room"}
         </Button>
         <span className="text-xs text-muted-foreground">
-          Data rooms are available on our Data Rooms Plus plan and higher.{" "}
-          <br />
-          You receive a 7-day trial.
+          Data rooms are included in your workspace.
         </span>
       </motion.div>
     </motion.div>

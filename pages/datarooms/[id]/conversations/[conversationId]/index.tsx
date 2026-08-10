@@ -9,5 +9,5 @@ export default function ConversationDetailPage() {
       ? router.query.conversationId
       : undefined;
 
-  return <ConversationOverview initialConversationId={conversationId} />;
+  return <ConversationOverview />;
 }

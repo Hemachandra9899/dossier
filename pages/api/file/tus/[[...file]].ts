@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/ee/features/billing/cancellation/lib/is-team-paused";
+import { isTeamPausedById } from "@/modules/access/is-team-paused";
 import { getLimits } from "@/ee/limits/server";
 import { MultiRegionS3Store } from "@/ee/features/storage/s3-store";
 import { CopyObjectCommand } from "@aws-sdk/client-s3";
@@ -33,8 +33,6 @@ const locker = new RedisLocker({
   redisClient: lockerRedisClient,
 });
 
-const FREE_PLAN = "free";
-const FREE_TRIAL_PLAN = "free+drtrial";
 const BYTES_PER_MEGABYTE = 1024 * 1024;
 type TusErrorResponse = { status_code: number; body: string };
 
@@ -169,7 +167,7 @@ const tusServer = new Server({
         },
       },
       select: {
-        plan: true,
+        id: true,
       },
     });
 
@@ -210,8 +208,6 @@ const tusServer = new Server({
       throw { status_code: 400, body: "Missing or invalid upload length" };
     }
 
-    const isFree = team.plan === FREE_PLAN || team.plan === FREE_TRIAL_PLAN;
-    const isTrial = team.plan.includes("drtrial");
     const teamFileSizeLimitConfig: Parameters<typeof getFileSizeLimits>[0]["limits"] =
       "fileSizeLimits" in limits &&
       typeof limits.fileSizeLimits === "object" &&
@@ -225,8 +221,6 @@ const tusServer = new Server({
         : undefined;
     const fileSizeLimits = getFileSizeLimits({
       limits: teamFileSizeLimitConfig,
-      isFree,
-      isTrial,
     });
     const fileSizeLimitMb = getFileSizeLimit(contentType, fileSizeLimits);
     const fileSizeLimitBytes = fileSizeLimitMb * BYTES_PER_MEGABYTE;

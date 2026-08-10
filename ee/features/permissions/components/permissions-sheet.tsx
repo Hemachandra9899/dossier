@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useTeam } from "@/context/team-context";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { ItemType, PermissionGroupAccessControls } from "@prisma/client";
 import {
   ColumnDef,
@@ -16,7 +15,6 @@ import {
   ArrowDownToLineIcon,
   ChevronDown,
   ChevronRight,
-  CrownIcon,
   EyeIcon,
   EyeOffIcon,
   File,
@@ -26,7 +24,6 @@ import {
 import useSWR from "swr";
 
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
-import { usePlan } from "@/lib/swr/use-billing";
 import { useDataroomFoldersTree } from "@/lib/swr/use-dataroom";
 import { cn, fetcher } from "@/lib/utils";
 import {
@@ -34,8 +31,6 @@ import {
   getHierarchicalDisplayName,
 } from "@/lib/utils/hierarchical-display";
 
-import PlanBadge from "@/components/billing/plan-badge";
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import CloudDownloadOff from "@/components/shared/icons/cloud-download-off";
 import { Button } from "@/components/ui/button";
 import {
@@ -376,10 +371,6 @@ export function PermissionsSheet({
   // initialPermissions = [],
 }: PermissionsSheetProps) {
   const { currentTeamId } = useTeam();
-  const { isDatarooms, isDataroomsPlus, isTrial } = usePlan();
-
-  // Check if custom permissions are allowed
-  const canSetCustomPermissions = isDatarooms || isDataroomsPlus || isTrial;
 
   const { folders, loading } = useDataroomFoldersTree({
     dataroomId,
@@ -963,19 +954,6 @@ export function PermissionsSheet({
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-medium">Share Entire Dataroom</h4>
-                  {!canSetCustomPermissions && (
-                    <UpgradePlanModal
-                      clickedPlan={PlanEnum.DataRooms}
-                      trigger="dataroom_permissions_sheet_toggle"
-                    >
-                      <button
-                        type="button"
-                        className="inline-flex cursor-pointer rounded-md transition-colors hover:bg-muted/50"
-                      >
-                        <PlanBadge plan={PlanEnum.DataRooms} />
-                      </button>
-                    </UpgradePlanModal>
-                  )}
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Turn off to set specific permissions for individual items.
@@ -983,18 +961,10 @@ export function PermissionsSheet({
                   choose what to share.
                 </p>
               </div>
-              {!canSetCustomPermissions ? (
-                <Switch
-                  checked={true}
-                  className="cursor-not-allowed opacity-50"
-                  onCheckedChange={undefined}
-                />
-              ) : (
-                <Switch
-                  checked={shareEntireDataroom}
-                  onCheckedChange={handleShareEntireDataroomToggle}
-                />
-              )}
+              <Switch
+                checked={shareEntireDataroom}
+                onCheckedChange={handleShareEntireDataroomToggle}
+              />
             </div>
           </div>
 
@@ -1002,7 +972,7 @@ export function PermissionsSheet({
           <div
             className={cn(
               "rounded-md border",
-              (shareEntireDataroom || !canSetCustomPermissions) && "opacity-50",
+              shareEntireDataroom && "opacity-50",
             )}
           >
             <Table>
@@ -1052,9 +1022,7 @@ export function PermissionsSheet({
                           >
                             <div
                               className={cn(
-                                (shareEntireDataroom ||
-                                  !canSetCustomPermissions) &&
-                                  "pointer-events-none",
+                                shareEntireDataroom && "pointer-events-none",
                               )}
                             >
                               {flexRender(

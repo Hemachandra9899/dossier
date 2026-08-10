@@ -2,16 +2,13 @@ import Link from "next/link";
 
 import { Dispatch, SetStateAction, useMemo, useState } from "react";
 
-import { PlanEnum } from "@/ee/stripe/constants";
 import { CircleHelpIcon, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { usePlan } from "@/lib/swr/use-billing";
 import { useTags } from "@/lib/swr/use-tags";
 import { TagProps } from "@/lib/types";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import { Label } from "@/components/ui/label";
 import { MultiSelect } from "@/components/ui/multi-select-v2";
 import { BadgeTooltip } from "@/components/ui/tooltip";
@@ -45,11 +42,8 @@ export default function TagSection({
   const [selectedValues, setSelectedValues] = useState<string[]>(
     data.tags || [],
   );
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const { isFree } = usePlan();
 
   const {
-    tagCount,
     tags: availableTags,
     loading: loadingTags,
   } = useTags({
@@ -74,12 +68,6 @@ export default function TagSection({
   };
 
   const createTag = async (tag: string) => {
-    if (isFree && tagCount && tagCount >= 5) {
-      setShowUpgradeModal(true);
-      toast.error("You have reached the maximum number of tags.");
-      return false;
-    }
-
     const res = await fetch(`/api/teams/${teamId}/tags`, {
       method: "POST",
       headers: {
@@ -144,14 +132,6 @@ export default function TagSection({
           onCreate={(search) => createTag(search)}
         />
       </div>
-      {showUpgradeModal && (
-        <UpgradePlanModal
-          clickedPlan={PlanEnum.Pro}
-          trigger="create_tag"
-          open={showUpgradeModal}
-          setOpen={setShowUpgradeModal}
-        />
-      )}
     </>
   );
 }

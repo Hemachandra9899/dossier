@@ -21,7 +21,6 @@ import {
   asDataroomViewerHeaderStyle,
   inferDataroomViewerLayoutPreset,
 } from "@/ee/features/branding/lib/dataroom-viewer-layout";
-import { PlanEnum } from "@/ee/stripe/constants";
 import { Check, CircleHelpIcon, CrownIcon, UploadIcon } from "lucide-react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 import sanitizeHtml from "sanitize-html";
@@ -34,7 +33,6 @@ import { usePlan } from "@/lib/swr/use-billing";
 import { useBrand } from "@/lib/swr/use-brand";
 import { cn, convertDataUrlToFile, uploadImage } from "@/lib/utils";
 
-import { UpgradePlanModal } from "@/components/billing/upgrade-plan-modal";
 import AppLayout from "@/components/layouts/app";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -53,7 +51,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { BadgeTooltip } from "@/components/ui/tooltip";
-import { UpgradeButton } from "@/components/ui/upgrade-button";
+
 import { DataroomBannerMedia } from "@/components/view/dataroom/dataroom-banner-media";
 
 export default function Branding() {
@@ -1710,60 +1708,23 @@ export default function Branding() {
 
             {/* Action Buttons - Always Visible */}
             <div className="flex items-center gap-4 border-t bg-background pt-4 lg:sticky lg:bottom-0 lg:z-10 lg:shrink-0 lg:pb-2">
-              {plan === "free" && !isTrial ? (
-                <UpgradeButton
-                  text="Save changes"
-                  clickedPlan={PlanEnum.Pro}
-                  trigger="branding_page"
-                  highlightItem={["custom-branding", "custom-branding-bundle"]}
-                />
-              ) : layoutBlocksSave ? (
-                <UpgradeButton
-                  text="Save changes"
-                  clickedPlan={PlanEnum.DataRooms}
-                  trigger="global_branding_layouts_save"
-                  highlightItem={["dataroom-viewer-layouts"]}
-                  hideItems={["datarooms"]}
-                />
-              ) : (
-                <Button
-                  onClick={saveBranding}
-                  loading={isLoading}
-                  disabled={
-                    (hasBusinessMessagingAccess && !!welcomeMessageError) ||
-                    (customPrivacyUrlEnabled &&
-                      privacyPolicyEnabled &&
-                      !!privacyPolicyUrlError)
-                  }
-                  className="bg-black text-white hover:bg-gray-800"
-                >
-                  Save changes
-                </Button>
-              )}
+              <Button
+                onClick={saveBranding}
+                loading={isLoading}
+                disabled={
+                  (hasBusinessMessagingAccess && !!welcomeMessageError) ||
+                  (customPrivacyUrlEnabled &&
+                    privacyPolicyEnabled &&
+                    !!privacyPolicyUrlError)
+                }
+                className="bg-black text-white hover:bg-gray-800"
+              >
+                Save changes
+              </Button>
               <Button variant="ghost" onClick={handleDelete} disabled={!brand}>
                 Reset branding
               </Button>
             </div>
-            <UpgradePlanModal
-              clickedPlan={PlanEnum.DataRooms}
-              trigger="global_branding_layouts_save"
-              highlightItem={["dataroom-viewer-layouts"]}
-              hideItems={["datarooms"]}
-              open={upgradeLayoutsModalOpen}
-              setOpen={setUpgradeLayoutsModalOpen}
-            />
-            <UpgradePlanModal
-              clickedPlan={PlanEnum.Business}
-              trigger="global_branding_messaging_save"
-              highlightItem={[
-                "custom-welcome-message",
-                "custom-cta",
-                "custom-social-cards",
-                "custom-domain",
-              ]}
-              open={upgradeMessagingModalOpen}
-              setOpen={setUpgradeMessagingModalOpen}
-            />
           </div>
 
           {/* Separator Line */}
