@@ -14,7 +14,12 @@ import { getIpAddress } from "@/lib/utils/ip";
 import { createSigningContext } from "@/modules/signing/application/context";
 import { exchangeRecipientAccessToken } from "@/modules/signing/application/exchange-recipient-access-token";
 import { isDossierSigningRuntimeEnabled } from "@/modules/signing/config";
-import { buildRecipientAccessCookieHeader } from "@/modules/signing/domain/recipient-access-token";
+import {
+  buildRecipientAccessCookieHeader,
+  computeRecipientAccessExpiry,
+  mintRecipientAccessToken,
+  RECIPIENT_ACCESS_COOKIE_TTL_MS,
+} from "@/modules/signing/domain/recipient-access-token";
 
 const bodySchema = z.object({
   token: z.string().min(1, "A signing link token is required."),
@@ -58,11 +63,21 @@ export default async function handle(
       token: parsed.data.token,
     });
 
+    const newCookieToken = mintRecipientAccessToken({
+      signatureRequestId: requestId,
+      recipientId: exchange.recipientId,
+      expiresAt: computeRecipientAccessExpiry({
+        now: new Date(),
+        ttlMs: RECIPIENT_ACCESS_COOKIE_TTL_MS,
+        requestExpiresAt: exchange.expiresAt,
+      }),
+    });
+
     res.setHeader(
       "Set-Cookie",
       buildRecipientAccessCookieHeader({
         requestId,
-        token: parsed.data.token,
+        token: newCookieToken,
       }),
     );
 

@@ -1,5 +1,5 @@
 {
-  "name": "papermark",
+  "name": "dossier",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -21,7 +21,6 @@
     "email": "email dev --dir ./components/emails --port 3001",
     "trigger:v4:dev": "npx trigger.dev@4 dev",
     "trigger:v4:deploy": "npx trigger.dev@4 deploy",
-    "stripe:webhook": "pkgx stripe listen --forward-to localhost:3000/api/stripe/webhook",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,mdx}\"",
     "dev:prisma": "npx prisma generate && npx prisma migrate deploy",
     "generate:openapi": "tsx scripts/generate-openapi.ts"
