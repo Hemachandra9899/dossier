@@ -44,6 +44,7 @@ export function RequestSignatureDialog({
   documentName,
   isPdf,
   onCreated,
+  dossierFileId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -52,6 +53,7 @@ export function RequestSignatureDialog({
   documentName: string;
   isPdf: boolean;
   onCreated?: (requestId: string) => void;
+  dossierFileId?: string | null;
 }) {
   if (!isDossierSigningEnabled || !isPdf || !open) {
     return null;
@@ -69,6 +71,7 @@ export function RequestSignatureDialog({
         documentId={documentId}
         documentName={documentName}
         onCreated={onCreated}
+        dossierFileId={dossierFileId}
       />
     </RequestSignatureProvider>
   );
@@ -81,6 +84,7 @@ function RequestSignatureDialogInner({
   documentId,
   documentName,
   onCreated,
+  dossierFileId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -88,6 +92,7 @@ function RequestSignatureDialogInner({
   documentId: string;
   documentName: string;
   onCreated?: (requestId: string) => void;
+  dossierFileId?: string | null;
 }) {
   const { state, dispatch } = useRequestSignature();
 
@@ -172,6 +177,7 @@ function RequestSignatureDialogInner({
         templateId: state.draft.templateId,
         recipients: state.draft.recipients,
         expiresAt: state.draft.expiresAt,
+        dossierFileId,
       });
       dispatch({
         type: "SET_RESULT",

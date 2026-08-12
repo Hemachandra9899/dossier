@@ -1,0 +1,104 @@
+enum DossierFileStatus {
+  NEW
+  COLLECTING
+  WAITING_ON_CLIENT
+  REVIEWING
+  NEEDS_CORRECTION
+  READY_TO_SIGN
+  SIGNING
+  COMPLETE
+  ARCHIVED
+}
+
+enum DossierFilePriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum DossierFileActivityType {
+  FILE_CREATED
+  STATUS_CHANGED
+  PRIORITY_CHANGED
+  OWNER_CHANGED
+  DUE_DATE_CHANGED
+  CLIENT_SHARE_CREATED
+  REQUIREMENT_CREATED
+  REQUIREMENT_SUBMITTED
+  REQUIREMENT_COMPLETED
+  CORRECTION_REQUESTED
+  DOCUMENT_ADDED
+  SIGNATURE_REQUEST_LINKED
+  SIGNATURE_COMPLETED
+  FILE_COMPLETED
+  NOTE_ADDED
+  FILE_ARCHIVED
+}
+
+model DossierFile {
+  id                     String  @id @default(cuid())
+  teamId                 String
+  dataroomId             String  @unique
+  requirementsTaskListId String? @unique
+
+  title       String
+  clientName  String?
+  clientEmail String?
+  reference   String?
+  caseType    String?
+
+  status   DossierFileStatus   @default(NEW)
+  priority DossierFilePriority @default(NORMAL)
+  ownerId  String?
+  dueAt    DateTime?
+  position Float               @default(0)
+
+  requiresSignature Boolean @default(false)
+
+  completedAt DateTime?
+  archivedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  team                 Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  dataroom             Dataroom  @relation(fields: [dataroomId], references: [id], onDelete: Cascade)
+  requirementsTaskList TaskList? @relation("DossierFileRequirements", fields: [requirementsTaskListId], references: [id], onDelete: SetNull)
+  owner                User?     @relation("DossierFileOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  signatureRequests SignatureRequest[]
+  activities        DossierFileActivity[]
+  notes             DossierFileNote[]
+
+  @@index([teamId, status, position])
+  @@index([teamId, updatedAt(sort: Desc)])
+  @@index([ownerId])
+  @@index([dueAt])
+}
+
+model DossierFileActivity {
+  id          String                  @id @default(cuid())
+  fileId      String
+  type        DossierFileActivityType
+  actorUserId String?
+  dedupeKey   String?                 @unique
+  metadata    Json?
+  occurredAt  DateTime                @default(now())
+
+  file DossierFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([fileId, occurredAt(sort: Desc)])
+}
+
+model DossierFileNote {
+  id          String   @id @default(cuid())
+  fileId      String
+  createdById String
+  body        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  file DossierFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  @@index([fileId, createdAt(sort: Desc)])
+}

@@ -19,10 +19,10 @@ function SidebarBrandHeader() {
   return (
     <SidebarHeader className="gap-y-0 pb-4">
       <p className="hidden w-full justify-center text-2xl font-bold tracking-tighter text-black group-data-[collapsible=icon]:inline-flex dark:text-white">
-        <Link href="/dashboard">P</Link>
+        <Link href="/dashboard">D</Link>
       </p>
       <p className="ml-2 flex items-center text-2xl font-bold tracking-tighter text-black group-data-[collapsible=icon]:hidden dark:text-white">
-        <Link href="/dashboard">Papermark</Link>
+        <Link href="/dashboard">Dossier</Link>
       </p>
     </SidebarHeader>
   );

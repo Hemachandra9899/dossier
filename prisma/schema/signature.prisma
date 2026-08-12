@@ -60,48 +60,52 @@ model SignatureTemplate {
   document Document           @relation(fields: [documentId], references: [id], onDelete: Cascade)
   requests SignatureRequest[]
 
+  @@unique([provider, providerEnvelopeId])
   @@index([teamId, createdAt(sort: Desc)])
   @@index([documentId])
-  @@unique([provider, providerEnvelopeId])
 }
 
 model SignatureRequest {
-  id                  String                 @id @default(cuid())
-  teamId              String
-  documentId          String
-  templateId          String
-  linkId              String?
+  id         String  @id @default(cuid())
+  teamId     String
+  documentId String
+  templateId String
+  linkId     String?
 
-  provider            SignatureProvider      @default(DOCUMENSO)
-  providerExternalId  String                 @unique
-  providerEnvelopeId  String?
-  providerDocumentId  Int?
+  provider           SignatureProvider @default(DOCUMENSO)
+  providerExternalId String            @unique
+  providerEnvelopeId String?
+  providerDocumentId Int?
 
-  status              SignatureRequestStatus @default(DRAFT)
+  status SignatureRequestStatus @default(DRAFT)
 
-  sentAt              DateTime?
-  viewedAt            DateTime?
-  completedAt         DateTime?
-  cancelledAt         DateTime?
-  expiresAt           DateTime?
+  sentAt      DateTime?
+  viewedAt    DateTime?
+  completedAt DateTime?
+  cancelledAt DateTime?
+  expiresAt   DateTime?
 
-  createdAt           DateTime               @default(now())
-  updatedAt           DateTime               @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  team       Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  document   Document           @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  template   SignatureTemplate  @relation(fields: [templateId], references: [id], onDelete: Restrict)
-  link       Link?              @relation(fields: [linkId], references: [id], onDelete: SetNull)
+  dossierFileId String?
+
+  team        Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  document    Document          @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  template    SignatureTemplate @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  link        Link?             @relation(fields: [linkId], references: [id], onDelete: SetNull)
+  dossierFile DossierFile?      @relation(fields: [dossierFileId], references: [id], onDelete: SetNull)
 
   recipients SignatureRecipient[]
   artifact   SignatureArtifact?
   deliveries SignatureDelivery[]
   activities SignatureActivity[]
 
+  @@unique([provider, providerEnvelopeId])
   @@index([teamId, status, createdAt(sort: Desc)])
   @@index([documentId, createdAt(sort: Desc)])
   @@index([linkId])
-  @@unique([provider, providerEnvelopeId])
+  @@index([dossierFileId])
 }
 
 model SignatureRecipient {
@@ -119,7 +123,7 @@ model SignatureRecipient {
   createdAt           DateTime                 @default(now())
   updatedAt           DateTime                 @updatedAt
 
-  signatureRequest SignatureRequest @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
+  signatureRequest SignatureRequest    @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
   deliveries       SignatureDelivery[]
   activities       SignatureActivity[]
 
@@ -145,9 +149,9 @@ model SignatureArtifact {
 // Idempotent provider-event inbox: webhook deliveries are upserted on
 // `dedupeKey` before any business processing happens.
 model SigningProviderEvent {
-  id                 String   @id @default(cuid())
+  id                 String            @id @default(cuid())
   provider           SignatureProvider
-  dedupeKey          String   @unique
+  dedupeKey          String            @unique
   eventType          String
   externalId         String?
   providerDocumentId Int?
@@ -155,7 +159,7 @@ model SigningProviderEvent {
   processedAt        DateTime?
   failedAt           DateTime?
   errorCode          String?
-  createdAt          DateTime @default(now())
+  createdAt          DateTime          @default(now())
 
   @@index([provider, createdAt(sort: Desc)])
   @@index([processedAt])
@@ -185,8 +189,8 @@ model SignatureDelivery {
   createdAt          DateTime                @default(now())
   updatedAt          DateTime                @updatedAt
 
-  signatureRequest   SignatureRequest        @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
-  recipient          SignatureRecipient?     @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  signatureRequest SignatureRequest    @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
+  recipient        SignatureRecipient? @relation(fields: [recipientId], references: [id], onDelete: Cascade)
 
   @@index([signatureRequestId, status])
   @@index([recipientId])
@@ -213,10 +217,9 @@ model SignatureActivity {
   timestamp          DateTime              @default(now())
   metadata           Json?
 
-  signatureRequest   SignatureRequest      @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
-  recipient          SignatureRecipient?   @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  signatureRequest SignatureRequest    @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
+  recipient        SignatureRecipient? @relation(fields: [recipientId], references: [id], onDelete: Cascade)
 
   @@index([signatureRequestId, timestamp(sort: Desc)])
   @@index([recipientId])
 }
-

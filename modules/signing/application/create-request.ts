@@ -24,6 +24,7 @@ export interface CreateRequestInput {
   templateId: string;
   recipients: unknown;
   expiresAt?: string | null;
+  dossierFileId?: string | null;
 }
 
 export interface CreateRequestResult {
@@ -73,6 +74,7 @@ export async function createRequest(
     templateId: template.id,
     expiresAt,
     recipients,
+    dossierFileId: input.dossierFileId,
   });
 
   try {

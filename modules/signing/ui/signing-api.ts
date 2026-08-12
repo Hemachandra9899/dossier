@@ -196,6 +196,7 @@ export const signingApi = {
     templateId: string;
     recipients: RecipientInput[];
     expiresAt?: string | null;
+    dossierFileId?: string | null;
   }) {
     return request<{ requestId: string; status: SignatureRequestStatus }>(
       `/api/teams/${input.teamId}/signature-requests`,
@@ -206,6 +207,7 @@ export const signingApi = {
           templateId: input.templateId,
           recipients: input.recipients,
           expiresAt: input.expiresAt ?? null,
+          dossierFileId: input.dossierFileId ?? null,
         }),
       },
     );

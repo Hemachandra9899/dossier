@@ -35,6 +35,7 @@ export interface CreateRequestWithRecipientsInput {
   documentId: string;
   templateId: string;
   linkId?: string | null;
+  dossierFileId?: string | null;
   expiresAt?: Date | null;
   recipients: NormalizedRecipient[];
 }
@@ -60,6 +61,7 @@ export class SignatureRequestRepository {
           documentId: input.documentId,
           templateId: input.templateId,
           linkId: input.linkId ?? null,
+          dossierFileId: input.dossierFileId ?? null,
           expiresAt: input.expiresAt ?? null,
           providerExternalId: temporaryExternalId,
           status: "PREPARING",
@@ -264,6 +266,7 @@ export class SignatureRequestRepository {
         status: true,
         providerEnvelopeId: true,
         providerDocumentId: true,
+        dossierFileId: true,
         document: { select: { name: true } },
       },
     });

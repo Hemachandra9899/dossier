@@ -13,6 +13,7 @@ model Dataroom {
   viewers      Viewer[]
   viewerGroups ViewerGroup[]
   brand        DataroomBrand?
+  dossierFile  DossierFile?
 
   // Internal team members scoped to this dataroom (DATAROOM_MEMBER role).
   userDatarooms UserDataroom[]
@@ -100,7 +101,7 @@ model Dataroom {
 // =============================================================================
 
 model TaskList {
-  id         String   @id @default(cuid())
+  id         String @id @default(cuid())
   name       String
   orderIndex Int?
 
@@ -109,7 +110,8 @@ model TaskList {
   teamId     String
   team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
-  tasks Task[]
+  tasks                   Task[]
+  dossierFileRequirements DossierFile? @relation("DossierFileRequirements")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -169,16 +171,16 @@ model Task {
 // Join row connecting a Task to an assignee. Exactly one of viewerId / groupId
 // / linkId / email is set. Multiple assignments per task support bulk-assign.
 model TaskAssignment {
-  id     String  @id @default(cuid())
+  id     String @id @default(cuid())
   taskId String
-  task   Task    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   viewerId String?
-  viewer   Viewer? @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+  viewer   Viewer?      @relation(fields: [viewerId], references: [id], onDelete: Cascade)
   groupId  String?
   group    ViewerGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade)
   linkId   String?
-  link     Link?   @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  link     Link?        @relation(fields: [linkId], references: [id], onDelete: Cascade)
   email    String?
 
   notifiedAt     DateTime? // assignment notification sent
@@ -282,14 +284,14 @@ model DataroomFolder {
 }
 
 model DataroomBrand {
-  id                             String  @id @default(cuid())
+  id                             String   @id @default(cuid())
   logo                           String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
   hideLogo                       Boolean? // null inherits the team-level Brand.hideLogo
   banner                         String? // This should be a reference to where the file is stored (S3, Google Cloud Storage, etc.)
   brandColor                     String? // This should be a reference to the brand color
   accentColor                    String? // This should be a reference to the accent color (front-page background)
   accentButtonColor              String? // Color used for CTA buttons; falls back to global Brand.accentButtonColor
-  applyAccentColorToDataroomView Boolean @default(false) // When true, apply accentColor to dataroom list/tree viewer background
+  applyAccentColorToDataroomView Boolean  @default(false) // When true, apply accentColor to dataroom list/tree viewer background
   welcomeMessage                 String? // This should be a reference to the welcome message
 
   cardLayout            String  @default("LIST")

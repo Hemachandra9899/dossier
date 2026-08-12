@@ -16,6 +16,7 @@ const bodySchema = z.object({
   templateId: z.string().min(1),
   recipients: signatureRecipientsInputSchema,
   expiresAt: z.string().datetime().nullable().optional(),
+  dossierFileId: z.string().optional(),
 });
 
 export default async function handle(
@@ -46,6 +47,7 @@ export default async function handle(
       templateId: parsed.data.templateId,
       recipients: parsed.data.recipients,
       expiresAt: parsed.data.expiresAt,
+      dossierFileId: parsed.data.dossierFileId,
     });
 
     return res.status(201).json(result);

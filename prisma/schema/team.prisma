@@ -1,22 +1,22 @@
 model Team {
-  id            String         @id @default(cuid())
-  name          String
-  slug          String?        @unique // Optional human-readable identifier (e.g. "acme"), used for SSO login
-  users         UserTeam[]
-  userDatarooms UserDataroom[]
-  documents     Document[]
-  folders       Folder[]
-  domains       Domain[]
-  invitations   Invitation[]
-  sentEmails    SentEmail[]
-  brand         Brand?
-  datarooms     Dataroom[]
-  agreements    Agreement[]
+  id                 String              @id @default(cuid())
+  name               String
+  slug               String?             @unique // Optional human-readable identifier (e.g. "acme"), used for SSO login
+  users              UserTeam[]
+  userDatarooms      UserDataroom[]
+  documents          Document[]
+  folders            Folder[]
+  domains            Domain[]
+  invitations        Invitation[]
+  sentEmails         SentEmail[]
+  brand              Brand?
+  datarooms          Dataroom[]
+  agreements         Agreement[]
   signatureTemplates SignatureTemplate[]
-  signatureRequests SignatureRequest[]
-  viewerGroups  ViewerGroup[]
-  visitorGroups VisitorGroup[]
-  viewers       Viewer[]
+  signatureRequests  SignatureRequest[]
+  viewerGroups       ViewerGroup[]
+  visitorGroups      VisitorGroup[]
+  viewers            Viewer[]
 
   permissionGroups  PermissionGroup[]
   linkPresets       LinkPreset[] // Link presets for the team
@@ -33,9 +33,10 @@ model Team {
 
   installedIntegrations InstalledIntegration[]
 
-  links     Link[]
-  views     View[]
-  workflows Workflow[]
+  links        Link[]
+  views        View[]
+  workflows    Workflow[]
+  dossierFiles DossierFile[]
 
   // request list (task system)
   taskLists TaskList[]

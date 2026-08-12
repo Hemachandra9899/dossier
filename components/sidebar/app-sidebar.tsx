@@ -17,6 +17,7 @@ import {
   Loader,
   ServerIcon,
   WorkflowIcon,
+  BriefcaseIcon,
 } from "lucide-react";
 
 import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
@@ -89,6 +90,12 @@ export function AppSidebarContent() {
         url: "/dashboard",
         icon: HouseIcon,
         current: router.pathname.includes("dashboard"),
+      },
+      {
+        title: "Files",
+        url: "/files",
+        icon: BriefcaseIcon,
+        current: router.pathname.startsWith("/files"),
       },
       {
         title: "All Documents",
@@ -213,6 +220,12 @@ export function AppSidebarContent() {
         : undefined;
 
     filteredNavMain = [
+      {
+        title: "Files",
+        url: "/files",
+        icon: BriefcaseIcon,
+        current: router.pathname.startsWith("/files"),
+      },
       {
         title: "Data Rooms",
         url: "/datarooms",

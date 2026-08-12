@@ -56,11 +56,14 @@ function DataroomMemberRouteGuard() {
     if (loading || !isDataroomMember) return;
 
     const path = router.pathname;
-    const onDataroomsArea =
-      path === "/datarooms" || path.startsWith("/datarooms/[id]");
+    const onAllowedScopedArea =
+      path === "/datarooms" ||
+      path.startsWith("/datarooms/[id]") ||
+      path === "/files" ||
+      path.startsWith("/files/[fileId]");
 
-    if (!onDataroomsArea) {
-      router.replace("/datarooms");
+    if (!onAllowedScopedArea) {
+      router.replace("/files");
       return;
     }
 

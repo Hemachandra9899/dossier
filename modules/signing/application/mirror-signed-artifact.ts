@@ -131,5 +131,18 @@ export async function mirrorSignedArtifact(
     sizeBytes: body.byteLength,
   });
 
+  if (request.dossierFileId) {
+    try {
+      const { syncDossierFileStatus } = await import(
+        "../../files/application/sync-file-status"
+      );
+      await syncDossierFileStatus(request.dossierFileId, {
+        dedupeKey: `signature-completed:${request.id}`,
+      });
+    } catch (err) {
+      ctx.logger.error("signing.sync_dossier_file_status_failed", { requestId: request.id }, err);
+    }
+  }
+
   return { mirrored: true, storageKey };
 }
