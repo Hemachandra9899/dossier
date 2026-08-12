@@ -41,7 +41,7 @@ model Team {
   taskLists TaskList[]
   tasks     Task[]
 
-  plan           String    @default("free")
+  plan           String    @default("business")
   stripeId       String?   @unique // Stripe customer ID
   subscriptionId String?   @unique // Stripe subscription ID
   startsAt       DateTime? // Stripe subscription start date

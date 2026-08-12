@@ -222,7 +222,10 @@ async function resolveSessionTeam({
     permissions,
     allowedDataroomIds,
     dataroomId,
-    team: membership.team,
+    team: {
+      id: membership.team.id,
+      plan: "business",
+    },
   };
 }
 

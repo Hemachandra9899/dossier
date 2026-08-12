@@ -63,9 +63,13 @@ export function getStorageConfig(storageRegion?: string): StorageConfig {
 
   const getArchiveBucket = () => {
     const archiveBucketVar = `NEXT_PRIVATE_ARCHIVE_BUCKET${suffix}`;
-    const archiveBucket = process.env[archiveBucketVar];
+    const archiveBucket =
+      process.env[archiveBucketVar] ||
+      process.env[`NEXT_PRIVATE_UPLOAD_BUCKET${suffix}`];
     if (!archiveBucket) {
-      throw new Error(`Missing environment variable: ${archiveBucketVar}`);
+      throw new Error(
+        `Missing environment variable: ${archiveBucketVar} or NEXT_PRIVATE_UPLOAD_BUCKET${suffix}`,
+      );
     }
     return archiveBucket;
   };

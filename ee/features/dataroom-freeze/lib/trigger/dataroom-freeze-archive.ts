@@ -240,11 +240,13 @@ export const dataroomFreezeArchiveTask = task({
 
       const storageConfig = await storageConfigPromise;
       const s3Client = new S3Client({
+        endpoint: storageConfig.endpoint || undefined,
         region: storageConfig.region,
         credentials: {
           accessKeyId: storageConfig.accessKeyId,
           secretAccessKey: storageConfig.secretAccessKey,
         },
+        forcePathStyle: storageConfig.endpoint ? (storageConfig.endpoint.includes("localhost") || storageConfig.endpoint.includes("127.0.0.1") || storageConfig.endpoint.includes("minio") || storageConfig.endpoint.includes("local")) : undefined,
       });
 
       // zlib.level 0 (store) because every entry is either already-compressed (inner zips)
@@ -306,11 +308,13 @@ export const dataroomFreezeArchiveTask = task({
         for (let i = 0; i < documentsZipS3Keys.length; i++) {
           const srcKey = documentsZipS3Keys[i];
           const downloadClient = new S3Client({
+            endpoint: storageConfig.endpoint || undefined,
             region: srcKey.region,
             credentials: {
               accessKeyId: storageConfig.accessKeyId,
               secretAccessKey: storageConfig.secretAccessKey,
             },
+            forcePathStyle: storageConfig.endpoint ? (storageConfig.endpoint.includes("localhost") || storageConfig.endpoint.includes("127.0.0.1") || storageConfig.endpoint.includes("minio") || storageConfig.endpoint.includes("local")) : undefined,
           });
 
           const getResponse = await downloadClient.send(
@@ -469,11 +473,13 @@ async function cleanupIntermediateZipParts(
 
     for (const group of groups.values()) {
       const cleanupClient = new S3Client({
+        endpoint: storageConfig.endpoint || undefined,
         region: group.region,
         credentials: {
           accessKeyId: storageConfig.accessKeyId,
           secretAccessKey: storageConfig.secretAccessKey,
         },
+        forcePathStyle: storageConfig.endpoint ? (storageConfig.endpoint.includes("localhost") || storageConfig.endpoint.includes("127.0.0.1") || storageConfig.endpoint.includes("minio") || storageConfig.endpoint.includes("local")) : undefined,
       });
 
       // DeleteObjectsCommand supports up to 1000 keys per request.

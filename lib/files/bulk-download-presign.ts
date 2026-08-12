@@ -65,11 +65,13 @@ export async function generateFreshPresignedUrl(
   const config = await getTeamStorageConfigById(teamId);
 
   const client = new S3Client({
+    endpoint: config.endpoint || undefined,
     region: s3Key.region,
     credentials: {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
     },
+    forcePathStyle: config.endpoint ? (config.endpoint.includes("localhost") || config.endpoint.includes("127.0.0.1") || config.endpoint.includes("minio") || config.endpoint.includes("local")) : undefined,
   });
 
   const command = new GetObjectCommand({

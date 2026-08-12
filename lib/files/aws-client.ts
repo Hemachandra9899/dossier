@@ -22,6 +22,7 @@ export const getS3Client = (storageRegion?: string) => {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
     },
+    forcePathStyle: config.endpoint ? (config.endpoint.includes("localhost") || config.endpoint.includes("127.0.0.1") || config.endpoint.includes("minio") || config.endpoint.includes("local")) : undefined,
   });
 };
 
@@ -41,6 +42,7 @@ export const getS3ClientForTeam = async (teamId: string) => {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
     },
+    forcePathStyle: config.endpoint ? (config.endpoint.includes("localhost") || config.endpoint.includes("127.0.0.1") || config.endpoint.includes("minio") || config.endpoint.includes("local")) : undefined,
   });
 };
 
@@ -103,6 +105,7 @@ export const getTeamS3ClientAndConfig = async (teamId: string) => {
       accessKeyId: config.accessKeyId,
       secretAccessKey: config.secretAccessKey,
     },
+    forcePathStyle: config.endpoint ? (config.endpoint.includes("localhost") || config.endpoint.includes("127.0.0.1") || config.endpoint.includes("minio") || config.endpoint.includes("local")) : undefined,
   });
 
   return { client, config };

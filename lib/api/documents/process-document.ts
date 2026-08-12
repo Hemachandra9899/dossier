@@ -148,6 +148,7 @@ export const processDocument = async ({
     (contentType === "application/vnd.apple.keynote" ||
       contentType === "application/x-iwork-keynote-sffkey")
   ) {
+  try {
     await tasks.trigger<typeof convertKeynoteToPdfTask>(
       "convert-keynote-to-pdf",
       {
@@ -166,11 +167,17 @@ export const processDocument = async ({
         concurrencyKey: teamId,
       },
     );
+  } catch (e: any) {
+    if (e?.name === "ApiClientMissingError") {
+      console.warn("[processDocument] Trigger.dev not configured — skipping Keynote conversion job.");
+    } else { throw e; }
+  }
   } else if (
     (type === "docs" || type === "slides") &&
     !isDownloadOnlyByExtension &&
     !isMarkdown
   ) {
+  try {
     await tasks.trigger<typeof convertFilesToPdfTask>(
       "convert-files-to-pdf",
       {
@@ -189,6 +196,11 @@ export const processDocument = async ({
         concurrencyKey: teamId,
       },
     );
+  } catch (e: any) {
+    if (e?.name === "ApiClientMissingError") {
+      console.warn("[processDocument] Trigger.dev not configured — skipping file conversion job.");
+    } else { throw e; }
+  }
   }
 
   if (
@@ -196,6 +208,7 @@ export const processDocument = async ({
     contentType !== "video/mp4" &&
     contentType?.startsWith("video/")
   ) {
+  try {
     await processVideo.trigger(
       {
         videoUrl: key,
@@ -215,10 +228,16 @@ export const processDocument = async ({
         concurrencyKey: teamId,
       },
     );
+  } catch (e: any) {
+    if (e?.name === "ApiClientMissingError") {
+      console.warn("[processDocument] Trigger.dev not configured — skipping video processing job.");
+    } else { throw e; }
+  }
   }
 
   // skip triggering convert-pdf-to-image job for "notion" / "excel" documents
   if (type === "pdf") {
+  try {
     await convertPdfToImageRoute.trigger(
       {
         documentId: document.id,
@@ -236,6 +255,11 @@ export const processDocument = async ({
         concurrencyKey: teamId,
       },
     );
+  } catch (e: any) {
+    if (e?.name === "ApiClientMissingError") {
+      console.warn("[processDocument] Trigger.dev not configured — skipping PDF-to-image conversion job.");
+    } else { throw e; }
+  }
   }
 
   if (type === "sheet" && enableExcelAdvancedMode) {

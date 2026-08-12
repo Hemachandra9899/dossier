@@ -10,6 +10,7 @@ import { verifyDataroomSessionInPagesRouter } from "@/lib/auth/dataroom-auth";
 import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
 import { buildContentDisposition, safeSlugify } from "@/lib/utils";
 import { RedisLocker } from "@/lib/files/tus-redis-locker";
+import { MemoryLocker } from "@/lib/files/tus-memory-locker";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { lockerRedisClient } from "@/lib/redis";
@@ -22,9 +23,13 @@ export const config = {
   },
 };
 
-const locker = new RedisLocker({
-  redisClient: lockerRedisClient,
-});
+const isRedisConfigured =
+  !!process.env.UPSTASH_REDIS_REST_LOCKER_URL &&
+  !!process.env.UPSTASH_REDIS_REST_LOCKER_TOKEN;
+
+const locker = isRedisConfigured
+  ? new RedisLocker({ redisClient: lockerRedisClient })
+  : new MemoryLocker();
 
 /**
  * Validates a viewer upload and resolves the team the file belongs to.

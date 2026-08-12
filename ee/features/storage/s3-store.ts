@@ -25,6 +25,13 @@ export class MultiRegionS3Store extends S3Store {
     // Initialize with EU config as default
     const euConfig = getStorageConfig();
 
+    console.log("[MultiRegionS3Store] Initializing with:", {
+      bucket: euConfig.bucket,
+      endpoint: euConfig.endpoint,
+      region: euConfig.region,
+      accessKeyId: euConfig.accessKeyId ? "***set***" : "MISSING",
+    });
+
     // Create S3 client config for super() call (omit endpoint if empty/undefined)
     const superS3Config: any = {
       bucket: euConfig.bucket,
@@ -34,6 +41,10 @@ export class MultiRegionS3Store extends S3Store {
         secretAccessKey: euConfig.secretAccessKey,
       },
     };
+    if (euConfig.endpoint) {
+      superS3Config.endpoint = euConfig.endpoint;
+      superS3Config.forcePathStyle = euConfig.endpoint.includes("localhost") || euConfig.endpoint.includes("127.0.0.1") || euConfig.endpoint.includes("minio") || euConfig.endpoint.includes("local");
+    }
 
     super({
       partSize: 8 * 1024 * 1024, // 8MiB parts
@@ -52,6 +63,10 @@ export class MultiRegionS3Store extends S3Store {
         secretAccessKey: euConfig.secretAccessKey,
       },
     };
+    if (euConfig.endpoint) {
+      euS3Config.endpoint = euConfig.endpoint;
+      euS3Config.forcePathStyle = euConfig.endpoint.includes("localhost") || euConfig.endpoint.includes("127.0.0.1") || euConfig.endpoint.includes("minio") || euConfig.endpoint.includes("local");
+    }
 
     this.euClient = new S3(euS3Config);
 
@@ -68,6 +83,10 @@ export class MultiRegionS3Store extends S3Store {
           secretAccessKey: this.usConfig.secretAccessKey,
         },
       };
+      if (this.usConfig.endpoint) {
+        usS3Config.endpoint = this.usConfig.endpoint;
+        usS3Config.forcePathStyle = this.usConfig.endpoint.includes("localhost") || this.usConfig.endpoint.includes("127.0.0.1") || this.usConfig.endpoint.includes("minio") || this.usConfig.endpoint.includes("local");
+      }
 
       this.usClient = new S3(usS3Config);
     } catch (error) {

@@ -64,11 +64,13 @@ export async function GET(
 
     const archiveConfig = await getTeamStorageConfigById(teamId);
     const s3Client = new S3Client({
+      endpoint: archiveConfig.endpoint || undefined,
       region: archiveConfig.region,
       credentials: {
         accessKeyId: archiveConfig.accessKeyId,
         secretAccessKey: archiveConfig.secretAccessKey,
       },
+      forcePathStyle: archiveConfig.endpoint ? (archiveConfig.endpoint.includes("localhost") || archiveConfig.endpoint.includes("127.0.0.1") || archiveConfig.endpoint.includes("minio") || archiveConfig.endpoint.includes("local")) : undefined,
     });
 
     const url = await getSignedUrl(

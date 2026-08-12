@@ -10,6 +10,7 @@ import path from "node:path";
 
 import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
 import { RedisLocker } from "@/lib/files/tus-redis-locker";
+import { MemoryLocker } from "@/lib/files/tus-memory-locker";
 import { newId } from "@/lib/id-helper";
 import prisma from "@/lib/prisma";
 import { lockerRedisClient } from "@/lib/redis";
@@ -29,9 +30,15 @@ export const config = {
   },
 };
 
-const locker = new RedisLocker({
-  redisClient: lockerRedisClient,
-});
+// Use an in-memory locker when Upstash Redis is not configured (local dev).
+// In production, the RedisLocker ensures distributed upload safety across instances.
+const isRedisConfigured =
+  !!process.env.UPSTASH_REDIS_REST_LOCKER_URL &&
+  !!process.env.UPSTASH_REDIS_REST_LOCKER_TOKEN;
+
+const locker = isRedisConfigured
+  ? new RedisLocker({ redisClient: lockerRedisClient })
+  : new MemoryLocker();
 
 const BYTES_PER_MEGABYTE = 1024 * 1024;
 type TusErrorResponse = { status_code: number; body: string };
