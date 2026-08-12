@@ -15,6 +15,7 @@ type CreateFileInput = {
   ownerId?: string | null;
   dueAt?: Date | null;
   requiresSignature?: boolean;
+  templateId?: string | null;
 };
 
 export async function createDossierFile(input: CreateFileInput) {
@@ -55,6 +56,38 @@ export async function createDossierFile(input: CreateFileInput) {
         teamId: input.teamId,
       },
     });
+
+    if (input.templateId) {
+      const template = await tx.dossierFileTemplate.findUnique({
+        where: { id: input.templateId },
+        include: { requirements: true },
+      });
+      if (template) {
+        for (const req of template.requirements) {
+          const task = await tx.task.create({
+            data: {
+              taskListId: requirementList.id,
+              dataroomId: dataroom.id,
+              teamId: input.teamId,
+              title: req.title,
+              type: req.type as any,
+              description: req.description,
+              status: "OPEN",
+              createdByUserId: input.userId,
+            },
+          });
+
+          if (input.clientEmail) {
+            await tx.taskAssignment.create({
+              data: {
+                taskId: task.id,
+                email: input.clientEmail.trim().toLowerCase(),
+              },
+            });
+          }
+        }
+      }
+    }
 
     const lastFile = await tx.dossierFile.findFirst({
       where: {
@@ -99,5 +132,12 @@ export async function createDossierFile(input: CreateFileInput) {
     return file;
   });
 
-  return result;
+  const { syncDossierFileStatus } = await import("./sync-file-status");
+  await syncDossierFileStatus(result.id, { actorUserId: input.userId });
+
+  const refreshed = await prisma.dossierFile.findUnique({
+    where: { id: result.id },
+  });
+
+  return refreshed ?? result;
 }

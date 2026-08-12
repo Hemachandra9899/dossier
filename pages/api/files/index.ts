@@ -12,13 +12,14 @@ const CreateFileSchema = z.object({
   teamId: z.string().min(1),
   title: z.string().trim().min(1).max(200),
   clientName: z.string().trim().max(200).optional(),
-  clientEmail: z.string().email().optional(),
+  clientEmail: z.string().email().optional().or(z.literal("")),
   reference: z.string().trim().max(100).optional(),
   caseType: z.string().trim().max(100).optional(),
   priority: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).optional(),
   ownerId: z.string().optional(),
-  dueAt: z.string().datetime().optional(),
+  dueAt: z.string().datetime().optional().nullable(),
   requiresSignature: z.boolean().optional(),
+  templateId: z.string().optional().nullable(),
 });
 
 export default async function handler(
@@ -68,7 +69,7 @@ export default async function handler(
         userId,
         title: parsed.data.title,
         clientName: parsed.data.clientName,
-        clientEmail: parsed.data.clientEmail,
+        clientEmail: parsed.data.clientEmail || null,
         reference: parsed.data.reference,
         caseType: parsed.data.caseType,
         priority: parsed.data.priority,
@@ -77,6 +78,7 @@ export default async function handler(
           ? new Date(parsed.data.dueAt)
           : null,
         requiresSignature: parsed.data.requiresSignature,
+        templateId: parsed.data.templateId,
       });
 
       return res.status(201).json({ file });

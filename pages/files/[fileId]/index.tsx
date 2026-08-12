@@ -446,7 +446,7 @@ export default function FileDetailPage() {
 
               {tasks.length === 0 && (
                 <p className="text-center text-xs text-muted-foreground py-8 border border-dashed rounded-lg bg-neutral-50">
-                  No required document requests. Click "Add Requirement" to request client documents.
+                  No required document requests. Click &quot;Add Requirement&quot; to request client documents.
                 </p>
               )}
             </div>

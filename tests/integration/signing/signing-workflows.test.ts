@@ -73,6 +73,7 @@ async function setupRequest(overrides: { expiresAt?: string } = {}) {
       },
     ],
     expiresAt: overrides.expiresAt ?? null,
+    skipAutoDelivery: true,
   });
   return { ...base, requestId };
 }
@@ -525,6 +526,7 @@ describe("signing workflows (integration)", () => {
           { name: "Alice Example", email: "alice@example.com", signingOrder: 1 },
         ],
         expiresAt: overrides.expiresAt ?? null,
+        skipAutoDelivery: true,
       });
       const before = await getRequest(ctx, { teamId: team.id, requestId });
       return { ctx, team, requestId, recipientId: before.recipients[0].id };

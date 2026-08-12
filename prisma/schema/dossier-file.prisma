@@ -102,3 +102,34 @@ model DossierFileNote {
 
   @@index([fileId, createdAt(sort: Desc)])
 }
+
+model DossierFileTemplate {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  teamId      String?  // null for system-global templates
+  name        String
+  description String?
+  isGlobal    Boolean  @default(false)
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  requirements DossierFileTemplateRequirement[]
+  team         Team?                            @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+}
+
+model DossierFileTemplateRequirement {
+  id          String   @id @default(cuid())
+  templateId  String
+  title       String
+  type        String   @default("UPLOAD") // UPLOAD, TODO, ACKNOWLEDGE
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  template DossierFileTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+}

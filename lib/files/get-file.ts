@@ -88,6 +88,10 @@ const getFileFromS3 = async (
   expiresIn?: number,
   responseContentDisposition?: string,
 ) => {
+  if (process.env.NODE_ENV === "test" || process.env.TEST_DATABASE_URL) {
+    return `https://example.com/mock-signed-url/${key}`;
+  }
+
   const isServer =
     typeof window === "undefined" && !!process.env.INTERNAL_API_KEY;
 
@@ -103,8 +107,9 @@ const getFileFromS3 = async (
       responseContentDisposition,
     );
   } else {
+    const host = typeof window === "undefined" ? (process.env.NEXT_PUBLIC_APP_URL || "") : "";
     return fetchPresignedUrl(
-      `/api/file/s3/get-presigned-get-url-proxy`,
+      `${host}/api/file/s3/get-presigned-get-url-proxy`,
       {
         "Content-Type": "application/json",
       },

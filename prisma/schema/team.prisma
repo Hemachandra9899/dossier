@@ -37,6 +37,7 @@ model Team {
   views        View[]
   workflows    Workflow[]
   dossierFiles DossierFile[]
+  fileTemplates DossierFileTemplate[]
 
   // request list (task system)
   taskLists TaskList[]

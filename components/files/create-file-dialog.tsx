@@ -32,12 +32,19 @@ export function CreateFileDialog({ onCreated }: Props) {
   const [dueAt, setDueAt] = useState("");
   const [priority, setPriority] = useState("NORMAL");
   const [requiresSignature, setRequiresSignature] = useState(false);
+  const [templateId, setTemplateId] = useState("");
 
   // Fetch team members for Owner selection dropdown
   const { data: teamData } = useSWR(
     teamId ? `/api/teams/${teamId}` : null
   );
   const members = teamData?.users ?? [];
+
+  // Fetch templates for selection dropdown
+  const { data: templatesData } = useSWR(
+    teamId ? `/api/files/templates?teamId=${teamId}` : null
+  );
+  const templates = templatesData?.templates ?? [];
 
   useEffect(() => {
     const handleOpen = () => {
@@ -52,6 +59,7 @@ export function CreateFileDialog({ onCreated }: Props) {
       setDueAt("");
       setPriority("NORMAL");
       setRequiresSignature(false);
+      setTemplateId("");
     };
 
     window.addEventListener("dossier:create-file", handleOpen);
@@ -80,6 +88,7 @@ export function CreateFileDialog({ onCreated }: Props) {
         ownerId: ownerId || undefined,
         dueAt: dueAt ? new Date(dueAt).toISOString() : undefined,
         requiresSignature,
+        templateId: templateId || undefined,
       });
 
       toast.success("File created successfully!");
@@ -115,6 +124,24 @@ export function CreateFileDialog({ onCreated }: Props) {
               onChange={(e) => setTitle(e.target.value)}
               className="flex h-9 w-full rounded-md border border-neutral-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-neutral-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold uppercase tracking-wider text-neutral-500">
+              Document Checklist Template
+            </label>
+            <select
+              value={templateId}
+              onChange={(e) => setTemplateId(e.target.value)}
+              className="flex h-9 w-full rounded-md border border-neutral-200 bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="">Custom (Empty Checklist)</option>
+              {templates.map((t: any) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

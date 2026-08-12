@@ -25,6 +25,7 @@ export interface CreateRequestInput {
   recipients: unknown;
   expiresAt?: string | null;
   dossierFileId?: string | null;
+  skipAutoDelivery?: boolean;
 }
 
 export interface CreateRequestResult {
@@ -119,15 +120,17 @@ export async function createRequest(
       type: "REQUEST_CREATED",
     });
 
-    // Auto-deliver the request to recipients
-    const { deliverSignatureRequest } = await import("./deliver-signature-request");
-    for (const recipient of ready.recipients) {
-      await deliverSignatureRequest(ctx, {
-        requestId: ready.id,
-        recipientId: recipient.id,
-      }).catch((err) => {
-        ctx.logger.error("signing.auto_delivery_failed", { requestId: ready.id, recipientId: recipient.id }, err);
-      });
+    if (!input.skipAutoDelivery) {
+      // Auto-deliver the request to recipients
+      const { deliverSignatureRequest } = await import("./deliver-signature-request");
+      for (const recipient of ready.recipients) {
+        await deliverSignatureRequest(ctx, {
+          requestId: ready.id,
+          recipientId: recipient.id,
+        }).catch((err) => {
+          ctx.logger.error("signing.auto_delivery_failed", { requestId: ready.id, recipientId: recipient.id }, err);
+        });
+      }
     }
 
     // Refresh status to SENT if it changed during auto-delivery

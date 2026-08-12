@@ -166,4 +166,50 @@ describe("files workspace workflows (integration)", () => {
     synced = await syncDossierFileStatus(file.id);
     assert.strictEqual(synced?.status, DossierFileStatus.COMPLETE);
   });
+
+  it("provisions file checklist from a template and auto-assigns tasks", async () => {
+    const team = await seedTeam();
+    const user = await seedUser({ email: `user-${crypto.randomUUID()}@example.com` });
+
+    // Seed a mock template
+    const template = await testPrisma.dossierFileTemplate.create({
+      data: {
+        key: `test-mortgage-app-${crypto.randomUUID()}`,
+        name: "Test Mortgage Application",
+        isGlobal: true,
+        requirements: {
+          create: [
+            { title: "Bank Statements", type: "UPLOAD" },
+            { title: "ID Copy", type: "UPLOAD" },
+          ],
+        },
+      },
+    });
+
+    const file = await createDossierFile({
+      teamId: team.id,
+      userId: user.id,
+      title: "Mortgage file with template",
+      clientEmail: "client-test@example.com",
+      templateId: template.id,
+    });
+
+    // Check that the tasks are created and assigned to the client
+    const tasks = await testPrisma.task.findMany({
+      where: { taskListId: file.requirementsTaskListId! },
+      include: { assignments: true },
+    });
+
+    assert.strictEqual(tasks.length, 2);
+    assert.ok(tasks.some((t) => t.title === "Bank Statements"));
+    assert.ok(tasks.some((t) => t.title === "ID Copy"));
+
+    for (const t of tasks) {
+      assert.strictEqual(t.assignments.length, 1);
+      assert.strictEqual(t.assignments[0].email, "client-test@example.com");
+    }
+
+    // Verify derived status is WAITING_ON_CLIENT because of assignments
+    assert.strictEqual(file.status, DossierFileStatus.WAITING_ON_CLIENT);
+  });
 });
