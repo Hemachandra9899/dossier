@@ -21,6 +21,25 @@ export interface RecipientDTO {
   status: string;
 }
 
+export interface DeliveryDTO {
+  id: string;
+  recipientId: string;
+  type: string;
+  status: string;
+  retryCount: number;
+  lastAttemptAt: string | null;
+  failedReason: string | null;
+  createdAt: string;
+}
+
+export interface ActivityDTO {
+  id: string;
+  recipientId: string | null;
+  type: string;
+  timestamp: string;
+  metadata: any;
+}
+
 export interface RequestDTO {
   id: string;
   teamId: string;
@@ -32,6 +51,8 @@ export interface RequestDTO {
   cancelledAt: string | null;
   createdAt: string;
   recipients: RecipientDTO[];
+  deliveries: DeliveryDTO[];
+  activities: ActivityDTO[];
 }
 
 export interface TemplateDTO {
@@ -134,6 +155,19 @@ async function request<T>(
   return (await response.json()) as T;
 }
 
+export interface SignedArtifactDTO {
+  requestId: string;
+  status: "pending" | "completed";
+  artifact?: {
+    storageKey: string;
+    fileName: string;
+    mimeType: string;
+    sha256: string;
+    sizeBytes: string;
+  };
+  downloadUrl?: string;
+}
+
 export const signingApi = {
   createTemplate(input: {
     teamId: string;
@@ -199,10 +233,26 @@ export const signingApi = {
     );
   },
 
+  remindRequest(input: { teamId: string; requestId: string; recipientId: string }) {
+    return request<{ ok: boolean }>(
+      `/api/teams/${input.teamId}/signature-requests/${input.requestId}/remind`,
+      {
+        method: "POST",
+        body: JSON.stringify({ recipientId: input.recipientId }),
+      },
+    );
+  },
+
   cancelRequest(input: { teamId: string; requestId: string }) {
     return request<{ request: RequestDTO }>(
       `/api/teams/${input.teamId}/signature-requests/${input.requestId}/cancel`,
       { method: "POST" },
+    );
+  },
+
+  getSignedArtifact(input: { teamId: string; requestId: string }) {
+    return request<SignedArtifactDTO>(
+      `/api/teams/${input.teamId}/signature-requests/${input.requestId}/signed-artifact`,
     );
   },
 

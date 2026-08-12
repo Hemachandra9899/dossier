@@ -95,6 +95,8 @@ model SignatureRequest {
 
   recipients SignatureRecipient[]
   artifact   SignatureArtifact?
+  deliveries SignatureDelivery[]
+  activities SignatureActivity[]
 
   @@index([teamId, status, createdAt(sort: Desc)])
   @@index([documentId, createdAt(sort: Desc)])
@@ -118,6 +120,8 @@ model SignatureRecipient {
   updatedAt           DateTime                 @updatedAt
 
   signatureRequest SignatureRequest @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
+  deliveries       SignatureDelivery[]
+  activities       SignatureActivity[]
 
   @@index([signatureRequestId, status])
   @@index([email])
@@ -156,3 +160,63 @@ model SigningProviderEvent {
   @@index([provider, createdAt(sort: Desc)])
   @@index([processedAt])
 }
+
+enum SignatureDeliveryType {
+  INVITATION
+  REMINDER
+  COMPLETION
+}
+
+enum SignatureDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model SignatureDelivery {
+  id                 String                  @id @default(cuid())
+  signatureRequestId String
+  recipientId        String?
+  type               SignatureDeliveryType
+  status             SignatureDeliveryStatus @default(PENDING)
+  retryCount         Int                     @default(0)
+  lastAttemptAt      DateTime?
+  failedReason       String?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+
+  signatureRequest   SignatureRequest        @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
+  recipient          SignatureRecipient?     @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([signatureRequestId, status])
+  @@index([recipientId])
+}
+
+enum SignatureActivityType {
+  REQUEST_CREATED
+  INVITATION_SENT
+  INVITATION_FAILED
+  RECIPIENT_VIEWED
+  SIGNING_STARTED
+  REMINDER_SENT
+  REQUEST_CANCELLED
+  RECIPIENT_SIGNED
+  REQUEST_COMPLETED
+  ARTIFACT_READY
+}
+
+model SignatureActivity {
+  id                 String                @id @default(cuid())
+  signatureRequestId String
+  recipientId        String?
+  type               SignatureActivityType
+  timestamp          DateTime              @default(now())
+  metadata           Json?
+
+  signatureRequest   SignatureRequest      @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
+  recipient          SignatureRecipient?   @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([signatureRequestId, timestamp(sort: Desc)])
+  @@index([recipientId])
+}
+

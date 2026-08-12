@@ -97,6 +97,12 @@ export async function createSigningSession(
 
   await ctx.requests.updateRecipientStatus(recipient.id, "SIGNING");
 
+  await ctx.requests.createActivity({
+    signatureRequestId: request.id,
+    recipientId: recipient.id,
+    type: "SIGNING_STARTED",
+  });
+
   const session = await ctx.provider.createSigningSession({
     providerTemplateId: requestTemplate.providerTemplateId,
     providerEnvelopeId: request.providerEnvelopeId,

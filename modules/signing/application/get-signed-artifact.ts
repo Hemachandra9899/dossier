@@ -1,12 +1,9 @@
-// GetSignedArtifact: returns the final signed file if it has been mirrored into
-// Dossier-owned storage, otherwise a "pending" DTO. No mirroring happens in
-// this checkpoint, so real requests always return pending until the artifact
-// mirror job lands.
-
 import type { SigningContext } from "./context";
 import type { SignedArtifactDTO } from "./dto";
 import { completedArtifactDTO, pendingArtifactDTO } from "./dto";
 import { SigningNotFoundError } from "../domain/signing-errors";
+import { getFile } from "@/lib/files/get-file";
+import { buildContentDisposition } from "@/lib/utils";
 
 export interface GetSignedArtifactInput {
   teamId: string;
@@ -28,5 +25,18 @@ export async function getSignedArtifact(
   const artifact = await ctx.requests.findArtifactByRequestId(input.requestId);
   if (!artifact) return pendingArtifactDTO(input.requestId);
 
-  return completedArtifactDTO(input.requestId, artifact);
+  const downloadUrl = await getFile({
+    type: "S3_PATH",
+    data: artifact.storageKey,
+    isDownload: true,
+    responseContentDisposition: buildContentDisposition(
+      artifact.fileName,
+      artifact.fileName,
+    ),
+  });
+
+  return {
+    ...completedArtifactDTO(input.requestId, artifact),
+    downloadUrl,
+  };
 }

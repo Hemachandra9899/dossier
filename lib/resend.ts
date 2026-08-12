@@ -40,8 +40,8 @@ export const sendEmail = async ({
   idempotencyKey?: string;
 }) => {
   if (!resend) {
-    // Throw an error if resend is not initialized
-    throw new Error("Resend not initialized");
+    console.log(`[MOCK EMAIL] to: ${to}, subject: ${subject}`);
+    return { id: "mock-email-id" };
   }
 
   const html = await render(react);

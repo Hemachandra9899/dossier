@@ -1,4 +1,7 @@
 services:
+  # ──────────────────────────────────────────
+  # MinIO (local S3-compatible object storage)
+  # ──────────────────────────────────────────
   minio:
     image: quay.io/minio/minio
     container_name: dossier-minio
@@ -31,5 +34,52 @@ services:
       exit 0;
       "
 
+  # ──────────────────────────────────────────
+  # Documenso (local signing engine)
+  # Postgres for Documenso's own schema (separate from Dossier's DB)
+  # ──────────────────────────────────────────
+  documenso-postgres:
+    image: postgres:15-alpine
+    container_name: dossier-documenso-postgres
+    environment:
+      POSTGRES_USER: documenso
+      POSTGRES_PASSWORD: documenso-local-secret
+      POSTGRES_DB: documenso
+    volumes:
+      - documenso_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U documenso"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  documenso:
+    image: documenso/documenso:latest
+    container_name: dossier-documenso
+    depends_on:
+      documenso-postgres:
+        condition: service_healthy
+    ports:
+      - "3002:3000"
+    environment:
+      # Internal DB for Documenso itself
+      DATABASE_URL: "postgresql://documenso:documenso-local-secret@documenso-postgres:5432/documenso"
+      NEXTAUTH_URL: "http://localhost:3002"
+      NEXTAUTH_SECRET: "documenso-local-nextauth-secret-change-me"
+      NEXT_PUBLIC_WEBAPP_URL: "http://localhost:3002"
+      # Required by Documenso - used to sign document certificates
+      NEXT_PRIVATE_SIGNING_LOCAL_FILE_CONTENTS: ""
+      NEXT_PRIVATE_SIGNING_PASSPHRASE: ""
+      # Email (disabled in dev - mails are logged to console)
+      NEXT_PRIVATE_SMTP_FROM_NAME: "Documenso Local"
+      NEXT_PRIVATE_SMTP_FROM_ADDRESS: "noreply@localhost"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
 volumes:
   minio_data:
+  documenso_pgdata:

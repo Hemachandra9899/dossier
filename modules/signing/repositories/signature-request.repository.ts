@@ -7,6 +7,11 @@ import type {
   SignatureRecipientStatus,
   SignatureRequest,
   SignatureRequestStatus,
+  SignatureDelivery,
+  SignatureDeliveryStatus,
+  SignatureDeliveryType,
+  SignatureActivity,
+  SignatureActivityType,
 } from "@prisma/client";
 
 import { buildRequestExternalId } from "../domain/external-id";
@@ -15,10 +20,14 @@ import type { NormalizedRecipient } from "../domain/recipient-validation";
 
 export type SignatureRequestWithRecipients = SignatureRequest & {
   recipients: SignatureRecipient[];
+  deliveries: SignatureDelivery[];
+  activities: SignatureActivity[];
 };
 
 export const signatureRequestInclude = {
   recipients: { orderBy: { signingOrder: "asc" as const } },
+  deliveries: { orderBy: { createdAt: "desc" as const } },
+  activities: { orderBy: { timestamp: "desc" as const } },
 } as const;
 
 export interface CreateRequestWithRecipientsInput {
@@ -209,7 +218,7 @@ export class SignatureRequestRepository {
         expiresAt: true,
         completedAt: true,
         document: { select: { name: true } },
-        recipients: { select: { id: true, name: true } },
+        recipients: { select: { id: true, name: true, status: true, email: true } },
       },
     });
   }
@@ -223,6 +232,14 @@ export class SignatureRequestRepository {
         documentId,
         status: { notIn: [...SIGNATURE_REQUEST_TERMINAL_STATUSES] },
       },
+      orderBy: { createdAt: "desc" },
+      include: signatureRequestInclude,
+    });
+  }
+
+  async findLatestByTeamAndDocument(teamId: string, documentId: string) {
+    return this.prisma.signatureRequest.findFirst({
+      where: { teamId, documentId },
       orderBy: { createdAt: "desc" },
       include: signatureRequestInclude,
     });
@@ -271,5 +288,39 @@ export class SignatureRequestRepository {
     sizeBytes: bigint;
   }) {
     return this.prisma.signatureArtifact.create({ data: input });
+  }
+
+  async createActivity(input: {
+    signatureRequestId: string;
+    recipientId?: string | null;
+    type: SignatureActivityType;
+    metadata?: any;
+  }): Promise<SignatureActivity> {
+    return this.prisma.signatureActivity.create({
+      data: {
+        signatureRequestId: input.signatureRequestId,
+        recipientId: input.recipientId ?? null,
+        type: input.type,
+        metadata: input.metadata ?? undefined,
+      },
+    });
+  }
+
+  async createDelivery(input: {
+    signatureRequestId: string;
+    recipientId?: string | null;
+    type: SignatureDeliveryType;
+    status: SignatureDeliveryStatus;
+    failedReason?: string | null;
+  }): Promise<SignatureDelivery> {
+    return this.prisma.signatureDelivery.create({
+      data: {
+        signatureRequestId: input.signatureRequestId,
+        recipientId: input.recipientId ?? null,
+        type: input.type,
+        status: input.status,
+        failedReason: input.failedReason ?? null,
+      },
+    });
   }
 }

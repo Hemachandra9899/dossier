@@ -50,6 +50,11 @@ export async function cancelRequest(
     cancelledAt: new Date(),
   });
 
+  await ctx.requests.createActivity({
+    signatureRequestId: updated.id,
+    type: "REQUEST_CANCELLED",
+  });
+
   ctx.logger.info("signing.request_cancelled", {
     teamId: updated.teamId,
     requestId: updated.id,

@@ -52,16 +52,53 @@ export async function exchangeRecipientAccessToken(
   if (NON_VISIBLE_STATUSES.has(request.status)) {
     throw new SigningNotFoundError("Signature request was not found.");
   }
+  if ((request.status as string) === "CANCELLED") {
+    throw new SigningValidationError(
+      "This signature request has been cancelled by the sender.",
+    );
+  }
+  if ((request.status as string) === "EXPIRED") {
+    throw new SigningValidationError(
+      "This signature request has expired.",
+    );
+  }
 
   // Request-level expiry: a link cannot open a request that has lapsed.
   if (
     request.expiresAt &&
     request.expiresAt.getTime() <= Date.now() &&
-    request.status !== "EXPIRED"
+    (request.status as string) !== "EXPIRED"
   ) {
     throw new SigningValidationError(
       "This signature request has expired.",
     );
+  }
+
+  // Update recipient status to VIEWED and log activity
+  const recipient = request.recipients.find((r) => r.id === parsed.recipientId);
+  if (recipient) {
+    if (recipient.status === "PENDING") {
+      await ctx.requests.updateRecipientStatus(recipient.id, "VIEWED", { viewedAt: new Date() });
+      if (request.status === "SENT") {
+        await ctx.requests.updateStatus(request.id, "VIEWED", { viewedAt: new Date() });
+      }
+    }
+
+    const { default: prisma } = await import("@/lib/prisma");
+    const exists = await prisma.signatureActivity.findFirst({
+      where: {
+        signatureRequestId: request.id,
+        recipientId: recipient.id,
+        type: "RECIPIENT_VIEWED",
+      },
+    });
+    if (!exists) {
+      await ctx.requests.createActivity({
+        signatureRequestId: request.id,
+        recipientId: recipient.id,
+        type: "RECIPIENT_VIEWED",
+      });
+    }
   }
 
   return { ok: true, recipientId: parsed.recipientId, expiresAt: parsed.expiresAt };

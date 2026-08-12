@@ -112,6 +112,25 @@ export async function createRequest(
 
     const ready = await ctx.requests.updateStatus(request.id, "READY");
 
+    await ctx.requests.createActivity({
+      signatureRequestId: ready.id,
+      type: "REQUEST_CREATED",
+    });
+
+    // Auto-deliver the request to recipients
+    const { deliverSignatureRequest } = await import("./deliver-signature-request");
+    for (const recipient of ready.recipients) {
+      await deliverSignatureRequest(ctx, {
+        requestId: ready.id,
+        recipientId: recipient.id,
+      }).catch((err) => {
+        ctx.logger.error("signing.auto_delivery_failed", { requestId: ready.id, recipientId: recipient.id }, err);
+      });
+    }
+
+    // Refresh status to SENT if it changed during auto-delivery
+    const refreshed = await ctx.requests.findById(ready.id);
+
     ctx.logger.info("signing.request_ready", {
       teamId: ready.teamId,
       requestId: ready.id,
@@ -120,7 +139,7 @@ export async function createRequest(
       recipientCount: ready.recipients.length,
     });
 
-    return { requestId: ready.id, status: ready.status };
+    return { requestId: ready.id, status: refreshed?.status ?? ready.status };
   } catch (error) {
     await ctx.requests.updateStatus(request.id, "FAILED");
 

@@ -1,41 +1,45 @@
-// GET /api/teams/:teamId/documents/:documentId/signature-requests
-// Returns the active (non-terminal) signature request for a document, or null
-// (team member). The sender UI uses this to show the current request summary
-// instead of blindly creating a new request.
+// POST /api/teams/:teamId/signature-requests/:requestId/remind
+// Sends a signature request reminder to a recipient (team member only).
 
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { requireTeamMember } from "@/lib/api/require-team-member";
 import { errorhandler } from "@/lib/errorHandler";
+import { remindRequest } from "@/modules/signing/application/remind-request";
 import { createSigningContext } from "@/modules/signing/application/context";
-import { getLatestRequest } from "@/modules/signing/application/get-active-request";
 import { isDossierSigningEnabled } from "@/modules/signing/config";
 
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  if (req.method !== "GET") {
-    res.setHeader("Allow", ["GET"]);
+  if (req.method !== "POST") {
+    res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
   if (!isDossierSigningEnabled) {
     return res.status(404).end();
   }
 
-  const { teamId, documentId } = req.query as {
+  const { teamId, requestId } = req.query as {
     teamId: string;
-    documentId: string;
+    requestId: string;
   };
   const user = await requireTeamMember(req, res, teamId);
   if (!user) return;
 
+  const recipientId = typeof req.body?.recipientId === "string" ? req.body.recipientId : "";
+  if (!recipientId) {
+    return res.status(400).json({ message: "recipientId is required in request body" });
+  }
+
   try {
-    const request = await getLatestRequest(createSigningContext(), {
+    await remindRequest(createSigningContext(), {
       teamId,
-      documentId,
+      requestId,
+      recipientId,
     });
-    return res.status(200).json({ request });
+    return res.status(200).json({ ok: true });
   } catch (error) {
     return errorhandler(error, res);
   }

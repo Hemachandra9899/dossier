@@ -3,8 +3,11 @@ import dynamic from "next/dynamic";
 import ErrorPage from "next/error";
 
 import { Suspense, useState } from "react";
+import useSWR from "swr";
 
 import { useTeam } from "@/context/team-context";
+import { signingApi } from "@/modules/signing/ui/signing-api";
+import { RequestManagement } from "@/modules/signing/ui/request-management";
 
 import { useDocumentLinks } from "@/lib/swr/use-document";
 import { useDocumentOverview } from "@/lib/swr/use-document-overview";
@@ -85,6 +88,13 @@ export default function DocumentPage() {
   const { links, error: linksError, mutate: mutateLinks } = useDocumentLinks();
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
+
+  const { data: activeRequestData, mutate: refreshActiveRequest } = useSWR(
+    prismaDocument?.id && teamId ? [teamId, prismaDocument.id, "active-request"] : null,
+    ([tId, dId]) => signingApi.getActiveRequest({ teamId: tId, documentId: dId }),
+    { refreshInterval: 5000 }
+  );
+  const activeRequest = activeRequestData?.request;
 
   const [isLinkSheetOpen, setIsLinkSheetOpen] = useState<boolean>(false);
   const [isBulkImportOpen, setIsBulkImportOpen] = useState<boolean>(false);
@@ -179,51 +189,59 @@ export default function DocumentPage() {
             <div className="h-48 animate-pulse rounded-lg bg-gray-100" />
           }
         >
-          <>
-            {/* Document Analytics - Always show, lazy loaded if not empty */}
-            {primaryVersion.type !== "video" &&
-              (isEmpty ? (
-                <DocumentStatsPlaceholder
-                  numPages={primaryVersion.numPages || 1}
-                  onCreateLink={() => setIsLinkSheetOpen(true)}
-                />
-              ) : (
-                <StatsComponent
-                  documentId={prismaDocument.id}
-                  numPages={primaryVersion.numPages!}
-                />
-              ))}
-
-            {/* Video Analytics - Always show, lazy loaded if not empty */}
-            {primaryVersion.type === "video" &&
-              (isEmpty ? (
-                <VideoStatsPlaceholder
-                  length={primaryVersion.length || 51}
-                  onCreateLink={() => setIsLinkSheetOpen(true)}
-                />
-              ) : (
-                <VideoAnalytics
-                  documentId={prismaDocument.id}
-                  primaryVersion={primaryVersion}
-                  teamId={teamId}
-                />
-              ))}
-
-            {/* Links - Always show */}
-            <LinksTable
-              links={links}
-              targetType={"DOCUMENT"}
-              primaryVersion={primaryVersion}
-              mutateDocument={mutateDocument}
-              onBulkImportOpen={() => setIsBulkImportOpen(true)}
+          {activeRequest ? (
+            <RequestManagement
+              teamId={teamId}
+              requestId={activeRequest.id}
+              onStateChange={refreshActiveRequest}
             />
+          ) : (
+            <>
+              {/* Document Analytics - Always show, lazy loaded if not empty */}
+              {primaryVersion.type !== "video" &&
+                (isEmpty ? (
+                  <DocumentStatsPlaceholder
+                    numPages={primaryVersion.numPages || 1}
+                    onCreateLink={() => setIsLinkSheetOpen(true)}
+                  />
+                ) : (
+                  <StatsComponent
+                    documentId={prismaDocument.id}
+                    numPages={primaryVersion.numPages!}
+                  />
+                ))}
 
-            {/* Visitors - Always show */}
-            <VisitorsTable
-              primaryVersion={primaryVersion}
-              isVideo={primaryVersion.type === "video"}
-            />
-          </>
+              {/* Video Analytics - Always show, lazy loaded if not empty */}
+              {primaryVersion.type === "video" &&
+                (isEmpty ? (
+                  <VideoStatsPlaceholder
+                    length={primaryVersion.length || 51}
+                    onCreateLink={() => setIsLinkSheetOpen(true)}
+                  />
+                ) : (
+                  <VideoAnalytics
+                    documentId={prismaDocument.id}
+                    primaryVersion={primaryVersion}
+                    teamId={teamId}
+                  />
+                ))}
+
+              {/* Links - Always show */}
+              <LinksTable
+                links={links}
+                targetType={"DOCUMENT"}
+                primaryVersion={primaryVersion}
+                mutateDocument={mutateDocument}
+                onBulkImportOpen={() => setIsBulkImportOpen(true)}
+              />
+
+              {/* Visitors - Always show */}
+              <VisitorsTable
+                primaryVersion={primaryVersion}
+                isVideo={primaryVersion.type === "video"}
+              />
+            </>
+          )}
         </Suspense>
 
         <LinkSheet

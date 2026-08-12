@@ -23,3 +23,15 @@ export async function getActiveRequest(
 
   return request ? toRequestDTO(request) : null;
 }
+
+export async function getLatestRequest(
+  ctx: SigningContext,
+  input: GetActiveRequestInput,
+): Promise<RequestDTO | null> {
+  const request = await ctx.requests.findLatestByTeamAndDocument(
+    input.teamId,
+    input.documentId,
+  );
+
+  return request ? toRequestDTO(request) : null;
+}

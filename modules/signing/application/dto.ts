@@ -18,6 +18,24 @@ export interface RecipientDTO {
   signedAt: Date | null;
 }
 
+export interface DeliveryDTO {
+  id: string;
+  type: string;
+  status: string;
+  retryCount: number;
+  lastAttemptAt: Date | null;
+  failedReason: string | null;
+  createdAt: Date;
+}
+
+export interface ActivityDTO {
+  id: string;
+  recipientId: string | null;
+  type: string;
+  timestamp: Date;
+  metadata: any;
+}
+
 export interface RequestDTO {
   id: string;
   teamId: string;
@@ -37,6 +55,8 @@ export interface RequestDTO {
   createdAt: Date;
   updatedAt: Date;
   recipients: RecipientDTO[];
+  deliveries: DeliveryDTO[];
+  activities: ActivityDTO[];
 }
 
 export function toRequestDTO(
@@ -60,7 +80,7 @@ export function toRequestDTO(
     expiresAt: request.expiresAt,
     createdAt: request.createdAt,
     updatedAt: request.updatedAt,
-    recipients: request.recipients.map((recipient) => ({
+    recipients: (request.recipients ?? []).map((recipient) => ({
       id: recipient.id,
       name: recipient.name,
       email: recipient.email,
@@ -69,6 +89,22 @@ export function toRequestDTO(
       status: recipient.status,
       viewedAt: recipient.viewedAt,
       signedAt: recipient.signedAt,
+    })),
+    deliveries: (request.deliveries ?? []).map((delivery) => ({
+      id: delivery.id,
+      type: delivery.type,
+      status: delivery.status,
+      retryCount: delivery.retryCount,
+      lastAttemptAt: delivery.lastAttemptAt,
+      failedReason: delivery.failedReason,
+      createdAt: delivery.createdAt,
+    })),
+    activities: (request.activities ?? []).map((activity) => ({
+      id: activity.id,
+      recipientId: activity.recipientId,
+      type: activity.type,
+      timestamp: activity.timestamp,
+      metadata: activity.metadata,
     })),
   };
 }
@@ -83,6 +119,7 @@ export interface SignedArtifactDTO {
     sha256: string;
     sizeBytes: string;
   };
+  downloadUrl?: string;
 }
 
 export function pendingArtifactDTO(requestId: string): SignedArtifactDTO {
