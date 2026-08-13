@@ -69,6 +69,11 @@ export const signatureArtifactMirrorQueue = queue({
   concurrencyLimit: 5,
 });
 
+export const dossierDocumentAnalysisQueue = queue({
+  name: "dossier-document-analysis",
+  concurrencyLimit: 5,
+});
+
 // Plan-based conversion queues (used at trigger time)
 const concurrencyConfig: Record<string, number> = {
   free: 1,

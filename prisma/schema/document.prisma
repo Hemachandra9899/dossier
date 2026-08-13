@@ -64,6 +64,7 @@ model DocumentVersion {
   vectorStoreFileId String? // OpenAI vector store file ID for AI search
   pages             DocumentPage[]
   redactionJobs     DocumentRedactionJob[] // Redaction jobs that target this version
+  analyses          DocumentAnalysis[]
   hasPages          Boolean                @default(false) // Indicates if the document has pages
   length            Int? // This is the length of the video in seconds
   createdAt         DateTime               @default(now())

@@ -57,38 +57,6 @@ export async function createDossierFile(input: CreateFileInput) {
       },
     });
 
-    if (input.templateId) {
-      const template = await tx.dossierFileTemplate.findUnique({
-        where: { id: input.templateId },
-        include: { requirements: true },
-      });
-      if (template) {
-        for (const req of template.requirements) {
-          const task = await tx.task.create({
-            data: {
-              taskListId: requirementList.id,
-              dataroomId: dataroom.id,
-              teamId: input.teamId,
-              title: req.title,
-              type: req.type as any,
-              description: req.description,
-              status: "OPEN",
-              createdByUserId: input.userId,
-            },
-          });
-
-          if (input.clientEmail) {
-            await tx.taskAssignment.create({
-              data: {
-                taskId: task.id,
-                email: input.clientEmail.trim().toLowerCase(),
-              },
-            });
-          }
-        }
-      }
-    }
-
     const lastFile = await tx.dossierFile.findFirst({
       where: {
         teamId: input.teamId,
@@ -117,6 +85,49 @@ export async function createDossierFile(input: CreateFileInput) {
         position: (lastFile?.position ?? 0) + 1000,
       },
     });
+
+    if (input.templateId) {
+      const template = await tx.dossierFileTemplate.findUnique({
+        where: { id: input.templateId },
+        include: { requirements: true },
+      });
+      if (template) {
+        for (const req of template.requirements) {
+          const task = await tx.task.create({
+            data: {
+              taskListId: requirementList.id,
+              dataroomId: dataroom.id,
+              teamId: input.teamId,
+              title: req.title,
+              type: req.type as any,
+              description: req.description,
+              status: "OPEN",
+              createdByUserId: input.userId,
+            },
+          });
+
+          // Create policy if requirement template has expectedKind defined
+          if (req.expectedKind) {
+            await tx.dossierRequirementPolicy.create({
+              data: {
+                taskId: task.id,
+                expectedKind: req.expectedKind,
+                verificationRules: req.verificationRules || {},
+              },
+            });
+          }
+
+          if (input.clientEmail) {
+            await tx.taskAssignment.create({
+              data: {
+                taskId: task.id,
+                email: input.clientEmail.trim().toLowerCase(),
+              },
+            });
+          }
+        }
+      }
+    }
 
     await tx.dossierFileActivity.create({
       data: {

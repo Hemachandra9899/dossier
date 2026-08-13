@@ -84,6 +84,7 @@ model User {
   taskActivities TaskActivity[] @relation("taskActivities")
 
   notificationPreferences NotificationPreference[]
+  dismissedIssues         VerificationIssue[]      @relation("dismissedIssues")
 }
 
 model Brand {

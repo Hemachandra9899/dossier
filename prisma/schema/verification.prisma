@@ -1,0 +1,69 @@
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  NEEDS_REVIEW
+  ISSUE
+}
+
+enum VerificationSeverity {
+  WARNING
+  ERROR
+}
+
+model DossierRequirementPolicy {
+  id                String   @id @default(cuid())
+  taskId            String   @unique
+  task              Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  expectedKind      String   // GOVERNMENT_ID | BANK_STATEMENT | PAY_STUB | EMPLOYMENT_LETTER | TAX_DOCUMENT | OTHER
+  verificationRules Json     // e.g. { matchClientName: true, expectedEmployer?: string, etc. }
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([taskId])
+}
+
+model DocumentAnalysis {
+  id                 String             @id @default(cuid())
+  documentVersionId  String
+  documentVersion    DocumentVersion    @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
+  taskId             String
+  task               Task               @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  status             VerificationStatus @default(PENDING)
+  extractedKind      String?
+  extractedData      Json?              // Extracted facts (fullName, address, statement dates, etc.)
+  checks             Json?              // Checklist evaluation results
+  confidenceScore    Float?             // Overall confidence score from AI (0.0 to 1.0)
+  
+  issues             VerificationIssue[]
+  
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([documentVersionId])
+  @@index([taskId])
+}
+
+model VerificationIssue {
+  id         String               @id @default(cuid())
+  analysisId String
+  analysis   DocumentAnalysis     @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  
+  checkCode  String               // e.g. CLIENT_NAME_MATCH
+  severity   VerificationSeverity @default(ERROR)
+  message    String
+  evidence   String?              // Detail of the mismatch/issue
+  
+  dismissed          Boolean   @default(false)
+  dismissedByUserId  String?
+  dismissedByUser    User?     @relation("dismissedIssues", fields: [dismissedByUserId], references: [id], onDelete: SetNull)
+  dismissedAt        DateTime?
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([analysisId])
+  @@index([dismissedByUserId])
+}

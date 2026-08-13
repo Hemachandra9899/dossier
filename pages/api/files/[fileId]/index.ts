@@ -37,6 +37,16 @@ export default async function handler(
               orderBy: { orderIndex: "asc" },
               include: {
                 assignments: true,
+                policy: true,
+                analyses: {
+                  orderBy: { createdAt: "desc" },
+                  take: 1,
+                  include: {
+                    issues: {
+                      orderBy: { createdAt: "asc" },
+                    },
+                  },
+                },
               },
             },
           },

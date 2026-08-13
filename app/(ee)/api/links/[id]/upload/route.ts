@@ -117,10 +117,11 @@ export async function POST(
   try {
     const linkId = params.id;
     const body = await request.json();
-    const { documentData, dataroomId, folderId } = body as {
+    const { documentData, dataroomId, folderId, taskId } = body as {
       documentData: DocumentData;
       dataroomId: string;
       folderId?: string;
+      taskId?: string;
     };
 
     if (!linkId || !documentData || !dataroomId) {
@@ -169,9 +170,11 @@ export async function POST(
       },
     });
 
+    const isTaskUpload = typeof taskId === "string" && taskId.length > 0;
+
     if (
       !link ||
-      !link.enableUpload ||
+      (!link.enableUpload && !isTaskUpload) ||
       link.dataroomId !== dataroomId ||
       !link.teamId
     ) {
@@ -190,7 +193,11 @@ export async function POST(
         teamId: link.teamId,
         views: { some: { id: viewId } },
       },
-      select: { id: true },
+      select: {
+        id: true,
+        email: true,
+        groups: { select: { groupId: true } },
+      },
     });
 
     if (!viewer) {
@@ -198,6 +205,44 @@ export async function POST(
         { message: "Viewer not found" },
         { status: 404 },
       );
+    }
+
+    if (isTaskUpload) {
+      const task = await prisma.task.findFirst({
+        where: { id: taskId, dataroomId },
+        select: {
+          type: true,
+          assignments: {
+            select: {
+              email: true,
+              viewerId: true,
+              groupId: true,
+              linkId: true,
+            },
+          },
+        },
+      });
+
+      const { isViewerAssigned } = await import(
+        "@/ee/features/request-lists/lib/assignments"
+      );
+
+      const assigned =
+        !!task &&
+        task.type === "UPLOAD" &&
+        isViewerAssigned(task.assignments, {
+          viewerId,
+          email: viewer.email ?? null,
+          linkId,
+          groupIds: new Set(viewer.groups.map((g) => g.groupId)),
+        });
+
+      if (!assigned) {
+        return NextResponse.json(
+          { message: "You are not assigned to this requirement task" },
+          { status: 403 },
+        );
+      }
     }
 
     if (typeof documentData.name !== "string") {
@@ -288,30 +333,101 @@ export async function POST(
       }
     }
 
-    const newDataroomDocument = await prisma.dataroomDocument.create({
-      data: {
-        dataroomId: dataroomId,
-        documentId: document.id,
-        folderId: dataroomFolderId,
-      },
+    // 3. Create the document metadata and task status updates inside a transaction
+    const { newDataroomDocument, taskUpdated, dossierFileId } = await prisma.$transaction(async (tx) => {
+      const newDataroomDocument = await tx.dataroomDocument.create({
+        data: {
+          dataroomId: dataroomId,
+          documentId: document.id,
+          folderId: dataroomFolderId,
+        },
+      });
+
+      await tx.documentUpload.create({
+        data: {
+          documentId: document.id,
+          viewerId: viewerId,
+          viewId: viewId,
+          linkId: linkId,
+          originalFilename: document.name,
+          fileSize: documentData.fileSize ?? 0,
+          numPages: document.numPages,
+          mimeType: document.contentType,
+          dataroomId: dataroomId,
+          dataroomDocumentId: newDataroomDocument.id,
+          teamId: link.teamId!,
+          taskId: taskId || undefined,
+        },
+      });
+
+      let taskUpdated = false;
+      let dossierFileId: string | null = null;
+
+      if (isTaskUpload && taskId) {
+        const task = await tx.task.findUnique({
+          where: { id: taskId },
+          select: { status: true, taskListId: true },
+        });
+
+        if (task) {
+          await tx.task.update({
+            where: { id: taskId },
+            data: { status: "SUBMITTED" },
+          });
+
+          await tx.taskActivity.create({
+            data: {
+              taskId,
+              type: "UPLOADED",
+              fromStatus: task.status,
+              toStatus: "SUBMITTED",
+              viewerId,
+              viewId,
+              comment: `Uploaded document: ${document.name}`,
+            },
+          });
+
+          taskUpdated = true;
+
+          const fileRecord = await tx.dossierFile.findFirst({
+            where: { requirementsTaskListId: task.taskListId },
+            select: { id: true },
+          });
+          dossierFileId = fileRecord?.id || null;
+        }
+      }
+
+      return { newDataroomDocument, taskUpdated, dossierFileId };
     });
 
-    // 3. Create the DocumentUpload record to track the upload details
-    await prisma.documentUpload.create({
-      data: {
-        documentId: document.id,
-        viewerId: viewerId,
-        viewId: viewId,
-        linkId: linkId,
-        originalFilename: document.name,
-        fileSize: documentData.fileSize ?? 0,
-        numPages: document.numPages,
-        mimeType: document.contentType,
-        dataroomId: dataroomId,
-        dataroomDocumentId: newDataroomDocument.id,
-        teamId: link.teamId,
-      },
-    });
+    if (taskUpdated && dossierFileId) {
+      try {
+        const { syncDossierFileStatus } = await import(
+          "@/modules/files/application/sync-file-status"
+        );
+        await syncDossierFileStatus(dossierFileId);
+      } catch (err) {
+        console.error("Failed to sync Dossier File status on upload:", err);
+      }
+    }
+
+    if (isTaskUpload && taskId) {
+      try {
+        const { dossierDocumentAnalysisTask } = await import(
+          "@/lib/trigger/dossier-document-analysis"
+        );
+        waitUntil(
+          dossierDocumentAnalysisTask.trigger({
+            documentId: document.id,
+            documentVersionId: document.versions[0]?.id || "",
+            taskId,
+            linkId,
+          })
+        );
+      } catch (aiErr) {
+        console.error("Failed to trigger verification pipeline:", aiErr);
+      }
+    }
 
     // 4. Send upload notification to team if enabled
     if (link.enableNotification) {

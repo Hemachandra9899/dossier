@@ -121,13 +121,15 @@ model DossierFileTemplate {
 }
 
 model DossierFileTemplateRequirement {
-  id          String   @id @default(cuid())
-  templateId  String
-  title       String
-  type        String   @default("UPLOAD") // UPLOAD, TODO, ACKNOWLEDGE
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String   @id @default(cuid())
+  templateId        String
+  title             String
+  type              String   @default("UPLOAD") // UPLOAD, TODO, ACKNOWLEDGE
+  description       String?
+  expectedKind      String?
+  verificationRules Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   template DossierFileTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 

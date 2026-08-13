@@ -23,6 +23,13 @@ import {
   Plus,
   Send,
   Trash,
+  AlertTriangle,
+  RefreshCw,
+  UserCheck,
+  Eye,
+  MapPin,
+  Calendar,
+  Building2,
 } from "lucide-react";
 
 export default function FileDetailPage() {
@@ -147,6 +154,52 @@ export default function FileDetailPage() {
       toast.error(err?.message || "Failed to request correction.");
     }
   };
+
+  const handleDismissIssue = async (taskId: string, issueId: string, dismissed: boolean) => {
+    try {
+      const res = await fetch(`/api/files/${file.id}/requirements/${taskId}/analysis`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ issueId, dismissed }),
+      });
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+      toast.success(dismissed ? "Issue dismissed" : "Issue restored");
+      void mutate();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update issue.");
+    }
+  };
+
+  const handleReanalyze = async (taskId: string) => {
+    try {
+      const res = await fetch(`/api/files/${file.id}/requirements/${taskId}/reanalyze`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+      toast.success("Re-analysis triggered in background!");
+      void mutate();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to trigger re-analysis.");
+    }
+  };
+
+  function renderStatusBadge(status: string) {
+    switch (status) {
+      case "VERIFIED":
+        return <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">Verified</Badge>;
+      case "NEEDS_REVIEW":
+        return <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100">Needs Review</Badge>;
+      case "ISSUE":
+        return <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-100">Issue</Badge>;
+      case "PENDING":
+      default:
+        return <Badge className="bg-neutral-100 text-neutral-600 border-neutral-200 hover:bg-neutral-100">Pending</Badge>;
+    }
+  }
 
   // Helper relative time formatter
   function formatRelative(dateStr: Date | string) {
@@ -369,56 +422,162 @@ export default function FileDetailPage() {
             {/* Checklist tasks */}
             <div className="space-y-3">
               {tasks.map((task: any) => (
-                <div key={task.id} className="border rounded-xl p-4 bg-background flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-sm text-neutral-800 truncate">{task.title}</span>
-                      <span className="text-[10px] uppercase font-bold tracking-wider bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded">
-                        {task.type}
-                      </span>
-                      <Badge variant="outline" className="text-xs">
-                        {task.status}
-                      </Badge>
+                <div key={task.id} className="border rounded-xl p-4 bg-background flex flex-col gap-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-neutral-800 truncate">{task.title}</span>
+                        <span className="text-[10px] uppercase font-bold tracking-wider bg-neutral-100 text-neutral-600 px-1.5 py-0.5 rounded">
+                          {task.type}
+                        </span>
+                        <Badge variant="outline" className="text-xs">
+                          {task.status}
+                        </Badge>
+                      </div>
+                      {task.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>
+                      )}
+                      {task.assignments && task.assignments.length > 0 && (
+                        <span className="text-[10px] text-muted-foreground block">
+                          Assigned to: {task.assignments.map((a: any) => a.email).join(", ")}
+                        </span>
+                      )}
                     </div>
-                    {task.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-2">{task.description}</p>
-                    )}
-                    {task.assignments && task.assignments.length > 0 && (
-                      <span className="text-[10px] text-muted-foreground block">
-                        Assigned to: {task.assignments.map((a: any) => a.email).join(", ")}
-                      </span>
-                    )}
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {task.status === "SUBMITTED" && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                            onClick={() => handleApproveRequirement(task.id)}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => setActiveCorrectionTaskId(task.id)}
+                          >
+                            Request Correction
+                          </Button>
+                        </>
+                      )}
+
+                      {task.status === "COMPLETED" && (
+                        <span className="text-green-600 flex items-center gap-1 text-xs font-semibold">
+                          <CheckCircle2 className="h-4 w-4" />
+                          Approved
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    {task.status === "SUBMITTED" && (
-                      <>
+                  {/* Verification Card */}
+                  {task.type === "UPLOAD" && task.analyses?.[0] && (
+                    <div className="border border-neutral-100 rounded-lg p-3 bg-neutral-50/50 space-y-3 text-xs">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-neutral-700">AI Document Verification</span>
+                          {renderStatusBadge(task.analyses[0].status)}
+                        </div>
                         <Button
                           size="sm"
-                          variant="outline"
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                          onClick={() => handleApproveRequirement(task.id)}
+                          variant="ghost"
+                          className="h-7 gap-1.5 px-2 text-neutral-500 hover:text-neutral-700"
+                          onClick={() => handleReanalyze(task.id)}
                         >
-                          Approve
+                          <RefreshCw className="h-3 w-3" />
+                          Reanalyze
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => setActiveCorrectionTaskId(task.id)}
-                        >
-                          Request Correction
-                        </Button>
-                      </>
-                    )}
+                      </div>
 
-                    {task.status === "COMPLETED" && (
-                      <span className="text-green-600 flex items-center gap-1 text-xs font-semibold">
-                        <CheckCircle2 className="h-4 w-4" />
-                        Approved
-                      </span>
-                    )}
-                  </div>
+                      <div className="flex items-center gap-1.5 text-neutral-600 border-t pt-2">
+                        <span className="font-medium">Detected Kind:</span>
+                        <span className="bg-neutral-100 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                          {task.analyses[0].extractedKind?.replace(/_/g, " ") || "UNKNOWN"}
+                        </span>
+                        {task.analyses[0].confidenceScore !== null && (
+                          <span className="text-neutral-400">
+                            (Confidence: {(task.analyses[0].confidenceScore * 100).toFixed(0)}%)
+                          </span>
+                        )}
+                      </div>
+
+                      {Array.isArray(task.analyses[0].checks) && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border-t pt-2">
+                          {task.analyses[0].checks.map((check: any) => (
+                            <div key={check.code} className="flex items-start gap-1.5">
+                              {check.pass ? (
+                                <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0 mt-0.5" />
+                              ) : (
+                                <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
+                              )}
+                              <div className="space-y-0.5">
+                                <span className="font-medium text-neutral-700">
+                                  {check.code.replace(/_/g, " ")}
+                                </span>
+                                <span className="block text-[10px] text-neutral-500 leading-normal">
+                                  {check.message}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {Array.isArray(task.analyses[0].issues) && task.analyses[0].issues.length > 0 && (
+                        <div className="border-t pt-2 space-y-2">
+                          <span className="font-semibold text-neutral-700 block">Verification Issues</span>
+                          <div className="space-y-1.5">
+                            {task.analyses[0].issues.map((issue: any) => (
+                              <div
+                                key={issue.id}
+                                className={`flex items-start justify-between gap-4 p-2 rounded border ${
+                                  issue.dismissed
+                                    ? "bg-neutral-100/50 border-neutral-100 text-neutral-400"
+                                    : "bg-red-50/30 border-red-100 text-red-700"
+                                }`}
+                              >
+                                <div className="space-y-0.5">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className={`font-semibold text-[9px] uppercase tracking-wider px-1 py-0.5 rounded ${
+                                      issue.dismissed
+                                        ? "bg-neutral-200 text-neutral-600"
+                                        : "bg-red-100 text-red-800"
+                                    }`}>
+                                      {issue.checkCode.replace(/_/g, " ")}
+                                    </span>
+                                    {issue.dismissed && (
+                                      <span className="text-[9px] text-neutral-400 font-medium italic">
+                                        (Dismissed)
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="block text-xs leading-normal">{issue.message}</span>
+                                  {issue.evidence && (
+                                    <span className="block text-[9px] text-neutral-500 font-mono">
+                                      Evidence: {issue.evidence}
+                                    </span>
+                                  )}
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 text-[10px] text-neutral-500 hover:text-neutral-800 shrink-0"
+                                  onClick={() => handleDismissIssue(task.id, issue.id, !issue.dismissed)}
+                                >
+                                  {issue.dismissed ? "Restore" : "Dismiss"}
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Reject / correction comment panel */}
                   {activeCorrectionTaskId === task.id && (

@@ -16,6 +16,8 @@ const CreateRequirementSchema = z.object({
   type: z.enum(["TODO", "UPLOAD", "ACKNOWLEDGE"]).default("UPLOAD"),
   assigneeEmail: z.string().email().optional(),
   uploadFolderId: z.string().optional(),
+  expectedKind: z.string().optional(),
+  verificationRules: z.record(z.any()).optional(),
 });
 
 export default async function handler(
@@ -95,6 +97,16 @@ export default async function handler(
             },
           },
         });
+
+        if (parsed.data.expectedKind) {
+          await tx.dossierRequirementPolicy.create({
+            data: {
+              taskId: created.id,
+              expectedKind: parsed.data.expectedKind,
+              verificationRules: parsed.data.verificationRules || {},
+            },
+          });
+        }
 
         await tx.dossierFileActivity.create({
           data: {
