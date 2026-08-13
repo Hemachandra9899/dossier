@@ -59,20 +59,13 @@ export async function syncDossierFileStatus(
       where: { id: fileId },
       data: {
         status: nextStatus,
-        completedAt:
-          nextStatus === "COMPLETE"
-            ? file.completedAt ?? new Date()
-            : null,
       },
     });
 
     await tx.dossierFileActivity.create({
       data: {
         fileId,
-        type:
-          nextStatus === "COMPLETE"
-            ? "FILE_COMPLETED"
-            : "STATUS_CHANGED",
+        type: "STATUS_CHANGED",
         actorUserId: context?.actorUserId ?? null,
         dedupeKey: context?.dedupeKey ?? null,
         metadata: {

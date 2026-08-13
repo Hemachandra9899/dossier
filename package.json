@@ -12,7 +12,7 @@
     "lint": "next lint",
     "test": "node --import tsx --test \"tests/unit/**/*.test.ts\"",
     "test:unit": "node --import tsx --test \"tests/unit/**/*.test.ts\"",
-    "test:integration": "node --import tsx --test \"tests/integration/**/*.test.ts\"",
+    "test:integration": "node --import tsx --test --test-concurrency=1 \"tests/integration/**/*.test.ts\"",
     "test:signing": "node --import tsx --test \"tests/unit/signing/*.test.ts\"",
     "check:access-form": "tsx scripts/check-access-form-footer.ts",
     "check:brand-logo": "tsx scripts/check-brand-logo.ts",

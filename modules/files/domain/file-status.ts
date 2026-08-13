@@ -22,6 +22,15 @@ const ACTIVE_SIGNATURE_STATUSES = new Set<SignatureRequestStatus>([
   SignatureRequestStatus.PARTIALLY_SIGNED,
 ]);
 
+// Terminal signature states that supersede older requests. A cancelled/failed/
+// declined/expired request must never block a later successfully completed one.
+const IGNORED_TERMINAL_SIGNATURE_STATUSES = new Set<SignatureRequestStatus>([
+  SignatureRequestStatus.CANCELLED,
+  SignatureRequestStatus.FAILED,
+  SignatureRequestStatus.DECLINED,
+  SignatureRequestStatus.EXPIRED,
+]);
+
 export function deriveFileStatus(input: {
   currentStatus: DossierFileStatus;
   requirements: RequirementSnapshot[];
@@ -37,6 +46,12 @@ export function deriveFileStatus(input: {
 
   if (currentStatus === DossierFileStatus.ARCHIVED) {
     return DossierFileStatus.ARCHIVED;
+  }
+
+  // COMPLETE is sticky/legacy: only a future CP10 finalization service may
+  // move a file into COMPLETE. Sync never derives it automatically anymore.
+  if (currentStatus === DossierFileStatus.COMPLETE) {
+    return DossierFileStatus.COMPLETE;
   }
 
   // Explicit correction is sticky until a reviewer resolves/reopens it.
@@ -73,26 +88,20 @@ export function deriveFileStatus(input: {
   }
 
   if (!requiresSignature) {
-    return DossierFileStatus.COMPLETE;
+    return DossierFileStatus.READY_TO_CLOSE;
   }
 
-  if (signatures.length === 0) {
-    return DossierFileStatus.READY_TO_SIGN;
-  }
-
-  const allSignaturesComplete = signatures.every(
-    (s) => s.status === SignatureRequestStatus.COMPLETED,
+  // Only consider "relevant current" requests: ignore superseded terminal
+  // requests so a later successful request is not blocked by history.
+  const relevant = signatures.filter(
+    (s) => !IGNORED_TERMINAL_SIGNATURE_STATUSES.has(s.status),
   );
 
-  if (allSignaturesComplete) {
-    return DossierFileStatus.COMPLETE;
+  if (relevant.some((s) => s.status === SignatureRequestStatus.COMPLETED)) {
+    return DossierFileStatus.READY_TO_CLOSE;
   }
 
-  const anyActiveSignature = signatures.some((s) =>
-    ACTIVE_SIGNATURE_STATUSES.has(s.status),
-  );
-
-  if (anyActiveSignature) {
+  if (relevant.some((s) => ACTIVE_SIGNATURE_STATUSES.has(s.status))) {
     return DossierFileStatus.SIGNING;
   }
 

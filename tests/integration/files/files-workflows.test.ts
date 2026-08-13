@@ -157,14 +157,34 @@ describe("files workspace workflows (integration)", () => {
     synced = await syncDossierFileStatus(file.id);
     assert.strictEqual(synced?.status, DossierFileStatus.REVIEWING);
 
-    // Complete requirement -> COMPLETE (requiresSignature is false)
+    // Complete requirement -> READY_TO_CLOSE (requiresSignature is false)
     await testPrisma.task.update({
       where: { id: task.id },
       data: { status: "COMPLETED" },
     });
 
     synced = await syncDossierFileStatus(file.id);
-    assert.strictEqual(synced?.status, DossierFileStatus.COMPLETE);
+    assert.strictEqual(synced?.status, DossierFileStatus.READY_TO_CLOSE);
+
+    // READY_TO_CLOSE never sets completedAt and never emits FILE_COMPLETED
+    assert.strictEqual(synced?.completedAt, null);
+
+    const activities = await testPrisma.dossierFileActivity.findMany({
+      where: { fileId: file.id },
+      orderBy: { occurredAt: "asc" },
+    });
+
+    const types = activities.map((a) => a.type);
+    assert.ok(types.includes("STATUS_CHANGED"));
+    assert.ok(!types.includes("FILE_COMPLETED"));
+
+    const lastStatusChange = [...activities]
+      .reverse()
+      .find((a) => a.type === "STATUS_CHANGED");
+    assert.strictEqual(
+      (lastStatusChange?.metadata as { to?: string } | null)?.to,
+      "READY_TO_CLOSE",
+    );
   });
 
   it("provisions file checklist from a template and auto-assigns tasks", async () => {

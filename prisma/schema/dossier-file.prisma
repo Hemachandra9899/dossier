@@ -6,6 +6,7 @@ enum DossierFileStatus {
   NEEDS_CORRECTION
   READY_TO_SIGN
   SIGNING
+  READY_TO_CLOSE
   COMPLETE
   ARCHIVED
 }
@@ -106,7 +107,7 @@ model DossierFileNote {
 model DossierFileTemplate {
   id          String   @id @default(cuid())
   key         String   @unique
-  teamId      String?  // null for system-global templates
+  teamId      String? // null for system-global templates
   name        String
   description String?
   isGlobal    Boolean  @default(false)

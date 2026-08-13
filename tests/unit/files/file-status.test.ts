@@ -57,14 +57,14 @@ test("deriveFileStatus status derivation rules", async (t) => {
     assert.strictEqual(status, DossierFileStatus.NEEDS_CORRECTION);
   });
 
-  await t.test("all complete + no signing needed -> COMPLETE", () => {
+  await t.test("all complete + no signing needed -> READY_TO_CLOSE", () => {
     const status = deriveFileStatus({
       currentStatus: DossierFileStatus.REVIEWING,
       requirements: [{ status: "COMPLETED", hasExternalAssignment: true }],
       requiresSignature: false,
       signatures: [],
     });
-    assert.strictEqual(status, DossierFileStatus.COMPLETE);
+    assert.strictEqual(status, DossierFileStatus.READY_TO_CLOSE);
   });
 
   await t.test("all complete + signing required + no request -> READY_TO_SIGN", () => {
@@ -87,14 +87,70 @@ test("deriveFileStatus status derivation rules", async (t) => {
     assert.strictEqual(status, DossierFileStatus.SIGNING);
   });
 
-  await t.test("all complete + signing required + completed signature -> COMPLETE", () => {
+  await t.test("all complete + signing required + completed signature -> READY_TO_CLOSE", () => {
     const status = deriveFileStatus({
       currentStatus: DossierFileStatus.SIGNING,
       requirements: [{ status: "COMPLETED", hasExternalAssignment: true }],
       requiresSignature: true,
       signatures: [{ status: SignatureRequestStatus.COMPLETED }],
     });
+    assert.strictEqual(status, DossierFileStatus.READY_TO_CLOSE);
+  });
+
+  await t.test("completed old request + cancelled old request -> READY_TO_CLOSE", () => {
+    const status = deriveFileStatus({
+      currentStatus: DossierFileStatus.SIGNING,
+      requirements: [{ status: "COMPLETED", hasExternalAssignment: true }],
+      requiresSignature: true,
+      signatures: [
+        { status: SignatureRequestStatus.COMPLETED },
+        { status: SignatureRequestStatus.CANCELLED },
+      ],
+    });
+    assert.strictEqual(status, DossierFileStatus.READY_TO_CLOSE);
+  });
+
+  await t.test("failed request only -> READY_TO_SIGN", () => {
+    const status = deriveFileStatus({
+      currentStatus: DossierFileStatus.SIGNING,
+      requirements: [{ status: "COMPLETED", hasExternalAssignment: true }],
+      requiresSignature: true,
+      signatures: [{ status: SignatureRequestStatus.FAILED }],
+    });
+    assert.strictEqual(status, DossierFileStatus.READY_TO_SIGN);
+  });
+
+  await t.test("active request -> SIGNING", () => {
+    const status = deriveFileStatus({
+      currentStatus: DossierFileStatus.READY_TO_SIGN,
+      requirements: [{ status: "COMPLETED", hasExternalAssignment: true }],
+      requiresSignature: true,
+      signatures: [
+        { status: SignatureRequestStatus.DECLINED },
+        { status: SignatureRequestStatus.VIEWED },
+      ],
+    });
+    assert.strictEqual(status, DossierFileStatus.SIGNING);
+  });
+
+  await t.test("COMPLETE remains sticky", () => {
+    const status = deriveFileStatus({
+      currentStatus: DossierFileStatus.COMPLETE,
+      requirements: [{ status: "SUBMITTED", hasExternalAssignment: true }],
+      requiresSignature: true,
+      signatures: [],
+    });
     assert.strictEqual(status, DossierFileStatus.COMPLETE);
+  });
+
+  await t.test("READY_TO_CLOSE does not become COMPLETE automatically", () => {
+    const status = deriveFileStatus({
+      currentStatus: DossierFileStatus.READY_TO_CLOSE,
+      requirements: [{ status: "COMPLETED", hasExternalAssignment: true }],
+      requiresSignature: false,
+      signatures: [],
+    });
+    assert.strictEqual(status, DossierFileStatus.READY_TO_CLOSE);
   });
 
   await t.test("ARCHIVED remains sticky", () => {
