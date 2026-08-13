@@ -234,20 +234,22 @@ export async function evaluateVerificationChecks(options: {
   });
 
   // 8. Cross-document checks
-  // Find other verified analyses in the same DossierFile/dataroom
-  const task = await prisma.task.findUnique({
+  // Find other verified analyses in the same DossierFile task list
+  const currentTask = await prisma.task.findUnique({
     where: { id: taskId },
-    select: { dataroomId: true },
+    select: { taskListId: true },
   });
 
-  if (task) {
+  if (currentTask && currentTask.taskListId) {
     const otherVerifiedAnalyses = await prisma.documentAnalysis.findMany({
       where: {
+        taskId: {
+          not: taskId,
+        },
         task: {
-          dataroomId: task.dataroomId,
+          taskListId: currentTask.taskListId,
         },
         status: "VERIFIED",
-        id: { not: taskId }, // Exclude current task's other analyses
       },
       select: {
         extractedData: true,

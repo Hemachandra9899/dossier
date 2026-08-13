@@ -7,10 +7,7 @@ import { evaluateVerificationChecks } from "@/lib/verification/evaluate-checks";
 import { DocumentKind } from "@/lib/verification/extraction-schema";
 
 export interface DossierDocumentAnalysisPayload {
-  documentId: string;
-  documentVersionId: string;
-  taskId: string;
-  linkId: string;
+  analysisId: string;
 }
 
 export const dossierDocumentAnalysisTask = task({
@@ -18,57 +15,68 @@ export const dossierDocumentAnalysisTask = task({
   retry: { maxAttempts: 3 },
   queue: dossierDocumentAnalysisQueue,
   run: async (payload: DossierDocumentAnalysisPayload) => {
-    const { documentId, documentVersionId, taskId, linkId } = payload;
+    const { analysisId } = payload;
 
-    logger.info("Starting dossier document verification analysis", {
-      documentId,
-      documentVersionId,
-      taskId,
-      linkId,
-    });
+    logger.info("dossier.verification.started", { analysisId });
 
-    // 1. Fetch task, requirement policy, document version and dossier file
-    const taskRecord = await prisma.task.findUnique({
-      where: { id: taskId },
+    // 1. Fetch the analysis record and relations
+    const analysisRecord = await prisma.documentAnalysis.findUnique({
+      where: { id: analysisId },
       include: {
-        policy: true,
-        taskList: {
-          select: {
-            dossierFileRequirements: {
+        task: {
+          include: {
+            policy: true,
+            taskList: {
               select: {
-                id: true,
-                clientName: true,
+                dossierFileRequirements: {
+                  select: {
+                    id: true,
+                    clientName: true,
+                  },
+                },
               },
             },
+          },
+        },
+        documentVersion: {
+          include: {
+            document: true,
           },
         },
       },
     });
 
-    if (!taskRecord) {
-      logger.error("Task not found for verification, aborting", { taskId });
-      return { success: false, reason: "Task not found" };
+    if (!analysisRecord) {
+      logger.error("dossier.verification.not_found", { analysisId });
+      return { success: false, reason: "Analysis record not found" };
     }
 
+    const { taskId, documentVersionId } = analysisRecord;
+    const taskRecord = analysisRecord.task;
     const policy = taskRecord.policy;
+    const documentVersion = analysisRecord.documentVersion;
+
     if (!policy) {
-      logger.info("No verification policy defined for task, skipping analysis", { taskId });
-      return { success: true, reason: "No policy defined" };
+      logger.info("dossier.verification.no_policy", { taskId, analysisId });
+      await prisma.documentAnalysis.update({
+        where: { id: analysisId },
+        data: {
+          runStatus: "FAILED",
+          status: "NEEDS_REVIEW",
+        },
+      });
+      return { success: false, reason: "No verification policy defined for task" };
     }
 
-    const documentVersion = await prisma.documentVersion.findUnique({
-      where: { id: documentVersionId },
-      include: {
-        document: true,
+    // 2. Mark run status as PROCESSING
+    await prisma.documentAnalysis.update({
+      where: { id: analysisId },
+      data: {
+        runStatus: "PROCESSING",
       },
     });
 
-    if (!documentVersion) {
-      logger.error("Document version not found, aborting", { documentVersionId });
-      return { success: false, reason: "Document version not found" };
-    }
-
-    // 2. Fetch the document content buffer from Vercel Blob/S3
+    // 3. Fetch the document content buffer from S3/Vercel Blob
     let fileBuffer: Buffer;
     try {
       const fileUrl = await getFile({
@@ -82,17 +90,28 @@ export const dossierDocumentAnalysisTask = task({
         throw new Error(`Failed to fetch file content: ${response.statusText}`);
       }
       fileBuffer = Buffer.from(await response.arrayBuffer());
-    } catch (fetchErr) {
-      logger.error("Failed to retrieve document file content", { fetchErr, documentVersionId });
+    } catch (fetchErr: any) {
+      logger.error("dossier.verification.fetch_failed", { fetchErr, documentVersionId, analysisId });
+      await prisma.documentAnalysis.update({
+        where: { id: analysisId },
+        data: {
+          runStatus: "FAILED",
+          status: "NEEDS_REVIEW",
+        },
+      });
+      await prisma.verificationIssue.create({
+        data: {
+          analysisId,
+          checkCode: "AI_ANALYSIS_FAILED",
+          severity: "WARNING",
+          message: `Failed to retrieve document file content: ${fetchErr?.message || fetchErr}. Please verify manually.`,
+          evidence: "File fetch failed",
+        },
+      });
       return { success: false, reason: "Failed to retrieve document file" };
     }
 
-    // 3. Extract facts using OpenAI or Mock fallback
-    logger.info("Extracting document facts", {
-      fileName: documentVersion.document.name,
-      expectedKind: policy.expectedKind,
-    });
-
+    // 4. Extract facts using OpenAI or Mock fallback
     let extracted = null;
     let status: any = "NEEDS_REVIEW";
     let checks: any[] = [];
@@ -107,8 +126,15 @@ export const dossierDocumentAnalysisTask = task({
         expectedKind: policy.expectedKind as DocumentKind,
       });
 
-      // 4. Run rules engine & evaluate checks
-      logger.info("Evaluating verification checks", { extracted });
+      logger.info("dossier.verification.extracted", {
+        analysisId,
+        taskId,
+        documentVersionId,
+        detectedKind: extracted.detectedKind,
+        confidenceScore: extracted.confidenceScore,
+      });
+
+      // Run rules engine & evaluate checks
       const clientName = taskRecord.taskList.dossierFileRequirements?.clientName;
 
       const evaluation = await evaluateVerificationChecks({
@@ -121,19 +147,23 @@ export const dossierDocumentAnalysisTask = task({
       status = evaluation.status;
       checks = evaluation.checks;
     } catch (extractErr: any) {
-      logger.error("Document analysis extraction failed", { extractErr });
+      logger.error("dossier.verification.extraction_failed", { extractErr, analysisId });
       isAiFailure = true;
       failureMessage = extractErr?.message || "Fact extraction failed";
     }
 
-    // 5. Persist DocumentAnalysis and issues
-    logger.info("Saving document analysis results", { status, checks });
+    // 5. Persist DocumentAnalysis status and issues
+    logger.info("dossier.verification.completed", {
+      analysisId,
+      status,
+      failedCheckCount: checks.filter((check) => !check.pass).length,
+    });
+
     await prisma.$transaction(async (tx) => {
-      // Defer/archive any previous analysis by deleting it (or keeping it, we choose to keep but the latest wins)
-      const analysis = await tx.documentAnalysis.create({
+      await tx.documentAnalysis.update({
+        where: { id: analysisId },
         data: {
-          documentVersionId,
-          taskId,
+          runStatus: isAiFailure ? "FAILED" : "COMPLETED",
           status,
           extractedKind: extracted ? extracted.detectedKind : null,
           extractedData: extracted ? (extracted as any) : null,
@@ -145,7 +175,7 @@ export const dossierDocumentAnalysisTask = task({
       if (isAiFailure) {
         await tx.verificationIssue.create({
           data: {
-            analysisId: analysis.id,
+            analysisId: analysisId,
             checkCode: "AI_ANALYSIS_FAILED",
             severity: "WARNING",
             message: `Automated document analysis failed: ${failureMessage}. Please verify manually.`,
@@ -158,7 +188,7 @@ export const dossierDocumentAnalysisTask = task({
           if (!check.pass) {
             await tx.verificationIssue.create({
               data: {
-                analysisId: analysis.id,
+                analysisId: analysisId,
                 checkCode: check.code,
                 severity: check.severity,
                 message: check.message,
@@ -170,7 +200,6 @@ export const dossierDocumentAnalysisTask = task({
       }
     });
 
-    logger.info("Dossier document verification completed successfully", { status });
     return { success: !isAiFailure, status };
   },
 });

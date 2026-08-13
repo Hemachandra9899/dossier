@@ -49,16 +49,30 @@ export default async function handler(
       return res.status(400).json({ error: "No document has been uploaded for this requirement yet." });
     }
 
+    const documentVersionId = latestUpload.document.versions[0].id;
+    const idempotencyKey = `reanalyze:${taskId}:${documentVersionId}`;
+
+    // Pre-create the analysis record so the task can resolve all params from DB
+    const analysis = await prisma.documentAnalysis.upsert({
+      where: { idempotencyKey },
+      update: {},
+      create: {
+        idempotencyKey,
+        taskId,
+        documentVersionId,
+        runStatus: "PENDING",
+        status: "PENDING",
+      },
+    });
+
     const { dossierDocumentAnalysisTask } = await import(
       "@/lib/trigger/dossier-document-analysis"
     );
 
-    const run = await dossierDocumentAnalysisTask.trigger({
-      documentId: latestUpload.documentId,
-      documentVersionId: latestUpload.document.versions[0].id,
-      taskId,
-      linkId: latestUpload.linkId,
-    });
+    const run = await dossierDocumentAnalysisTask.trigger(
+      { analysisId: analysis.id },
+      { idempotencyKey: `trigger:${analysis.id}` },
+    );
 
     return res.status(200).json({ success: true, runId: run.id });
   } catch (error) {

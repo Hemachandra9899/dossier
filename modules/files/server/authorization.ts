@@ -91,6 +91,26 @@ export async function requireFileAccess(
   };
 }
 
+/**
+ * Like requireFileAccess but additionally gates on manage-level roles.
+ * Only ADMIN, MANAGER, and MEMBER may dismiss issues or close files.
+ * DATAROOM_MEMBER and VIEWER are rejected with 403.
+ */
+export async function requireFileManageAccess(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  fileId: string,
+) {
+  const result = await requireFileAccess(req, res, fileId);
+
+  const manageRoles = ["ADMIN", "MANAGER", "MEMBER"] as const;
+  if (!manageRoles.includes(result.membership.role as (typeof manageRoles)[number])) {
+    throw new FileAuthorizationError(403, "Insufficient permissions");
+  }
+
+  return result;
+}
+
 export function sendAuthorizationError(
   res: NextApiResponse,
   error: unknown,

@@ -3,14 +3,26 @@ import { z } from "zod";
 import prisma from "@/lib/prisma";
 import {
   requireFileAccess,
+  requireFileManageAccess,
   sendAuthorizationError,
 } from "@/modules/files/server/authorization";
 import { VerificationStatus } from "@prisma/client";
 
-const DismissIssueSchema = z.object({
-  issueId: z.string().min(1),
-  dismissed: z.boolean(),
-});
+const DismissIssueSchema = z
+  .object({
+    issueId: z.string().min(1),
+    dismissed: z.boolean(),
+    dismissalReason: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.dismissed && (!data.dismissalReason || data.dismissalReason.trim().length < 3)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["dismissalReason"],
+        message: "A dismissal reason of at least 3 characters is required when dismissing an issue.",
+      });
+    }
+  });
 
 export default async function handler(
   req: NextApiRequest,
@@ -57,7 +69,10 @@ export default async function handler(
         });
       }
 
-      const { issueId, dismissed } = parsed.data;
+      const { issueId, dismissed, dismissalReason } = parsed.data;
+
+      // Manage-level access required for dismissing issues
+      await requireFileManageAccess(req, res, fileId);
 
       // Verify issue belongs to the task's analysis
       const issue = await prisma.verificationIssue.findUnique({
@@ -78,6 +93,7 @@ export default async function handler(
             dismissed,
             dismissedByUserId: dismissed ? userId : null,
             dismissedAt: dismissed ? new Date() : null,
+            dismissalReason: dismissed ? (dismissalReason ?? null) : null,
           },
         });
 

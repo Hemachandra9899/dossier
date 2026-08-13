@@ -41,7 +41,7 @@ The user expects this document to be a "${expectedKind}".
 Extract all fields that are present in the document. For fields not relevant to the document type, or not found, return null.
 Perform OCR and parse text and tables from all pages of the document.`;
 
-    const response = await (openai as any).beta.chat.completions.parse({
+    const response = await (openai as any).responses.parse({
       model: "gpt-4o",
       messages: [
         {
@@ -66,7 +66,7 @@ Perform OCR and parse text and tables from all pages of the document.`;
       temperature: 0.1,
     });
 
-    const extraction = response.choices[0]?.message?.parsed;
+    const extraction = (response as any).output_parsed;
     if (!extraction) {
       throw new Error("OpenAI failed to return structured extraction results.");
     }

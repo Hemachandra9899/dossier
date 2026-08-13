@@ -10,6 +10,13 @@ enum VerificationSeverity {
   ERROR
 }
 
+enum DocumentAnalysisRunStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 model DossierRequirementPolicy {
   id                String   @id @default(cuid())
   taskId            String   @unique
@@ -25,22 +32,25 @@ model DossierRequirementPolicy {
 }
 
 model DocumentAnalysis {
-  id                 String             @id @default(cuid())
+  id                 String                    @id @default(cuid())
   documentVersionId  String
-  documentVersion    DocumentVersion    @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
+  documentVersion    DocumentVersion           @relation(fields: [documentVersionId], references: [id], onDelete: Cascade)
   taskId             String
-  task               Task               @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  task               Task                      @relation(fields: [taskId], references: [id], onDelete: Cascade)
   
-  status             VerificationStatus @default(PENDING)
+  idempotencyKey     String                    @unique
+  analysisVersion    Int                       @default(1)
+  runStatus          DocumentAnalysisRunStatus @default(PENDING)
+  status             VerificationStatus        @default(PENDING)
   extractedKind      String?
-  extractedData      Json?              // Extracted facts (fullName, address, statement dates, etc.)
-  checks             Json?              // Checklist evaluation results
-  confidenceScore    Float?             // Overall confidence score from AI (0.0 to 1.0)
+  extractedData      Json?                     // Extracted facts (fullName, address, statement dates, etc.)
+  checks             Json?                     // Checklist evaluation results
+  confidenceScore    Float?                    // Overall confidence score from AI (0.0 to 1.0)
   
   issues             VerificationIssue[]
   
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
 
   @@index([documentVersionId])
   @@index([taskId])
@@ -60,6 +70,7 @@ model VerificationIssue {
   dismissedByUserId  String?
   dismissedByUser    User?     @relation("dismissedIssues", fields: [dismissedByUserId], references: [id], onDelete: SetNull)
   dismissedAt        DateTime?
+  dismissalReason    String?
   
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

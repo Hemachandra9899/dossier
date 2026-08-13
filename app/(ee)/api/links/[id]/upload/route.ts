@@ -334,7 +334,7 @@ export async function POST(
     }
 
     // 3. Create the document metadata and task status updates inside a transaction
-    const { newDataroomDocument, taskUpdated, dossierFileId } = await prisma.$transaction(async (tx) => {
+    const { newDataroomDocument, taskUpdated, dossierFileId, analysisId, documentVersionId } = await prisma.$transaction(async (tx) => {
       const newDataroomDocument = await tx.dataroomDocument.create({
         data: {
           dataroomId: dataroomId,
@@ -362,11 +362,19 @@ export async function POST(
 
       let taskUpdated = false;
       let dossierFileId: string | null = null;
+      let analysisId: string | null = null;
+      let documentVersionId: string | null = null;
 
       if (isTaskUpload && taskId) {
         const task = await tx.task.findUnique({
           where: { id: taskId },
-          select: { status: true, taskListId: true },
+          select: {
+            status: true,
+            taskListId: true,
+            policy: {
+              select: { id: true },
+            },
+          },
         });
 
         if (task) {
@@ -394,10 +402,42 @@ export async function POST(
             select: { id: true },
           });
           dossierFileId = fileRecord?.id || null;
+
+          const version = document.versions[0];
+          if (version) {
+            documentVersionId = version.id;
+
+            if (task.policy) {
+              const idempotencyKey = [
+                "verification",
+                taskId,
+                version.id,
+                "v1",
+              ].join(":");
+
+              const analysis = await tx.documentAnalysis.upsert({
+                where: { idempotencyKey },
+                update: {},
+                create: {
+                  idempotencyKey,
+                  taskId,
+                  documentVersionId: version.id,
+                  runStatus: "PENDING",
+                  status: "PENDING",
+                },
+              });
+              analysisId = analysis.id;
+            }
+          } else {
+            console.error("dossier.verification.no_document_version", {
+              documentId: document.id,
+              taskId,
+            });
+          }
         }
       }
 
-      return { newDataroomDocument, taskUpdated, dossierFileId };
+      return { newDataroomDocument, taskUpdated, dossierFileId, analysisId, documentVersionId };
     });
 
     if (taskUpdated && dossierFileId) {
@@ -411,18 +451,20 @@ export async function POST(
       }
     }
 
-    if (isTaskUpload && taskId) {
+    if (isTaskUpload && taskId && analysisId) {
       try {
         const { dossierDocumentAnalysisTask } = await import(
           "@/lib/trigger/dossier-document-analysis"
         );
         waitUntil(
-          dossierDocumentAnalysisTask.trigger({
-            documentId: document.id,
-            documentVersionId: document.versions[0]?.id || "",
-            taskId,
-            linkId,
-          })
+          dossierDocumentAnalysisTask.trigger(
+            {
+              analysisId,
+            },
+            {
+              idempotencyKey: `trigger:${analysisId}`,
+            }
+          )
         );
       } catch (aiErr) {
         console.error("Failed to trigger verification pipeline:", aiErr);
