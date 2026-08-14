@@ -1,4 +1,4 @@
-import prisma from "@/src/infrastructure/database/prisma";
+import prisma from "@/infrastructure/database/prisma";
 import type { CreateFileShareInput } from "./public-access.types";
 
 export const publicAccessRepository = {

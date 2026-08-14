@@ -1,0 +1,12 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#dossier-bg)" />
+  <path d="M13 16.5C13 14.567 14.567 13 16.5 13H21L24.5 16.5H31.5C33.433 16.5 35 18.067 35 20V31.5C35 33.433 33.433 35 31.5 35H16.5C14.567 35 13 33.433 13 31.5V16.5Z" fill="white" />
+  <path d="M17.5 24.5C17.5 23.9477 17.9477 23.5 18.5 23.5H29.5C30.0523 23.5 30.5 23.9477 30.5 24.5C30.5 25.0523 30.0523 25.5 29.5 25.5H18.5C17.9477 25.5 17.5 25.0523 17.5 24.5Z" fill="#7C6CF0" />
+  <path d="M17.5 29.5C17.5 28.9477 17.9477 28.5 18.5 28.5H25.5C26.0523 28.5 26.5 28.9477 26.5 29.5C26.5 30.0523 26.0523 30.5 25.5 30.5H18.5C17.9477 30.5 17.5 30.0523 17.5 29.5Z" fill="#7C6CF0" />
+  <defs>
+    <linearGradient id="dossier-bg" x1="2" y1="2" x2="46" y2="46" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366F1" />
+      <stop offset="1" stop-color="#7C3AED" />
+    </linearGradient>
+  </defs>
+</svg>

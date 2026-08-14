@@ -1,2 +1,2 @@
-export * from "@/src/infrastructure/storage";
-export { default } from "@/src/infrastructure/storage";
+export * from "@/infrastructure/storage";
+export { default } from "@/infrastructure/storage";

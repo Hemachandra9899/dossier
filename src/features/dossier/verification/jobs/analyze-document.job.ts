@@ -1,5 +1,5 @@
 import { logger, task } from "@trigger.dev/sdk";
-import prisma from "@/src/infrastructure/database/prisma";
+import prisma from "@/infrastructure/database/prisma";
 import { getFile } from "@/lib/files/get-file";
 import { dossierDocumentAnalysisQueue } from "@/lib/trigger/queues";
 import { extractDocumentFacts } from "../providers/openai.provider";
