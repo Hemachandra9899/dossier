@@ -1,3 +1,3 @@
-import { FileDetailPage } from "@/modules/files/ui/file-detail-page";
+import { FileDetail } from "@/src/features/dossier/files";
 
-export default FileDetailPage;
+export default FileDetail;

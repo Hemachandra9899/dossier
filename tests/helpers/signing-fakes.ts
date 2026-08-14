@@ -16,7 +16,7 @@ import type {
   SigningProvider,
 } from "@/modules/signing/provider/signing-provider";
 import { mapDocumensoEventToStatus } from "@/modules/signing/provider/documenso/mapper";
-import type { SignedArtifactStorage } from "@/modules/signing/storage/signed-artifact-storage";
+import type { SignedArtifactStorage } from "@/src/infrastructure/storage";
 import { testPrisma } from "./test-db";
 
 const silentLogger: SigningContext["logger"] = {

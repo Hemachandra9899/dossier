@@ -22,8 +22,8 @@ import { DocumentRepository } from "../server/document.repository";
 import { ProviderEventRepository } from "../server/provider-event.repository";
 import { SignatureRequestRepository } from "../server/signature-request.repository";
 import { SignatureTemplateRepository } from "../server/signature-template.repository";
-import type { SignedArtifactStorage } from "../storage/signed-artifact-storage";
-import { s3SignedArtifactStorage } from "../storage/s3-signed-artifact-storage";
+import type { SignedArtifactStorage } from "@/src/infrastructure/storage";
+import { signedArtifactStorage as s3SignedArtifactStorage } from "@/src/infrastructure/storage";
 
 export type ProviderEventMapper = (
   event: string,
