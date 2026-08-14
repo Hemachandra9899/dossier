@@ -70,6 +70,8 @@ model DossierFile {
   signatureRequests SignatureRequest[]
   activities        DossierFileActivity[]
   notes             DossierFileNote[]
+  completionRuns    DossierCompletionRun[]
+  completionRecords DossierCompletionRecord[]
 
   @@index([teamId, status, position])
   @@index([teamId, updatedAt(sort: Desc)])

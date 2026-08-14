@@ -85,6 +85,9 @@ model User {
 
   notificationPreferences NotificationPreference[]
   dismissedIssues         VerificationIssue[]      @relation("dismissedIssues")
+
+  initiatedCompletionRuns DossierCompletionRun[]    @relation("DossierCompletionRunInitiator")
+  completedDossierFiles   DossierCompletionRecord[] @relation("DossierCompletionRecordCompletedBy")
 }
 
 model Brand {
