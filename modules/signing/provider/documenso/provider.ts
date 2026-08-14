@@ -23,7 +23,7 @@ import type {
   ProviderSigningSession,
   ProviderTemplate,
   SigningProvider,
-} from "../../ports/signing-provider";
+} from "../signing-provider";
 import { getDocumensoClient, getDocumensoHost } from "./client";
 
 const EDITOR_PRESIGN_TOKEN_EXPIRES_IN_SECONDS = 3600;

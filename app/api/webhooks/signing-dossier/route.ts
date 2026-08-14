@@ -10,12 +10,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSigningContext } from "@/modules/signing/application/context";
 import { isDossierSigningRuntimeEnabled } from "@/modules/signing/config";
 import { createProviderEventDedupeKey } from "@/modules/signing/domain/signing-event";
-import { DOCUMENSO_SIGNING_EVENTS } from "@/modules/signing/providers/documenso/mapper";
+import { mapDocumensoEventToStatus } from "@/modules/signing/provider/documenso/mapper";
 import {
-  DOCUMENSO_WEBHOOK_SECRET_HEADER,
-  documensoWebhookPayloadSchema,
-  verifyDocumensoWebhookSecret,
-} from "@/modules/signing/providers/documenso/webhook";
+  parseDocumensoWebhookPayload,
+  verifyDocumensoSignature,
+} from "@/modules/signing/provider/documenso/webhook";
 import { processSigningProviderEventTask } from "@/lib/trigger/process-signing-provider-event";
 
 export const runtime = "nodejs";
