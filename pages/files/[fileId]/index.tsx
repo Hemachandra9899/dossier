@@ -7,6 +7,15 @@ import AppLayout from "@/components/layouts/app";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { DataroomLinkSheet } from "@/components/links/link-sheet/dataroom-link-sheet";
 import { RequestManagement } from "@/modules/signing/ui/request-management";
 import { RequestSignatureDialog } from "@/modules/signing/ui/request-signature/request-signature-dialog";
@@ -62,6 +71,15 @@ export default function FileDetailPage() {
 
   // DataroomLinkSheet open state
   const [isShareOpen, setIsShareOpen] = useState(false);
+
+  // Dismiss issue dialog state
+  const [dismissDialog, setDismissDialog] = useState<{
+    open: boolean;
+    taskId: string;
+    issueId: string;
+  } | null>(null);
+  const [dismissReason, setDismissReason] = useState("");
+  const [isDismissing, setIsDismissing] = useState(false);
 
   // Fetch full details
   const { data, mutate, isLoading } = useSWR(
@@ -155,20 +173,60 @@ export default function FileDetailPage() {
     }
   };
 
-  const handleDismissIssue = async (taskId: string, issueId: string, dismissed: boolean) => {
+  /** Open the dismiss dialog — restoring an issue skips the dialog. */
+  const openDismissDialog = (taskId: string, issueId: string) => {
+    setDismissReason("");
+    setDismissDialog({ open: true, taskId, issueId });
+  };
+
+  /** Called when the user confirms a dismissal with a reason. */
+  const handleConfirmDismiss = async () => {
+    if (!dismissDialog) return;
+    if (dismissReason.trim().length < 3) {
+      toast.error("Please enter a reason of at least 3 characters.");
+      return;
+    }
+    setIsDismissing(true);
     try {
-      const res = await fetch(`/api/files/${file.id}/requirements/${taskId}/analysis`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ issueId, dismissed }),
-      });
-      if (!res.ok) {
-        throw new Error(await res.text());
-      }
-      toast.success(dismissed ? "Issue dismissed" : "Issue restored");
+      const res = await fetch(
+        `/api/files/${file.id}/requirements/${dismissDialog.taskId}/analysis`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            issueId: dismissDialog.issueId,
+            dismissed: true,
+            dismissalReason: dismissReason.trim(),
+          }),
+        },
+      );
+      if (!res.ok) throw new Error(await res.text());
+      toast.success("Issue dismissed");
+      void mutate();
+      setDismissDialog(null);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to dismiss issue.");
+    } finally {
+      setIsDismissing(false);
+    }
+  };
+
+  /** Restore a previously dismissed issue — no reason required. */
+  const handleRestoreIssue = async (taskId: string, issueId: string) => {
+    try {
+      const res = await fetch(
+        `/api/files/${file.id}/requirements/${taskId}/analysis`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ issueId, dismissed: false }),
+        },
+      );
+      if (!res.ok) throw new Error(await res.text());
+      toast.success("Issue restored");
       void mutate();
     } catch (err: any) {
-      toast.error(err?.message || "Failed to update issue.");
+      toast.error(err?.message || "Failed to restore issue.");
     }
   };
 
@@ -567,7 +625,11 @@ export default function FileDetailPage() {
                                   size="sm"
                                   variant="ghost"
                                   className="h-6 text-[10px] text-neutral-500 hover:text-neutral-800 shrink-0"
-                                  onClick={() => handleDismissIssue(task.id, issue.id, !issue.dismissed)}
+                                  onClick={() =>
+                                    issue.dismissed
+                                      ? handleRestoreIssue(task.id, issue.id)
+                                      : openDismissDialog(task.id, issue.id)
+                                  }
                                 >
                                   {issue.dismissed ? "Restore" : "Dismiss"}
                                 </Button>
@@ -757,6 +819,50 @@ export default function FileDetailPage() {
             }}
           />
         )}
+        {/* Dismiss verification issue dialog */}
+        <Dialog
+          open={!!dismissDialog?.open}
+          onOpenChange={(open) => {
+            if (!open) setDismissDialog(null);
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Dismiss verification issue</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2 py-2">
+              <Label htmlFor="dismissReason" className="text-sm font-medium">
+                Reason
+              </Label>
+              <Textarea
+                id="dismissReason"
+                placeholder="e.g. Client moved to this address on July 10"
+                value={dismissReason}
+                onChange={(e) => setDismissReason(e.target.value)}
+                rows={3}
+                className="resize-none"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Minimum 3 characters. This reason will be stored on the issue record.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDismissDialog(null)}
+                disabled={isDismissing}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleConfirmDismiss}
+                disabled={isDismissing || dismissReason.trim().length < 3}
+              >
+                {isDismissing ? "Dismissing…" : "Dismiss issue"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </AppLayout>
   );

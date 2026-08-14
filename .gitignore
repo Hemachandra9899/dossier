@@ -77,3 +77,12 @@ _public/
 
 .opencode
 plans/
+
+# Agent and editor tooling
+.agents/
+.cursor/
+.cursorignore
+skills-lock.json
+Pipfile
+Pipfile.lock
+pkgx.yaml
