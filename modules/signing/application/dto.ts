@@ -5,7 +5,7 @@
 
 import type { SignatureRequestStatus } from "@prisma/client";
 import type { SignatureProviderName } from "../domain/signing-event";
-import type { SignatureRequestWithRecipients } from "../repositories/signature-request.repository";
+import type { SignatureRequestWithRecipients } from "../server/signature-request.repository";
 
 export interface RecipientDTO {
   id: string;

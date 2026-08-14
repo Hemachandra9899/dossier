@@ -19,7 +19,7 @@ export interface UpdateRequirementInput {
 export async function addRequirement(input: AddRequirementInput) {
   const file = await prisma.dossierFile.findUnique({
     where: { id: input.fileId },
-    select: { requirementsTaskListId: true },
+    select: { requirementsTaskListId: true, dataroomId: true, teamId: true },
   });
 
   if (!file || !file.requirementsTaskListId) {
@@ -29,10 +29,11 @@ export async function addRequirement(input: AddRequirementInput) {
   return prisma.task.create({
     data: {
       taskListId: file.requirementsTaskListId,
+      dataroomId: file.dataroomId,
+      teamId: file.teamId,
       title: input.title,
       type: input.type,
       description: input.description || null,
-      assigneeEmail: input.assigneeEmail || null,
       status: "OPEN",
     },
   });

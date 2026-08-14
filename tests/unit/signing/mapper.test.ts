@@ -4,7 +4,7 @@ import { describe, it } from "node:test";
 import {
   mapDocumensoEventToStatus,
   mapDocumensoRecipientStatusToStatus,
-} from "@/modules/signing/providers/documenso/mapper";
+} from "@/modules/signing/provider/documenso/mapper";
 
 describe("mapDocumensoEventToStatus", () => {
   it("maps DOCUMENT_SIGNED to PARTIALLY_SIGNED", () => {

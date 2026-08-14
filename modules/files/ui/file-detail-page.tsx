@@ -41,7 +41,7 @@ import {
   Building2,
 } from "lucide-react";
 
-export default function FileDetailPage() {
+export function FileDetailPage() {
   const router = useRouter();
   const { fileId } = router.query as { fileId?: string };
 

@@ -25,7 +25,7 @@ export async function createFileShare(input: CreateFileShareInput) {
       teamId: file.teamId,
       dataroomId: file.dataroomId,
       name: input.name || "Share Link",
-      type: "DATAROOM_LINK",
+      linkType: "DATAROOM_LINK",
       expiresAt: input.expiresAt || null,
       password: input.passcode || null,
     },

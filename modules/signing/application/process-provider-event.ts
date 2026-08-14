@@ -12,7 +12,7 @@ import { assertCanTransitionTo } from "../domain/state-machine";
 import { SigningNotFoundError } from "../domain/signing-errors";
 import prisma from "@/lib/prisma";
 import { getEnvelope } from "@/lib/signing/envelopes";
-import { mapDocumensoRecipientStatusToStatus } from "../providers/documenso/mapper";
+import { mapDocumensoRecipientStatusToStatus } from "../provider/documenso/mapper";
 
 export type ProviderEventEffect = {
   nextStatus: SignatureRequestStatus | null;

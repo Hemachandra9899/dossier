@@ -10,4 +10,4 @@ export {
   getDocumensoHost as getSigningHost,
   getDocumensoApiUrl as getSigningApiUrl,
   getDocumensoWebhookSecret as getSigningWebhookSecret,
-} from "@/modules/signing/providers/documenso/client";
+} from "@/modules/signing/provider/documenso/client";

@@ -14,8 +14,8 @@ import type {
   ProviderSignedArtifact,
   ProviderTemplate,
   SigningProvider,
-} from "@/modules/signing/ports/signing-provider";
-import { mapDocumensoEventToStatus } from "@/modules/signing/providers/documenso/mapper";
+} from "@/modules/signing/provider/signing-provider";
+import { mapDocumensoEventToStatus } from "@/modules/signing/provider/documenso/mapper";
 import type { SignedArtifactStorage } from "@/modules/signing/storage/signed-artifact-storage";
 import { testPrisma } from "./test-db";
 

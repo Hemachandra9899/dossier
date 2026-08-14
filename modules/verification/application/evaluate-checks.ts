@@ -1,5 +1,5 @@
-import prisma from "@/lib/prisma";
-import { DocumentExtraction, PolicyRules } from "./extraction-schema";
+import prisma from "@/platform/db";
+import { DocumentExtraction, PolicyRules } from "../provider/extraction-schema";
 import { VerificationStatus, VerificationSeverity } from "@prisma/client";
 
 export interface EvaluatedCheck {
