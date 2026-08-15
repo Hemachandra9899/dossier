@@ -8,6 +8,7 @@ const nextConfig = {
   webpack: (config) => {
     config.resolve.alias["@ee"] = path.resolve("./ee");
     config.resolve.alias["@/ee"] = path.resolve("./ee");
+    config.resolve.alias["@/public"] = path.resolve("./public");
     return config;
   },
   images: {

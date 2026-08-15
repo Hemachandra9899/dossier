@@ -27,8 +27,8 @@ import {
 } from "@/shared/ui/breadcrumb";
 import { Portal } from "@/shared/ui/portal";
 
-import { ScreenProtector } from "../../view/ScreenProtection";
-import Nav, { TNavData } from "../../view/nav";
+import { ScreenProtector } from "@/shared/ui/view/ScreenProtection";
+import Nav, { TNavData } from "@/shared/ui/view/nav";
 import { AwayPoster } from "./away-poster";
 
 // custom styles for notion

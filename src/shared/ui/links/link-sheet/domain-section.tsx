@@ -1,26 +1,20 @@
-import Link from "next/link";
-
 import {
   Dispatch,
   SetStateAction,
   useCallback,
   useEffect,
+  useMemo,
   useState,
 } from "react";
-
-import { useTeam } from "@/features/workspace/providers/workspace-provider";
-import { Domain, LinkType } from "@prisma/client";
-import { ShuffleIcon } from "lucide-react";
-import { customAlphabet } from "nanoid";
 import { mutate } from "swr";
-
-import { BLOCKED_PATHNAMES } from "@/shared/utils/constants";
-import { useLimits } from "@/ee/limits/swr-handler";
-import { cn } from "@/shared/utils/utils";
+import { useLimits } from "@/shared/utils/swr/use-limits";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { useEntitlements } from "@/features/access";
-
-import { AddDomainModal } from "@/shared/ui/domains/add-domain-modal";
-import { Button } from "@/shared/ui/button";
+import { BLOCKED_PATHNAMES } from "@/shared/utils/constants";
+import { generateRandomSlug } from "@/shared/utils/utils";
+import { cn } from "@/shared/utils/utils";
+import { Domain, LinkType } from "@/shared/utils/types";
+import { DomainConfigurationModal } from "@/shared/ui/domains/domain-configuration-modal";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import {
@@ -30,15 +24,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import { ButtonTooltip } from "@/shared/ui/tooltip";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
+import { DEFAULT_LINK_TYPE } from "..";
 
-import { DEFAULT_LINK_TYPE } from ".";
-
-// Unambiguous alphabet: excludes easily confused characters (0/O, 1/l/I)
-const generateRandomSlug = customAlphabet(
-  "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz",
-  10,
-);
+function getDefaultDomain(): string {
+  if (typeof window !== "undefined") {
+    return window.location.host;
+  }
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    try {
+      return new URL(process.env.NEXT_PUBLIC_BASE_URL).host;
+    } catch {
+      return process.env.NEXT_PUBLIC_BASE_URL;
+    }
+  }
+  return "localhost:3000";
+}
 
 export default function DomainSection({
   data,
@@ -53,24 +54,22 @@ export default function DomainSection({
   linkType: Omit<LinkType, "WORKFLOW_LINK">;
   editLink?: boolean;
 }) {
+  const defaultAppDomain = useMemo(() => getDefaultDomain(), []);
   const [isModalOpen, setModalOpen] = useState(false);
-  // Initialize displayValue from data.domain when editing, otherwise "papermark.com"
   const [displayValue, setDisplayValue] = useState<string>(
-    editLink && data.domain ? data.domain : "papermark.com",
+    editLink && data.domain ? data.domain : defaultAppDomain,
   );
   const teamInfo = useTeam();
   const { limits } = useLimits();
   const { entitlements } = useEntitlements();
 
-  // Custom domains are available to every workspace.
   const canUseCustomDomainForDocument =
     entitlements.customDomains || !!limits?.customDomainOnPro;
   const canUseCustomDomainForDataroom =
     entitlements.customDomains || !!limits?.customDomainInDataroom;
 
-  // Check if we're editing a link with a custom domain
   const isEditingCustomDomain =
-    editLink && data.domain && data.domain !== "papermark.com" ? true : false;
+    editLink && data.domain && data.domain !== defaultAppDomain ? true : false;
 
   const generateAndSetSlug = useCallback(() => {
     const newSlug = generateRandomSlug();
@@ -84,21 +83,18 @@ export default function DomainSection({
         : canUseCustomDomainForDataroom;
 
     if (isEditingCustomDomain && !canChangeCustomDomain) {
-      setDisplayValue(data.domain ?? "papermark.com");
+      setDisplayValue(data.domain ?? defaultAppDomain);
       return;
     }
 
-    // Handle opening the add domain modal
     if (value === "add_domain" || value === "add_dataroom_domain") {
       setModalOpen(true);
-      setData((prev) => ({ ...prev, domain: "papermark.com" }));
-      setDisplayValue("papermark.com");
+      setData((prev) => ({ ...prev, domain: defaultAppDomain }));
+      setDisplayValue(defaultAppDomain);
       return;
     }
 
-    // Check if this is a custom domain selection (not papermark.com)
-    if (value !== "papermark.com") {
-      // Auto-generate a slug if there isn't one yet
+    if (value !== defaultAppDomain) {
       setData((prev) => ({
         ...prev,
         domain: value,
@@ -108,13 +104,11 @@ export default function DomainSection({
       return;
     }
 
-    // Update domain normally if allowed
     setData((prev) => ({ ...prev, domain: value }));
     setDisplayValue(value);
   };
 
   const handleSelectFocus = () => {
-    // Assuming your fetcher key for domains is '/api/teams/:teamId/domains'
     mutate(`/api/teams/${teamInfo?.currentTeam?.id}/domains`);
   };
 
@@ -122,18 +116,16 @@ export default function DomainSection({
     if (domains && !editLink) {
       const defaultDomain = domains.find((domain) => domain.isDefault);
 
-      // Only set a custom domain if the plan allows it
       const canUseCustomDomain =
         (linkType === "DOCUMENT_LINK" && canUseCustomDomainForDocument) ||
         (linkType === "DATAROOM_LINK" && canUseCustomDomainForDataroom);
 
       const domainValue = canUseCustomDomain
-        ? (defaultDomain?.slug ?? "papermark.com")
-        : "papermark.com";
+        ? (defaultDomain?.slug ?? defaultAppDomain)
+        : defaultAppDomain;
 
-      // Auto-generate a slug when a custom domain is auto-selected as default
       const isCustomDomain =
-        domainValue !== "papermark.com" && canUseCustomDomain;
+        domainValue !== defaultAppDomain && canUseCustomDomain;
 
       setData((prev) => ({
         ...prev,
@@ -143,17 +135,22 @@ export default function DomainSection({
 
       setDisplayValue(domainValue);
     }
-  }, [domains, editLink, linkType, canUseCustomDomainForDocument, canUseCustomDomainForDataroom, limits]);
+  }, [
+    domains,
+    editLink,
+    linkType,
+    setData,
+    canUseCustomDomainForDocument,
+    canUseCustomDomainForDataroom,
+    defaultAppDomain,
+  ]);
 
-  // Set defaultDomain based on plan type and link type
   const defaultDomain = editLink
-    ? (data.domain ?? "papermark.com")
-    : (linkType === "DOCUMENT_LINK" && canUseCustomDomainForDocument) ||
-        (linkType === "DATAROOM_LINK" && canUseCustomDomainForDataroom)
-      ? (domains?.find((domain) => domain.isDefault)?.slug ?? "papermark.com")
-      : "papermark.com";
+    ? (data.domain ?? defaultAppDomain)
+    : domains
+      ? (domains.find((domain) => domain.isDefault)?.slug ?? defaultAppDomain)
+      : defaultAppDomain;
 
-  // Set the initial display value when component mounts
   useEffect(() => {
     setDisplayValue(defaultDomain);
   }, [defaultDomain, editLink]);
@@ -184,7 +181,7 @@ export default function DomainSection({
           <SelectTrigger
             className={cn(
               "flex h-10 w-full rounded-none rounded-l-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm",
-              data.domain && data.domain !== "papermark.com"
+              data.domain && data.domain !== defaultAppDomain
                 ? ""
                 : "border-r-1 rounded-r-md",
             )}
@@ -192,8 +189,8 @@ export default function DomainSection({
             <SelectValue placeholder="Select a domain" />
           </SelectTrigger>
           <SelectContent className="flex w-full rounded-md border border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm">
-            <SelectItem value="papermark.com" className="hover:bg-muted">
-              papermark.com
+            <SelectItem value={defaultAppDomain} className="hover:bg-muted">
+              {defaultAppDomain}
             </SelectItem>
             {linkType === "DOCUMENT_LINK" && (
               <>
@@ -234,102 +231,48 @@ export default function DomainSection({
           </SelectContent>
         </Select>
 
-        {data.domain && data.domain !== "papermark.com" ? (
-          <>
+        {data.domain && data.domain !== defaultAppDomain ? (
+          <div className="relative flex min-w-0 flex-1">
+            <span className="inline-flex items-center border border-l-0 border-r-0 border-input bg-muted px-3 text-sm text-muted-foreground">
+              /
+            </span>
             <Input
               type="text"
-              name="key"
-              required
+              id="link-slug"
+              aria-label="Link slug"
               value={data.slug || ""}
-              disabled={isDisabled}
-              pattern="^[a-zA-Z0-9-]+$"
-              onKeyDown={(e) => {
-                // Allow navigation keys, backspace, delete, etc.
-                if (e.key.length === 1 && !/^[a-zA-Z0-9-]$/.test(e.key)) {
-                  e.preventDefault();
-                }
-              }}
-              onInvalid={(e) => {
-                const currentValue = e.currentTarget.value;
-                const isBlocked = BLOCKED_PATHNAMES.includes(
-                  `/${currentValue}`,
-                );
-
-                if (isBlocked) {
-                  e.currentTarget.setCustomValidity(
-                    "This pathname is blocked. Please choose another one.",
-                  );
-                } else {
-                  e.currentTarget.setCustomValidity(
-                    "Only letters, numbers, and '-' are allowed.",
-                  );
-                }
-              }}
-              autoComplete="off"
+              onChange={(e) =>
+                setData((prev) => ({ ...prev, slug: e.target.value }))
+              }
+              placeholder="custom-slug"
               className={cn(
-                "hidden rounded-none focus:ring-inset",
-                data.domain && data.domain !== "papermark.com" ? "flex" : "",
-                isDisabled ? "opacity-50" : "",
+                "h-10 rounded-none border border-l-0 border-input bg-white text-foreground placeholder-muted-foreground focus:border-muted-foreground focus:outline-none focus:ring-inset focus:ring-muted-foreground dark:border-gray-500 dark:bg-gray-800 focus:dark:bg-transparent sm:text-sm",
+                data.domain && data.domain !== defaultAppDomain ? "flex" : "",
+                isSlugInvalid
+                  ? "border-destructive focus:border-destructive"
+                  : "",
               )}
-              placeholder="deck"
-              onChange={(e) => {
-                if (isDisabled) return;
-
-                const currentValue = e.target.value.replace(
-                  /[^a-zA-Z0-9-]/g,
-                  "",
-                );
-                const isBlocked = BLOCKED_PATHNAMES.includes(
-                  `/${currentValue}`,
-                );
-
-                if (isBlocked) {
-                  e.currentTarget.setCustomValidity(
-                    "This pathname is blocked. Please choose another one.",
-                  );
-                } else {
-                  e.currentTarget.setCustomValidity("");
-                }
-                setData((prev) => ({ ...prev, slug: currentValue }));
-              }}
-              aria-invalid={isSlugInvalid}
             />
-            <ButtonTooltip content="Generate random slug">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-10 min-w-10 rounded-l-none border-l-0"
-                disabled={isDisabled}
-                onClick={(e) => {
-                  e.preventDefault();
-                  generateAndSetSlug();
-                }}
-              >
-                <ShuffleIcon className="h-4 w-4" />
-              </Button>
-            </ButtonTooltip>
-          </>
+            <BadgeTooltip
+              content="Generate random slug"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted"
+              onClick={generateAndSetSlug}
+            >
+              🎲
+            </BadgeTooltip>
+          </div>
         ) : null}
       </div>
 
-      {data.domain && data.domain !== "papermark.com" && !isDomainVerified ? (
-        <div className="mt-4 text-sm text-red-500">
-          Your domain is not verified yet!{" "}
-          <Link
-            className="underline hover:text-red-500/80"
-            href="/settings/domains"
-            target="_blank"
-          >
-            Verify now
-          </Link>
-        </div>
+      {data.domain && data.domain !== defaultAppDomain && !isDomainVerified ? (
+        <p className="mt-1 text-xs text-amber-500">
+          This domain is pending DNS verification.
+        </p>
       ) : null}
 
-      {/* Add domain modal for custom domains */}
-      <AddDomainModal
-        open={isModalOpen}
-        setOpen={setModalOpen}
+      <DomainConfigurationModal
+        isOpen={isModalOpen}
+        setIsOpen={setModalOpen}
         linkType={linkType}
       />
     </>

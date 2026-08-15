@@ -1,2 +1,2 @@
-export default function Component(_props: any) { return null; }
-export type CustomFieldData = any;
+export * from "./custom-fields-panel/index";
+export { default } from "./custom-fields-panel/index";

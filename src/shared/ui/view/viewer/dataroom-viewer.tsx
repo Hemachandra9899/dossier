@@ -4,24 +4,24 @@ import { useEffect, useMemo, useState } from "react";
 import React from "react";
 
 import { usePendingUploads } from "@/features/files/upload/pending-uploads-context";
-import { ViewerChatPanel } from "@/ee/features/ai/components/viewer-chat-panel";
+import { ViewerChatPanel } from "@ee/features/ai/components/viewer-chat-panel";
 import {
   ViewerChatLayout,
   ViewerChatProvider,
-} from "@/ee/features/ai/components/viewer-chat-provider";
-import { ViewerChatToggle } from "@/ee/features/ai/components/viewer-chat-toggle";
+} from "@ee/features/ai/components/viewer-chat-provider";
+import { ViewerChatToggle } from "@ee/features/ai/components/viewer-chat-toggle";
 import {
   type DataroomCardLayout,
   type DataroomViewerHeaderStyle,
   asDataroomCardLayout,
   asDataroomViewerHeaderStyle,
-} from "@/ee/features/branding/lib/dataroom-viewer-layout";
+} from "@ee/features/branding/lib/dataroom-viewer-layout";
 import {
   ConversationSidebarLayout,
   ConversationSidebarProvider,
-} from "@/ee/features/conversations/components/viewer/conversation-sidebar-provider";
-import { RequestListButton } from "@/ee/features/request-lists/components/viewer/request-list-button";
-import { useViewerRequestList } from "@/ee/features/request-lists/lib/swr/use-viewer-request-list";
+} from "@ee/features/conversations/components/viewer/conversation-sidebar-provider";
+import { RequestListButton } from "@ee/features/request-lists/components/viewer/request-list-button";
+import { useViewerRequestList } from "@ee/features/request-lists/lib/swr/use-viewer-request-list";
 import {
   DataroomBrand,
   DataroomFolder,
@@ -64,7 +64,7 @@ import {
   VIEWER_OPEN_DOWNLOAD_EVENT,
   VIEWER_TOGGLE_CONVERSATIONS_EVENT,
 } from "../dataroom/dataroom-trailing-actions";
-import { DEFAULT_DATAROOM_VIEW_TYPE } from "../dataroom/dataroom-view";
+import type { DEFAULT_DATAROOM_VIEW_TYPE } from "../dataroom/dataroom-view";
 import DocumentCard from "../dataroom/document-card";
 import { DocumentUploadModal } from "../dataroom/document-upload-modal";
 import FolderCard from "../dataroom/folder-card";

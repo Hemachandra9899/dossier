@@ -1,2 +1,2 @@
-export function DeleteDataroom(_props: any) { return null; }
-export default DeleteDataroom;
+export * from "./delete-dataroom/index";
+export { default } from "./delete-dataroom/index";

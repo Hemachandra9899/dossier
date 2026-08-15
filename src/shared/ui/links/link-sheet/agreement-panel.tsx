@@ -1,2 +1,2 @@
-export function AgreementPanel(_props: any) { return null; }
-export default AgreementPanel;
+export * from "./agreement-panel/index";
+export { default } from "./agreement-panel/index";

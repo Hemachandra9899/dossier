@@ -1,5 +1,4 @@
-import { SidebarFolderTreeSelection } from "./selection-tree";
-import { SidebarFolderTree } from "./sidebar-tree";
-import { ViewFolderTree } from "./view-tree";
-
-export { SidebarFolderTree, SidebarFolderTreeSelection, ViewFolderTree };
+export { SidebarFolderTreeSelection } from "./selection-tree";
+export { SidebarFolderTree } from "./sidebar-tree";
+export { ViewFolderTree } from "./view-tree";
+export * from "./utils";

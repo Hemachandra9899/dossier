@@ -85,7 +85,7 @@ function DataroomMemberRouteGuard() {
   return null;
 }
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const isDataroom = router.pathname.startsWith("/datarooms/[id]");
 
@@ -137,3 +137,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </SidebarProvider>
   );
 }
+
+export default AppLayout;

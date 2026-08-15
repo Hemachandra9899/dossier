@@ -12,7 +12,7 @@ import {
   TooltipTrigger,
 } from "@/shared/ui/tooltip";
 
-import { Button } from "../../ui/button";
+import { Button } from "@/shared/ui/button";
 
 export type DataroomTrailingActionsVariant = "onBrand" | "onLight";
 

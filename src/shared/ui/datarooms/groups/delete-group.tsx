@@ -1,2 +1,2 @@
-export function DeleteGroup(_props: any) { return null; }
-export default DeleteGroup;
+export * from "./delete-group/index";
+export { default } from "./delete-group/index";

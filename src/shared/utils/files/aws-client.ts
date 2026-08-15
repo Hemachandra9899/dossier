@@ -1,4 +1,4 @@
-import storage from "@/platform/storage";
+import storage, { getStorageConfig } from "@/infrastructure/storage";
 
 export function getS3Client() {
   return storage;
@@ -14,13 +14,13 @@ export function getLambdaClientForTeam(_teamId?: any) {
 }
 
 export async function getTeamS3ClientAndConfig(_teamId?: any) {
-  const bucket = process.env.S3_BUCKET_NAME || "dossier";
+  const config = getStorageConfig();
   return {
     client: storage,
-    config: { bucket, region: process.env.AWS_REGION || "us-east-1" },
+    config: { bucket: config.bucket, region: config.region },
     s3: storage,
-    bucket,
-    advancedBucket: bucket,
+    bucket: config.bucket,
+    advancedBucket: config.bucket,
     lambdaFunctionName: "bulk-download",
   } as any;
 }

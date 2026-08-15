@@ -41,7 +41,7 @@ import {
 import { TimestampTooltip } from "@/shared/ui/timestamp-tooltip";
 import { VisitorAvatar } from "@/shared/ui/visitors/visitor-avatar";
 
-import { InviteViewersModal } from "../../../ee/features/dataroom-invitations/components/invite-viewers-modal";
+import { InviteViewersModal } from "@ee/features/dataroom-invitations/components/invite-viewers-modal";
 import { AddGroupMemberModal } from "./add-member-modal";
 
 export default function GroupMemberTable({
