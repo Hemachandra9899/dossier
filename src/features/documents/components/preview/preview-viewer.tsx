@@ -6,6 +6,7 @@ import { HTML_DOCUMENT_IFRAME_SANDBOX } from "@/shared/utils/utils/html-document
 import { PreviewExcelViewer } from "./preview-excel-viewer";
 import { PreviewImageViewer } from "./preview-image-viewer";
 import { PreviewPagesViewer } from "./preview-pages-viewer";
+import { PreviewPdfViewer } from "./preview-pdf-viewer";
 
 interface PreviewViewerProps {
   documentData: DocumentPreviewData;
@@ -25,7 +26,7 @@ export function PreviewViewer({
     : undefined;
 
   const renderViewer = () => {
-    // Documents with pages (PDFs, docs, slides)
+    // Documents with page images (PDFs, docs, slides). Every page is an <img>.
     if (documentData.pages && documentData.pages.length > 0) {
       return (
         <PreviewPagesViewer
@@ -34,6 +35,14 @@ export function PreviewViewer({
           pagesApiEndpoint={previewPagesEndpoint}
           initialPage={initialPage}
         />
+      );
+    }
+
+    // Raw PDFs with no converted page images yet (or none at all). Rendered
+    // inline with an inline Content-Disposition on the signed URL.
+    if (documentData.fileType === "pdf" && documentData.file) {
+      return (
+        <PreviewPdfViewer documentData={documentData} onClose={onClose} />
       );
     }
 

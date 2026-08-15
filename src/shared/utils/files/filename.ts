@@ -60,6 +60,31 @@ export function buildContentDisposition(
 }
 
 /**
+ * Build an `inline` Content-Disposition header. Used when an object must be
+ * displayed in-browser (e.g. raw PDF preview inside an iframe) instead of
+ * being downloaded, while keeping a safe, URL-encoded filename.
+ */
+export function buildInlineContentDisposition(
+  originalFileName: string,
+  slugifiedName: string,
+): string {
+  return `inline; filename="${slugifiedName}"; filename*=UTF-8''${encodeRFC5987(originalFileName)}`;
+}
+
+/**
+ * Build an `inline` Content-Disposition header for a single filename
+ * (already including its extension).
+ */
+export function buildInlineDispositionForName(filename: string): string {
+  const dotIdx = filename.lastIndexOf(".");
+  const base = dotIdx > 0 ? filename.slice(0, dotIdx) : filename;
+  const ext = dotIdx > 0 ? filename.slice(dotIdx) : "";
+  const sanitizedExt = /^\.[A-Za-z0-9]+$/.test(ext) ? ext : "";
+  const slug = safeSlugify(base) + sanitizedExt;
+  return buildInlineContentDisposition(filename, slug);
+}
+
+/**
  * Build a Content-Disposition `attachment` header for a single download
  * filename (already including its extension).
  */

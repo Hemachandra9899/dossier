@@ -12,7 +12,7 @@ import { RequestManagement } from "@/features/signing/ui/request-management";
 import { useDocumentLinks } from "@/shared/utils/swr/use-document";
 import { useDocumentOverview } from "@/shared/utils/swr/use-document-overview";
 import DocumentHeader from "@/shared/ui/documents/document-header";
-import { DocumentPreviewButton } from "@/shared/ui/documents/document-preview-button";
+import { DocumentPreviewButton } from "@/features/documents/components/preview/document-preview-button";
 // Import placeholder components
 import DocumentStatsPlaceholder from "@/shared/ui/documents/document-stats-placeholder";
 import LinkDocumentIndicator from "@/shared/ui/documents/link-document-indicator";

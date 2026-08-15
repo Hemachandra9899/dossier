@@ -3,8 +3,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 
 import { enforceDocumentMemberScope } from "@/shared/utils/api/rbac/guard";
+import { shouldHavePages } from "@/shared/utils/documents/document-processing";
 import { getFeatureFlags } from "@/shared/utils/featureFlags";
 import { getAdvancedExcelFileUrl } from "@/shared/utils/files/advanced-excel-url";
+import { buildInlineDispositionForName } from "@/shared/utils/files/filename";
 import { getFile } from "@/shared/utils/files/get-file";
 import { signPageLinks } from "@/shared/utils/files/sign-page-links";
 import prisma from "@/platform/db";
@@ -13,6 +15,8 @@ import { log } from "@/shared/utils/utils";
 import { resolveHtmlContentForRender } from "@/shared/utils/utils/html-document";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
+
+const INITIAL_PAGES_TO_LOAD = 10;
 
 export default async function handle(
   req: NextApiRequest,
@@ -76,6 +80,9 @@ export default async function handle(
             file: true,
             storageType: true,
             pages: {
+              // Only fetch the first window of page rows; the rest are signed
+              // on-demand via the preview-pages endpoint as the viewer scrolls.
+              where: { pageNumber: { lte: INITIAL_PAGES_TO_LOAD } },
               orderBy: { pageNumber: "asc" },
               select: {
                 file: true,
@@ -110,54 +117,55 @@ export default async function handle(
       isVertical: primaryVersion.isVertical,
       numPages: primaryVersion.numPages,
       advancedExcelEnabled: document.advancedExcelEnabled,
+      isProcessing: false,
       pages: undefined as any,
       file: undefined as string | undefined,
       sheetData: undefined as any,
       htmlContent: undefined as string | undefined,
     };
 
-    const INITIAL_PAGES_TO_LOAD = 10;
-
-    if (primaryVersion.hasPages && primaryVersion.pages.length > 0) {
-      // Documents with pages (PDFs, docs, slides)
-      // Only sign URLs for the first batch of pages to avoid timeouts on large documents.
-      // Remaining page URLs are fetched on-demand by the client via preview-pages endpoint.
-      returnData.pages = await Promise.all(
-        primaryVersion.pages.map(async (page, index) => {
-          const { storageType, ...otherPageData } = page;
-          const inWindow = index < INITIAL_PAGES_TO_LOAD;
-          return {
-            ...otherPageData,
-            file: inWindow
-              ? await getFile({ data: page.file, type: storageType })
-              : null,
-            pageLinks: inWindow
-              ? ((await signPageLinks(otherPageData.pageLinks)) ??
-                otherPageData.pageLinks)
-              : otherPageData.pageLinks,
-          };
-        }),
+    if (primaryVersion.hasPages && primaryVersion.numPages) {
+      // Documents with page images (PDFs, docs, slides).
+      // Sign URLs for the first window of pages; remaining pages are placeholders
+      // fetched on-demand by the client via the preview-pages endpoint.
+      const pageRows = new Map(
+        primaryVersion.pages.map((page) => [page.pageNumber, page]),
       );
+
+      returnData.pages = [];
+      for (let pageNumber = 1; pageNumber <= primaryVersion.numPages; pageNumber++) {
+        const page = pageRows.get(pageNumber);
+        if (page) {
+          const { storageType, ...otherPageData } = page;
+          const signedLinks = await signPageLinks(otherPageData.pageLinks);
+          returnData.pages.push({
+            ...otherPageData,
+            pageNumber,
+            file: await getFile({ data: page.file, type: storageType }),
+            ...(signedLinks ? { pageLinks: signedLinks } : {}),
+          });
+        } else {
+          // Placeholder so the viewer can navigate to pages beyond the window.
+          returnData.pages.push({ pageNumber, file: null });
+        }
+      }
     } else if (
       primaryVersion.type === "pdf" ||
-      primaryVersion.file?.endsWith(".pdf") ||
-      primaryVersion.hasPages
+      primaryVersion.file?.endsWith(".pdf")
     ) {
-      // PDF documents: generate direct presigned download/view URL from Object Storage
+      // Raw PDF: still being converted (hasPages=false) or never converted.
+      // Serve the original file inline so the browser renders it instead of
+      // downloading it; the viewer shows a "generating page previews" banner.
+      const fileName = primaryVersion.file.split("/").pop() || "document.pdf";
       const fileUrl = await getFile({
         data: primaryVersion.file,
         type: primaryVersion.storageType,
+        responseContentDisposition: buildInlineDispositionForName(fileName),
       });
       returnData.file = fileUrl;
-      returnData.numPages = primaryVersion.numPages || 1;
-      returnData.pages = [
-        {
-          pageNumber: 1,
-          file: fileUrl,
-          pageLinks: [],
-          embeddedLinks: [],
-        },
-      ];
+      returnData.numPages = primaryVersion.numPages || 0;
+      returnData.pages = [];
+      returnData.isProcessing = shouldHavePages(primaryVersion.type);
     } else if (primaryVersion.type === "image") {
       // Single image files
       returnData.file = await getFile({
@@ -209,11 +217,7 @@ export default async function handle(
       });
     } else {
       // Check if document should be processed but isn't
-      const shouldHavePages = ["pdf", "docs", "slides", "cad"].includes(
-        primaryVersion.type || "",
-      );
-
-      if (shouldHavePages) {
+      if (shouldHavePages(primaryVersion.type)) {
         return res.status(400).json({
           message: "Document is still processing. Please wait and try again.",
         });

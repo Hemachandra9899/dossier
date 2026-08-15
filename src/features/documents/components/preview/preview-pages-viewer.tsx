@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, RefreshCwIcon } from "lucide-react";
 
 import { DocumentPreviewData } from "@/shared/utils/types/document-preview";
 import { cn } from "@/shared/utils/utils";
@@ -8,6 +8,9 @@ import { cn } from "@/shared/utils/utils";
 import { Button } from "@/shared/ui/button";
 
 const PRELOAD_RADIUS = 5;
+const MAX_AUTO_RETRIES = 2;
+const RETRY_BACKOFF_MS = 1500;
+const IMAGE_TIMEOUT_MS = 25_000;
 
 interface PreviewPagesViewerProps {
   documentData: DocumentPreviewData;
@@ -25,14 +28,19 @@ export function PreviewPagesViewer({
   const [currentPage, setCurrentPage] = useState(() =>
     Math.min(Math.max(initialPage ?? 1, 1), documentData.numPages || 1),
   );
-  const [imageCache, setImageCache] = useState<{ [key: number]: boolean }>({});
-  const [imageLoaded, setImageLoaded] = useState(imageCache[1] || false);
   const [pages, setPages] = useState(documentData.pages ?? []);
+  const [imageCache, setImageCache] = useState<{ [key: number]: boolean }>({});
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [pageError, setPageError] = useState<string | null>(null);
+
   const pagesRef = useRef(pages);
   const pendingRef = useRef<Set<number>>(new Set());
+  const refetchedRef = useRef<Set<number>>(new Set());
+  const retryCountRef = useRef(0);
   const generationRef = useRef(0);
 
-  const { numPages, documentName, isVertical } = documentData;
+  const { numPages, documentName } = documentData;
 
   useEffect(() => {
     pagesRef.current = pages;
@@ -42,6 +50,10 @@ export function PreviewPagesViewer({
     setPages(documentData.pages ?? []);
     pagesRef.current = documentData.pages ?? [];
     pendingRef.current = new Set();
+    refetchedRef.current = new Set();
+    retryCountRef.current = 0;
+    setPageError(null);
+    setImageError(false);
     generationRef.current += 1;
   }, [documentData.pages]);
 
@@ -56,11 +68,7 @@ export function PreviewPagesViewer({
       const needed: number[] = [];
 
       for (let i = start; i <= end; i++) {
-        if (
-          !currentPages[i - 1]?.file &&
-          !pendingRef.current.has(i) &&
-          i <= currentPages.length
-        ) {
+        if (!currentPages[i - 1]?.file && !pendingRef.current.has(i)) {
           needed.push(i);
         }
       }
@@ -68,6 +76,7 @@ export function PreviewPagesViewer({
       if (needed.length === 0) return;
 
       needed.forEach((pn) => pendingRef.current.add(pn));
+      setPageError(null);
 
       try {
         const response = await fetch(pagesApiEndpoint, {
@@ -78,21 +87,42 @@ export function PreviewPagesViewer({
 
         if (generationRef.current !== generation) return;
 
-        if (response.ok) {
-          const data = await response.json();
-          setPages((prev) => {
-            const updated = [...prev];
-            for (const fetchedPage of data.pages) {
-              const idx = fetchedPage.pageNumber - 1;
-              if (idx >= 0 && idx < updated.length && updated[idx]) {
-                updated[idx] = {
-                  ...updated[idx],
-                  file: fetchedPage.file,
-                };
-              }
+        if (!response.ok) {
+          throw new Error(`Failed to load page previews (${response.status})`);
+        }
+
+        const data = await response.json();
+        if (generationRef.current !== generation) return;
+
+        retryCountRef.current = 0;
+
+        setPages((prev) => {
+          const updated = [...prev];
+          for (const fetchedPage of data.pages ?? []) {
+            const idx = fetchedPage.pageNumber - 1;
+            if (idx < 0) continue;
+            while (updated.length <= idx) {
+              updated.push({ pageNumber: updated.length + 1, file: null });
             }
-            return updated;
-          });
+            updated[idx] = { ...updated[idx], ...fetchedPage };
+          }
+          return updated;
+        });
+      } catch (err) {
+        if (generationRef.current !== generation) return;
+
+        retryCountRef.current += 1;
+        if (retryCountRef.current <= MAX_AUTO_RETRIES) {
+          setTimeout(
+            () => ensurePagesLoaded(centerPage),
+            RETRY_BACKOFF_MS * retryCountRef.current,
+          );
+        } else {
+          setPageError(
+            err instanceof Error
+              ? err.message
+              : "Failed to load page previews. Please try again.",
+          );
         }
       } finally {
         if (generationRef.current === generation) {
@@ -110,16 +140,14 @@ export function PreviewPagesViewer({
   const goToNextPage = useCallback(() => {
     if (currentPage < numPages) {
       setCurrentPage(currentPage + 1);
-      setImageLoaded(imageCache[currentPage + 1] || false);
     }
-  }, [currentPage, numPages, imageCache]);
+  }, [currentPage, numPages]);
 
   const goToPreviousPage = useCallback(() => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
-      setImageLoaded(imageCache[currentPage - 1] || false);
     }
-  }, [currentPage, numPages, imageCache]);
+  }, [currentPage]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -140,6 +168,63 @@ export function PreviewPagesViewer({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [goToPreviousPage, goToNextPage, onClose]);
 
+  const currentPageData = pages[currentPage - 1];
+  const hasFileUrl = !!currentPageData?.file;
+
+  // Reset image state when navigating to a different page.
+  useEffect(() => {
+    setImageLoaded(imageCache[currentPage] || false);
+    setImageError(false);
+  }, [currentPage, hasFileUrl, imageCache]);
+
+  // Fail fast when the current page image takes too long to load.
+  useEffect(() => {
+    if (!hasFileUrl || imageCache[currentPage]) return;
+
+    const timer = setTimeout(() => {
+      setImageError(true);
+      setImageLoaded(false);
+    }, IMAGE_TIMEOUT_MS);
+
+    return () => clearTimeout(timer);
+  }, [currentPage, hasFileUrl, imageCache]);
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+    setImageError(false);
+    setImageCache((prev) => ({ ...prev, [currentPage]: true }));
+  };
+
+  const handleImageError = () => {
+    // Signed URLs expire; fetch a fresh URL once before surfacing an error.
+    if (!refetchedRef.current.has(currentPage)) {
+      refetchedRef.current.add(currentPage);
+      const idx = currentPage - 1;
+      setPages((prev) => {
+        const updated = [...prev];
+        if (updated[idx]) {
+          updated[idx] = { ...updated[idx], file: null };
+        }
+        return updated;
+      });
+      pendingRef.current.delete(currentPage);
+      ensurePagesLoaded(currentPage);
+      return;
+    }
+
+    setImageError(true);
+    setImageLoaded(false);
+  };
+
+  const handleRetry = () => {
+    refetchedRef.current.delete(currentPage);
+    retryCountRef.current = 0;
+    setPageError(null);
+    setImageError(false);
+    setImageLoaded(false);
+    ensurePagesLoaded(currentPage);
+  };
+
   if (!pages || pages.length === 0) {
     return (
       <div className="flex h-full w-full items-center justify-center">
@@ -148,13 +233,6 @@ export function PreviewPagesViewer({
     );
   }
 
-  const currentPageData = pages[currentPage - 1];
-
-  const handleImageLoad = () => {
-    setImageLoaded(true);
-    setImageCache((prev) => ({ ...prev, [currentPage]: true }));
-  };
-
   if (!currentPageData) {
     return (
       <div className="flex h-full w-full items-center justify-center">
@@ -162,11 +240,6 @@ export function PreviewPagesViewer({
       </div>
     );
   }
-
-  const hasFileUrl = !!currentPageData.file;
-  const isPdf =
-    documentData.fileType === "pdf" ||
-    !!currentPageData.file?.toLowerCase().includes(".pdf");
 
   return (
     <div className="relative h-full w-full overflow-hidden">
@@ -217,24 +290,55 @@ export function PreviewPagesViewer({
       {/* Page Content */}
       <div className="flex h-full w-full items-center justify-center p-4">
         <div className="relative max-h-full max-w-full">
-          {(!imageLoaded || !hasFileUrl) && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+          {!hasFileUrl && !pageError && (
+            <div className="flex items-center justify-center p-10">
+              <div className="text-center">
+                <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <p className="mt-2 text-xs text-gray-400">
+                  Loading page {currentPage}…
+                </p>
+              </div>
+            </div>
+          )}
+
+          {!hasFileUrl && pageError && (
+            <div className="text-center">
+              <p className="text-gray-400">{pageError}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRetry}
+                className="mt-3 text-gray-200"
+              >
+                <RefreshCwIcon className="mr-1 h-3 w-3" /> Retry
+              </Button>
             </div>
           )}
 
           {hasFileUrl && (
-            isPdf ? (
-              <iframe
-                src={`${currentPageData.file!}#toolbar=0&navpanes=0`}
-                title={documentName || "PDF Document"}
-                className={cn(
-                  "h-[calc(100vh-140px)] w-[85vw] max-w-5xl rounded-lg border-0 bg-white transition-opacity duration-200 shadow-2xl",
-                  imageLoaded ? "opacity-100" : "opacity-0",
-                )}
-                onLoad={handleImageLoad}
-              />
-            ) : (
+            <>
+              {(!imageLoaded || imageError) && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  {imageError ? (
+                    <div className="text-center">
+                      <p className="text-gray-400">
+                        This page could not be loaded.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRetry}
+                        className="mt-3 text-gray-200"
+                      >
+                        <RefreshCwIcon className="mr-1 h-3 w-3" /> Retry
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  )}
+                </div>
+              )}
+
               <img
                 src={currentPageData.file!}
                 alt={`Page ${currentPage}`}
@@ -243,25 +347,11 @@ export function PreviewPagesViewer({
                   imageLoaded ? "opacity-100" : "opacity-0",
                 )}
                 onLoad={handleImageLoad}
-                onError={() => {
-                  setImageLoaded(false);
-                  setImageCache((prev) => ({ ...prev, [currentPage]: false }));
-
-                  const idx = currentPage - 1;
-                  const current = pagesRef.current;
-                  if (idx >= 0 && idx < current.length && current[idx]) {
-                    const updated = [...current];
-                    updated[idx] = { ...updated[idx], file: "" };
-                    pagesRef.current = updated;
-                    setPages(updated);
-                  }
-                  pendingRef.current.delete(currentPage);
-                  ensurePagesLoaded(currentPage);
-                }}
+                onError={handleImageError}
                 draggable={false}
                 onContextMenu={(e) => e.preventDefault()}
               />
-            )
+            </>
           )}
         </div>
       </div>

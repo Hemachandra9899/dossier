@@ -1,7 +1,4 @@
-import { useEffect } from "react";
-
 import { XIcon } from "lucide-react";
-import { toast } from "sonner";
 
 import { useDocumentPreview } from "@/shared/utils/swr/use-document-preview";
 
@@ -9,7 +6,7 @@ import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import LoadingSpinner from "@/shared/ui/loading-spinner";
 
-import { PreviewViewer } from "./preview-viewers/preview-viewer";
+import { PreviewViewer } from "./preview-viewer";
 
 interface DocumentPreviewModalProps {
   documentId: string;

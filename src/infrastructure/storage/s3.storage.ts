@@ -120,14 +120,32 @@ export class S3ObjectStorage implements ObjectStorage {
     }
   }
 
-  async getDownloadUrl(key: string, expiresInSeconds: number = 3600, bucket?: string): Promise<string> {
-    return this.getSignedUrl(key, expiresInSeconds, bucket);
+  async getDownloadUrl(
+    key: string,
+    expiresInSeconds: number = 3600,
+    bucket?: string,
+    responseContentDisposition?: string,
+  ): Promise<string> {
+    return this.getSignedUrl(
+      key,
+      expiresInSeconds,
+      bucket,
+      responseContentDisposition,
+    );
   }
 
-  async getSignedUrl(key: string, expiresInSeconds: number = 3600, bucket?: string): Promise<string> {
+  async getSignedUrl(
+    key: string,
+    expiresInSeconds: number = 3600,
+    bucket?: string,
+    responseContentDisposition?: string,
+  ): Promise<string> {
     const command = new GetObjectCommand({
       Bucket: bucket || this.defaultBucket,
       Key: key,
+      ...(responseContentDisposition
+        ? { ResponseContentDisposition: responseContentDisposition }
+        : {}),
     });
     return getS3SignedUrl(this.client, command, { expiresIn: expiresInSeconds });
   }

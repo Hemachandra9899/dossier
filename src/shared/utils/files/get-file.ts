@@ -98,7 +98,12 @@ const getFileFromS3 = async (
   if (isServer) {
     // Generate signed URL directly from Oracle Object Storage / S3
     const expiresInSeconds = expiresIn ? Math.floor(expiresIn / 1000) : 3600;
-    return s3Storage.getSignedUrl(key, expiresInSeconds);
+    return s3Storage.getSignedUrl(
+      key,
+      expiresInSeconds,
+      undefined,
+      responseContentDisposition,
+    );
   } else {
     return fetchPresignedUrl(
       `/api/file/s3/get-presigned-get-url-proxy`,

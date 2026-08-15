@@ -8,6 +8,7 @@ import { getServerSession } from "next-auth/next";
 import { hashToken } from "@/shared/utils/api/auth/token";
 import { isDataroomScopedRole } from "@/shared/utils/api/rbac/permissions";
 import { processDocument } from "@/shared/utils/api/documents/process-document";
+import { triggerDocumentProcessing } from "@/shared/utils/api/documents/trigger-document-processing";
 import { errorhandler } from "@/shared/utils/errorHandler";
 import prisma from "@/platform/db";
 import { CustomUser } from "@/shared/utils/types";
@@ -481,6 +482,25 @@ export default async function handle(
         createLink,
         folderPathName,
       });
+
+      // Initial uploads must enqueue the same conversion task as new versions.
+      // The created version starts with hasPages=false; the task flips it to
+      // true only after every page image exists. Failing to trigger here means
+      // a fresh PDF upload never produces page previews.
+      const initialVersion = document.versions[0];
+      if (initialVersion) {
+        await triggerDocumentProcessing({
+          teamId,
+          documentId: document.id,
+          documentVersionId: initialVersion.id,
+          versionNumber: initialVersion.versionNumber,
+          type: document.type,
+          plan: team.plan,
+          url: fileUrl,
+          contentType: contentType ?? null,
+          fileSize,
+        });
+      }
 
       return res.status(201).json(serializeFileSize(document));
     } catch (error) {

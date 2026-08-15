@@ -8,12 +8,14 @@ export interface DocumentPreviewData {
   isVertical: boolean;
   numPages: number;
   advancedExcelEnabled?: boolean;
+  /** True when a page-based document has not finished converting yet. */
+  isProcessing?: boolean;
   pages?: {
     file: string | null;
-    pageNumber: string;
-    embeddedLinks: string[];
-    pageLinks: PageLink[];
-    metadata: { width: number; height: number; scaleFactor: number };
+    pageNumber: number;
+    embeddedLinks?: string[];
+    pageLinks?: PageLink[];
+    metadata?: { width: number; height: number; scaleFactor: number };
   }[];
   file?: string;
   sheetData?: any;
