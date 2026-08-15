@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 
 import { enforceDocumentMemberScope } from "@/shared/utils/api/rbac/guard";
 import { shouldHavePages } from "@/shared/utils/documents/document-processing";
+import { resolvePreviewMode } from "@/shared/utils/documents/preview-mode";
 import { getFeatureFlags } from "@/shared/utils/featureFlags";
 import { getAdvancedExcelFileUrl } from "@/shared/utils/files/advanced-excel-url";
 import { buildInlineDispositionForName } from "@/shared/utils/files/filename";
@@ -108,6 +109,27 @@ export default async function handle(
       return res.status(404).json({ message: "Document version not found" });
     }
 
+    // Never trust `hasPages` alone: a legacy row can claim pages exist while no
+    // (or too few) DocumentPage rows were actually created. Only serve the page
+    // viewer when real generated pages match the declared page count.
+    const generatedPageCount = await prisma.documentPage.count({
+      where: { versionId: primaryVersion.id },
+    });
+
+    const previewMode = resolvePreviewMode({
+      type: primaryVersion.type,
+      file: primaryVersion.file,
+      hasPages: primaryVersion.hasPages,
+      numPages: primaryVersion.numPages,
+      generatedPageCount,
+    });
+
+    const isPdf =
+      primaryVersion.type === "pdf" ||
+      primaryVersion.file?.toLowerCase().endsWith(".pdf");
+
+    const numPages = primaryVersion.numPages ?? 0;
+
     // Prepare return data structure
     const returnData = {
       documentId,
@@ -120,28 +142,34 @@ export default async function handle(
       isProcessing: false,
       pages: undefined as any,
       file: undefined as string | undefined,
+      fallbackFile: undefined as string | undefined,
       sheetData: undefined as any,
       htmlContent: undefined as string | undefined,
     };
 
-    if (primaryVersion.hasPages && primaryVersion.numPages) {
-      // Documents with page images (PDFs, docs, slides).
-      // Sign URLs for the first window of pages; remaining pages are placeholders
-      // fetched on-demand by the client via the preview-pages endpoint.
+    if (previewMode.mode === "pages") {
+      // All generated pages exist. Sign URLs for the first window of pages;
+      // remaining pages are placeholders fetched on-demand by the client via
+      // the preview-pages endpoint.
       const pageRows = new Map(
         primaryVersion.pages.map((page) => [page.pageNumber, page]),
       );
 
       returnData.pages = [];
-      for (let pageNumber = 1; pageNumber <= primaryVersion.numPages; pageNumber++) {
+      for (let pageNumber = 1; pageNumber <= numPages; pageNumber++) {
         const page = pageRows.get(pageNumber);
         if (page) {
           const { storageType, ...otherPageData } = page;
           const signedLinks = await signPageLinks(otherPageData.pageLinks);
+          const fileName = page.file.split("/").pop() || `page-${pageNumber}.jpeg`;
           returnData.pages.push({
             ...otherPageData,
             pageNumber,
-            file: await getFile({ data: page.file, type: storageType }),
+            file: await getFile({
+              data: page.file,
+              type: storageType,
+              responseContentDisposition: buildInlineDispositionForName(fileName),
+            }),
             ...(signedLinks ? { pageLinks: signedLinks } : {}),
           });
         } else {
@@ -149,13 +177,22 @@ export default async function handle(
           returnData.pages.push({ pageNumber, file: null });
         }
       }
-    } else if (
-      primaryVersion.type === "pdf" ||
-      primaryVersion.file?.endsWith(".pdf")
-    ) {
-      // Raw PDF: still being converted (hasPages=false) or never converted.
-      // Serve the original file inline so the browser renders it instead of
-      // downloading it; the viewer shows a "generating page previews" banner.
+
+      // Give the page viewer an escape hatch to the original PDF if a page
+      // image is missing or fails to load.
+      if (isPdf) {
+        const fileName = primaryVersion.file.split("/").pop() || "document.pdf";
+        returnData.fallbackFile = await getFile({
+          data: primaryVersion.file,
+          type: primaryVersion.storageType,
+          responseContentDisposition: buildInlineDispositionForName(fileName),
+        });
+      }
+    } else if (previewMode.mode === "pdf") {
+      // Raw PDF: still being converted, never converted, or a legacy row that
+      // claims hasPages=true without the matching DocumentPage rows. Serve the
+      // original file inline so the browser renders it instead of downloading
+      // it; the viewer shows a "generating page previews" banner.
       const fileName = primaryVersion.file.split("/").pop() || "document.pdf";
       const fileUrl = await getFile({
         data: primaryVersion.file,
@@ -163,9 +200,14 @@ export default async function handle(
         responseContentDisposition: buildInlineDispositionForName(fileName),
       });
       returnData.file = fileUrl;
+      returnData.fallbackFile = fileUrl;
       returnData.numPages = primaryVersion.numPages || 0;
       returnData.pages = [];
       returnData.isProcessing = shouldHavePages(primaryVersion.type);
+    } else if (previewMode.mode === "processing") {
+      return res.status(400).json({
+        message: "Document is still processing. Please wait and try again.",
+      });
     } else if (primaryVersion.type === "image") {
       // Single image files
       returnData.file = await getFile({
@@ -216,16 +258,9 @@ export default async function handle(
         message: "Notion document preview coming soon",
       });
     } else {
-      // Check if document should be processed but isn't
-      if (shouldHavePages(primaryVersion.type)) {
-        return res.status(400).json({
-          message: "Document is still processing. Please wait and try again.",
-        });
-      } else {
-        return res.status(400).json({
-          message: "Preview not available for this document type",
-        });
-      }
+      return res.status(400).json({
+        message: "Preview not available for this document type",
+      });
     }
 
     return res.status(200).json(returnData);

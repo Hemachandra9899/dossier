@@ -3,6 +3,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 
 import { enforceDocumentMemberScope } from "@/shared/utils/api/rbac/guard";
+import { partitionPageNumbers } from "@/shared/utils/documents/page-request";
+import { buildInlineDispositionForName } from "@/shared/utils/files/filename";
 import { getFile } from "@/shared/utils/files/get-file";
 import { signPageLinks } from "@/shared/utils/files/sign-page-links";
 import prisma from "@/platform/db";
@@ -100,19 +102,41 @@ export default async function handle(
       },
     });
 
+    const foundPageNumbers = documentPages.map((page) => page.pageNumber);
+    const { missing } = partitionPageNumbers(pageNumbers, foundPageNumbers);
+
+    // Never return a silent 200 with zero requested pages resolved: a missing
+    // page means conversion has not produced it yet. Signal that explicitly so
+    // the client can show a "not ready" state instead of spinning forever.
+    if (missing.length === pageNumbers.length) {
+      return res
+        .status(409)
+        .json({ code: "PAGES_NOT_READY", missingPageNumbers: missing });
+    }
+
     const pagesWithUrls = await Promise.all(
       documentPages.map(async (page) => {
         const { storageType, pageLinks } = page;
         const signedLinks = await signPageLinks(pageLinks);
+        const fileName =
+          page.file.split("/").pop() || `page-${page.pageNumber}.jpeg`;
         return {
           pageNumber: page.pageNumber,
-          file: await getFile({ data: page.file, type: storageType }),
+          // Sign page previews inline so the browser renders the image instead
+          // of downloading it (downloads keep the attachment disposition).
+          file: await getFile({
+            data: page.file,
+            type: storageType,
+            responseContentDisposition: buildInlineDispositionForName(fileName),
+          }),
           ...(signedLinks ? { pageLinks: signedLinks } : {}),
         };
       }),
     );
 
-    return res.status(200).json({ pages: pagesWithUrls });
+    return res
+      .status(200)
+      .json({ pages: pagesWithUrls, missingPageNumbers: missing });
   } catch (error) {
     log({
       message: "Error fetching preview page URLs",
