@@ -21,8 +21,8 @@ import {
 } from "@/shared/ui/popover";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 
-import TagBadge from "../links/link-sheet/tags/tag-badge";
-import { Icon } from "../shared/icons";
+import TagBadge from "@/shared/ui/links/link-sheet/tags/tag-badge";
+import { Icon } from "@/shared/ui/shared/icons";
 import LoadingSpinner from "./loading-spinner";
 
 /**

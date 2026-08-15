@@ -118,7 +118,7 @@ async function copyFolder(
     let list = await client.send(listCommand); // get the list
     if (list.KeyCount && list.Contents) {
       // if items to copy
-      const fromObjectKeys = list.Contents.map((content) => content.Key); // get the existing object keys
+      const fromObjectKeys = list.Contents.map((content: any) => content.Key); // get the existing object keys
       for (let fromObjectKey of fromObjectKeys) {
         // loop through items and copy each one
         const toObjectKey = fromObjectKey?.replace(fromLocation, toLocation); // replace with the destination in the key

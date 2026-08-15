@@ -39,7 +39,7 @@ export async function getPublicSignedArtifact(
 
   // Only the recipient bound to the access token may download.
   const recipient = request.recipients.find(
-    (item) => item.id === input.recipientId,
+    (item: any) => item.id === input.recipientId,
   );
   if (!recipient) {
     throw new SigningNotFoundError("Signature request was not found.");

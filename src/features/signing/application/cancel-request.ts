@@ -42,7 +42,8 @@ export async function cancelRequest(
       ctx.logger.warn("signing.provider_cancel_failed", {
         requestId: request.id,
         providerEnvelopeId: request.providerEnvelopeId,
-      }, error);
+        error: String(error),
+      });
     }
   }
 

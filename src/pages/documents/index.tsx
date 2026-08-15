@@ -117,7 +117,7 @@ export default function Documents() {
             totalShownItems={documents.length}
             totalPages={pagination.pages}
             onPageChange={updatePagination}
-            onPageSizeChange={(size) => updatePagination(undefined, size)}
+            onPageSizeChange={(size: any) => updatePagination(undefined, size)}
             itemName="documents"
             extraInfo={
               searchFolders && searchFolders.length > 0

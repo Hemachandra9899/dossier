@@ -80,7 +80,7 @@ export function toRequestDTO(
     expiresAt: request.expiresAt,
     createdAt: request.createdAt,
     updatedAt: request.updatedAt,
-    recipients: (request.recipients ?? []).map((recipient) => ({
+    recipients: (request.recipients ?? []).map((recipient: any) => ({
       id: recipient.id,
       name: recipient.name,
       email: recipient.email,
@@ -90,7 +90,7 @@ export function toRequestDTO(
       viewedAt: recipient.viewedAt,
       signedAt: recipient.signedAt,
     })),
-    deliveries: (request.deliveries ?? []).map((delivery) => ({
+    deliveries: (request.deliveries ?? []).map((delivery: any) => ({
       id: delivery.id,
       type: delivery.type,
       status: delivery.status,
@@ -99,7 +99,7 @@ export function toRequestDTO(
       failedReason: delivery.failedReason,
       createdAt: delivery.createdAt,
     })),
-    activities: (request.activities ?? []).map((activity) => ({
+    activities: (request.activities ?? []).map((activity: any) => ({
       id: activity.id,
       recipientId: activity.recipientId,
       type: activity.type,

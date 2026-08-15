@@ -22,7 +22,7 @@ export async function remindRequest(
     throw new Error("Signature request not found");
   }
 
-  const recipient = request.recipients.find((r) => r.id === input.recipientId);
+  const recipient = request.recipients.find((r: any) => r.id === input.recipientId);
   if (!recipient || !recipient.email) {
     throw new Error("Recipient not found or email is empty");
   }
@@ -74,7 +74,9 @@ export async function remindRequest(
         senderEmail,
         documentName,
         url: signingUrl,
-      }),
+        signingUrl,
+        customMessage: request.customMessage ?? undefined,
+      }) as any,
       system: true,
     });
 

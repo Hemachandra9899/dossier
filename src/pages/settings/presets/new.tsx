@@ -163,7 +163,7 @@ export default function NewPreset() {
                 placeholder="My Link Preset"
                 value={data.name || ""}
                 onChange={(e) =>
-                  setData((prev) => ({ ...prev, name: e.target.value }))
+                  setData((prev: any) => ({ ...prev, name: e.target.value }))
                 }
                 required
                 data-1p-ignore

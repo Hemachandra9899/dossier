@@ -100,12 +100,13 @@ export async function mirrorSignedArtifact(
   const safeName = safeSlugify(request.document.name).slice(0, 60) || "signed";
   const fileName = `${safeName}_signed.pdf`;
 
-  const { storageKey } = await ctx.storage.upload({
+  const uploadRes = await ctx.storage.upload({
     teamId: request.teamId,
     requestId: request.id,
     fileName,
     body,
   });
+  const storageKey = typeof uploadRes === "string" ? uploadRes : uploadRes.storageKey;
 
   try {
     await ctx.requests.createArtifact({

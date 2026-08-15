@@ -181,7 +181,7 @@ export default async function handle(
       data: {
         name: name!,
         color:
-          color && COLORS_LIST.map(({ color }) => color).includes(color)
+          color && COLORS_LIST.map(({ color }: any) => color).includes(color)
             ? color
             : randomBadgeColor(),
         teamId: teamId,

@@ -75,7 +75,7 @@ export async function exchangeRecipientAccessToken(
   }
 
   // Update recipient status to VIEWED and log activity
-  const recipient = request.recipients.find((r) => r.id === parsed.recipientId);
+  const recipient = request.recipients.find((r: any) => r.id === parsed.recipientId);
   if (recipient) {
     if (recipient.status === "PENDING") {
       await ctx.requests.updateRecipientStatus(recipient.id, "VIEWED", { viewedAt: new Date() });

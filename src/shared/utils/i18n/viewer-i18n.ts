@@ -117,81 +117,81 @@ async function loadNamespaceFile(
     case "en":
       switch (namespace) {
         case "access-form":
-          return (await import("../../locales/en/access-form.json")).default;
+          return (await import("@/../locales/en/access-form.json")).default;
         case "dataroom":
-          return (await import("../../locales/en/dataroom.json")).default;
+          return (await import("@/../locales/en/dataroom.json")).default;
         case "viewer":
-          return (await import("../../locales/en/viewer.json")).default;
+          return (await import("@/../locales/en/viewer.json")).default;
       }
       break;
     case "de":
       switch (namespace) {
         case "access-form":
-          return (await import("../../locales/de/access-form.json")).default;
+          return (await import("@/../locales/de/access-form.json")).default;
         case "dataroom":
-          return (await import("../../locales/de/dataroom.json")).default;
+          return (await import("@/../locales/de/dataroom.json")).default;
         case "viewer":
-          return (await import("../../locales/de/viewer.json")).default;
+          return (await import("@/../locales/de/viewer.json")).default;
       }
       break;
     case "fr":
       switch (namespace) {
         case "access-form":
-          return (await import("../../locales/fr/access-form.json")).default;
+          return (await import("@/../locales/fr/access-form.json")).default;
         case "dataroom":
-          return (await import("../../locales/fr/dataroom.json")).default;
+          return (await import("@/../locales/fr/dataroom.json")).default;
         case "viewer":
-          return (await import("../../locales/fr/viewer.json")).default;
+          return (await import("@/../locales/fr/viewer.json")).default;
       }
       break;
     case "es":
       switch (namespace) {
         case "access-form":
-          return (await import("../../locales/es/access-form.json")).default;
+          return (await import("@/../locales/es/access-form.json")).default;
         case "dataroom":
-          return (await import("../../locales/es/dataroom.json")).default;
+          return (await import("@/../locales/es/dataroom.json")).default;
         case "viewer":
-          return (await import("../../locales/es/viewer.json")).default;
+          return (await import("@/../locales/es/viewer.json")).default;
       }
       break;
     case "it":
       switch (namespace) {
         case "access-form":
-          return (await import("../../locales/it/access-form.json")).default;
+          return (await import("@/../locales/it/access-form.json")).default;
         case "dataroom":
-          return (await import("../../locales/it/dataroom.json")).default;
+          return (await import("@/../locales/it/dataroom.json")).default;
         case "viewer":
-          return (await import("../../locales/it/viewer.json")).default;
+          return (await import("@/../locales/it/viewer.json")).default;
       }
       break;
     case "nl":
       switch (namespace) {
         case "access-form":
-          return (await import("../../locales/nl/access-form.json")).default;
+          return (await import("@/../locales/nl/access-form.json")).default;
         case "dataroom":
-          return (await import("../../locales/nl/dataroom.json")).default;
+          return (await import("@/../locales/nl/dataroom.json")).default;
         case "viewer":
-          return (await import("../../locales/nl/viewer.json")).default;
+          return (await import("@/../locales/nl/viewer.json")).default;
       }
       break;
     case "pt-BR":
       switch (namespace) {
         case "access-form":
-          return (await import("../../locales/pt-BR/access-form.json")).default;
+          return (await import("@/../locales/pt-BR/access-form.json")).default;
         case "dataroom":
-          return (await import("../../locales/pt-BR/dataroom.json")).default;
+          return (await import("@/../locales/pt-BR/dataroom.json")).default;
         case "viewer":
-          return (await import("../../locales/pt-BR/viewer.json")).default;
+          return (await import("@/../locales/pt-BR/viewer.json")).default;
       }
       break;
     case "ja":
       switch (namespace) {
         case "access-form":
-          return (await import("../../locales/ja/access-form.json")).default;
+          return (await import("@/../locales/ja/access-form.json")).default;
         case "dataroom":
-          return (await import("../../locales/ja/dataroom.json")).default;
+          return (await import("@/../locales/ja/dataroom.json")).default;
         case "viewer":
-          return (await import("../../locales/ja/viewer.json")).default;
+          return (await import("@/../locales/ja/viewer.json")).default;
       }
       break;
   }

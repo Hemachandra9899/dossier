@@ -3,7 +3,7 @@
 // providerTemplateId + providerEnvelopeId).
 
 import type { SigningContext } from "./context";
-import type { ProviderTemplate } from "../provider/signing-provider";
+import type { ProviderTemplate } from "../providers/signing-provider";
 import { SigningNotFoundError, SigningStateError } from "../domain/signing-errors";
 
 export interface CreateEditorSessionInput {

@@ -11,6 +11,8 @@ import { NuqsAdapter } from "nuqs/adapters/next/pages";
 import { EXCLUDED_PATHS } from "@/shared/utils/constants";
 import { useTrackLastVisited } from "@/shared/utils/hooks/use-last-visited";
 
+import { PostHogGroupSync } from "@/shared/providers/posthog-group-sync";
+import { PostHogCustomProvider } from "@/shared/providers/posthog-provider";
 import { ThemeProvider } from "@/shared/providers/theme-provider";
 import { Toaster } from "@/shared/ui/sonner";
 import { TooltipProvider } from "@/shared/ui/tooltip";

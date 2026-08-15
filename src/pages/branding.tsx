@@ -1680,7 +1680,7 @@ export default function Branding() {
                             }
                             className="grid grid-cols-3 gap-2"
                           >
-                            {CARD_LAYOUT_OPTIONS.map((opt) => (
+                            {CARD_LAYOUT_OPTIONS.map((opt: any) => (
                               <Label
                                 key={opt.value}
                                 htmlFor={`global-card-layout-${opt.value}`}

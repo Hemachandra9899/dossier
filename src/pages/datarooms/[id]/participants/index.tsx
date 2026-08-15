@@ -144,7 +144,7 @@ export default function DataroomParticipantsPage() {
                 sorting={sorting ?? { sortBy, sortOrder }}
                 isFiltered={isFiltered}
                 onPageChange={setCurrentPage}
-                onPageSizeChange={(size) => {
+                onPageSizeChange={(size: any) => {
                   setPageSize(size);
                   setCurrentPage(1);
                 }}

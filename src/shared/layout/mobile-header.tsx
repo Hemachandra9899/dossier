@@ -23,7 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
 
-import { ModeToggle } from "../theme-toggle";
+import { ModeToggle } from "@/shared/providers/theme-provider";
 
 export function MobileHeader() {
   const { data: session } = useSession();

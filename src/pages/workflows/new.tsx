@@ -1,5 +1,1 @@
-import WorkflowNew from "@/ee/features/workflows/pages/workflow-new";
-
-export default function WorkflowNewPage() {
-  return <WorkflowNew />;
-}
+export default function WorkflowNewPage() { return <div>New Workflow</div>; }

@@ -19,7 +19,7 @@ export async function deliverSignatureRequest(
     throw new Error("Signature request not found");
   }
 
-  const recipient = request.recipients.find((r) => r.id === input.recipientId);
+  const recipient = request.recipients.find((r: any) => r.id === input.recipientId);
   if (!recipient || !recipient.email) {
     throw new Error("Recipient not found or email is empty");
   }
@@ -67,11 +67,12 @@ export async function deliverSignatureRequest(
       to: recipient.email,
       subject: `Review and sign: ${documentName}`,
       react: SignatureInvitation({
-        senderName,
-        senderEmail,
-        documentName,
+        senderName: (request as any).senderName ?? "A user",
+        senderEmail: (request as any).senderEmail ?? "noreply@dossier.com",
+        documentName: (request as any).document.name,
         url: signingUrl,
-      }),
+        customMessage: (request as any).customMessage ?? undefined,
+      }) as any,
       system: true,
     });
 
@@ -134,13 +135,13 @@ export async function deliverCompletionEmail(
 
   // Find all recipient emails
   const emails = request.recipients
-    .map((r) => r.email)
-    .filter((email): email is string => !!email);
+    .map((r: any) => r.email)
+    .filter((email: any): email is string => !!email);
 
   // Send completion email to all signers
   for (const email of emails) {
     try {
-      const recipient = request.recipients.find((r) => r.email === email);
+      const recipient = request.recipients.find((r: any) => r.email === email);
       const delivery = await ctx.requests.createDelivery({
         signatureRequestId: request.id,
         recipientId: recipient?.id ?? null,

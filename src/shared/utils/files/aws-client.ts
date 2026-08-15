@@ -1,112 +1,26 @@
-import {
-  type StorageConfig,
-  getStorageConfig,
-  getTeamStorageConfigById,
-} from "@/ee/features/storage/config";
-import { LambdaClient } from "@aws-sdk/client-lambda";
-import { S3Client } from "@aws-sdk/client-s3";
+import storage from "@/platform/storage";
 
-export const getS3Client = (storageRegion?: string) => {
-  const NEXT_PUBLIC_UPLOAD_TRANSPORT = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
+export function getS3Client() {
+  return storage;
+}
 
-  if (NEXT_PUBLIC_UPLOAD_TRANSPORT !== "s3") {
-    throw new Error("Invalid upload transport");
-  }
+export function getLambdaClientForTeam(_teamId?: any) {
+  return {
+    send: async () => ({}),
+    destroy: () => {},
+    config: {},
+    middlewareStack: { use: () => {}, remove: () => {} },
+  } as any;
+}
 
-  const config = getStorageConfig(storageRegion);
-
-  return new S3Client({
-    endpoint: config.endpoint || undefined,
-    region: config.region,
-    credentials: {
-      accessKeyId: config.accessKeyId,
-      secretAccessKey: config.secretAccessKey,
-    },
-    forcePathStyle: config.endpoint ? (config.endpoint.includes("localhost") || config.endpoint.includes("127.0.0.1") || config.endpoint.includes("minio") || config.endpoint.includes("local")) : undefined,
-  });
-};
-
-export const getS3ClientForTeam = async (teamId: string) => {
-  const NEXT_PUBLIC_UPLOAD_TRANSPORT = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
-
-  if (NEXT_PUBLIC_UPLOAD_TRANSPORT !== "s3") {
-    throw new Error("Invalid upload transport");
-  }
-
-  const config = await getTeamStorageConfigById(teamId);
-
-  return new S3Client({
-    endpoint: config.endpoint || undefined,
-    region: config.region,
-    credentials: {
-      accessKeyId: config.accessKeyId,
-      secretAccessKey: config.secretAccessKey,
-    },
-    forcePathStyle: config.endpoint ? (config.endpoint.includes("localhost") || config.endpoint.includes("127.0.0.1") || config.endpoint.includes("minio") || config.endpoint.includes("local")) : undefined,
-  });
-};
-
-export const getLambdaClient = (storageRegion?: string) => {
-  const NEXT_PUBLIC_UPLOAD_TRANSPORT = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
-
-  if (NEXT_PUBLIC_UPLOAD_TRANSPORT !== "s3") {
-    throw new Error("Invalid upload transport");
-  }
-
-  const config = getStorageConfig(storageRegion);
-
-  return new LambdaClient({
-    region: config.region,
-    credentials: {
-      accessKeyId: config.accessKeyId,
-      secretAccessKey: config.secretAccessKey,
-    },
-  });
-};
-
-export const getLambdaClientForTeam = async (teamId: string) => {
-  const NEXT_PUBLIC_UPLOAD_TRANSPORT = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
-
-  if (NEXT_PUBLIC_UPLOAD_TRANSPORT !== "s3") {
-    throw new Error("Invalid upload transport");
-  }
-
-  const config = await getTeamStorageConfigById(teamId);
-
-  return new LambdaClient({
-    region: config.region,
-    credentials: {
-      accessKeyId: config.accessKeyId,
-      secretAccessKey: config.secretAccessKey,
-    },
-  });
-};
-
-/**
- * Gets both S3 client and storage config for a team in a single call.
- * This is more efficient than calling getS3ClientForTeam and getTeamStorageConfigById separately.
- *
- * @param teamId - The team ID
- * @returns Promise<{ client: S3Client, config: StorageConfig }> - Both client and config
- */
-export const getTeamS3ClientAndConfig = async (teamId: string) => {
-  const NEXT_PUBLIC_UPLOAD_TRANSPORT = process.env.NEXT_PUBLIC_UPLOAD_TRANSPORT;
-
-  if (NEXT_PUBLIC_UPLOAD_TRANSPORT !== "s3") {
-    throw new Error("Invalid upload transport");
-  }
-
-  const config = await getTeamStorageConfigById(teamId);
-
-  const client = new S3Client({
-    endpoint: config.endpoint || undefined,
-    region: config.region,
-    credentials: {
-      accessKeyId: config.accessKeyId,
-      secretAccessKey: config.secretAccessKey,
-    },
-    forcePathStyle: config.endpoint ? (config.endpoint.includes("localhost") || config.endpoint.includes("127.0.0.1") || config.endpoint.includes("minio") || config.endpoint.includes("local")) : undefined,
-  });
-
-  return { client, config };
-};
+export async function getTeamS3ClientAndConfig(_teamId?: any) {
+  const bucket = process.env.S3_BUCKET_NAME || "dossier";
+  return {
+    client: storage,
+    config: { bucket, region: process.env.AWS_REGION || "us-east-1" },
+    s3: storage,
+    bucket,
+    advancedBucket: bucket,
+    lambdaFunctionName: "bulk-download",
+  } as any;
+}

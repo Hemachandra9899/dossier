@@ -18,6 +18,58 @@ import { log } from "@/shared/utils/utils";
 
 import { authOptions } from "../auth/[...nextauth]";
 
+async function resolveDbUserId(user: CustomUser): Promise<string> {
+  if (!user) return "";
+
+  if (user.id) {
+    const existingById = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { id: true },
+    });
+    if (existingById) {
+      return existingById.id;
+    }
+  }
+
+  if (user.email) {
+    const existingByEmail = await prisma.user.findUnique({
+      where: { email: user.email },
+      select: { id: true },
+    });
+    if (existingByEmail) {
+      return existingByEmail.id;
+    }
+
+    const createdUser = await prisma.user.upsert({
+      where: { email: user.email },
+      update: {},
+      create: {
+        ...(user.id ? { id: user.id } : {}),
+        email: user.email,
+        name: user.name || user.email.split("@")[0],
+        image: user.image,
+      },
+      select: { id: true },
+    });
+    return createdUser.id;
+  }
+
+  if (user.id) {
+    const createdUser = await prisma.user.upsert({
+      where: { id: user.id },
+      update: {},
+      create: {
+        id: user.id,
+        name: user.name || "User",
+      },
+      select: { id: true },
+    });
+    return createdUser.id;
+  }
+
+  return "";
+}
+
 export default async function handle(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -32,9 +84,14 @@ export default async function handle(
     const user = session.user as CustomUser;
 
     try {
+      const dbUserId = await resolveDbUserId(user);
+      if (!dbUserId) {
+        return res.status(200).json([]);
+      }
+
       const userTeams = await prisma.userTeam.findMany({
         where: {
-          userId: user.id,
+          userId: dbUserId,
         },
         include: {
           team: {
@@ -67,7 +124,7 @@ export default async function handle(
             name: defaultTeamName,
             users: {
               create: {
-                userId: user.id,
+                userId: dbUserId,
                 role: "ADMIN",
               },
             },
@@ -87,7 +144,7 @@ export default async function handle(
       return res.status(200).json(teams);
     } catch (error) {
       log({
-        message: `Failed to find team for user: _${user.id}_ \n\n ${error}`,
+        message: `Failed to find team for user: _${user?.id}_ \n\n ${error}`,
         type: "error",
       });
       errorhandler(error, res);
@@ -104,14 +161,19 @@ export default async function handle(
     const user = session.user as CustomUser;
 
     try {
-      const grantUnlimited = await canCreateUnlimitedTeam(user.id);
+      const dbUserId = await resolveDbUserId(user);
+      if (!dbUserId) {
+        return res.status(400).json({ message: "Invalid user" });
+      }
+
+      const grantUnlimited = await canCreateUnlimitedTeam(dbUserId);
 
       // Datarooms-premium admins can provision their own teams (same
       // principle as datarooms-unlimited), but are capped at
       // PREMIUM_TEAM_LIMIT teams. Unlimited takes precedence.
       const premiumEligibility = grantUnlimited
         ? null
-        : await getPremiumTeamEligibility(user.id);
+        : await getPremiumTeamEligibility(dbUserId);
 
       if (
         premiumEligibility?.isPremiumAdmin &&
@@ -142,7 +204,7 @@ export default async function handle(
               : {}),
           users: {
             create: {
-              userId: user.id,
+              userId: dbUserId,
               role: "ADMIN",
             },
           },

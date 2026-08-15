@@ -1,14 +1,5 @@
+import React from "react";
 import { FileCode, FileIcon, Link as LinkIcon, MailIcon } from "lucide-react";
-
-import CadIcon from "@/shared/ui/shared/icons/files/cad";
-import DocsIcon from "@/shared/ui/shared/icons/files/docs";
-import ImageFileIcon from "@/shared/ui/shared/icons/files/image";
-import MapIcon from "@/shared/ui/shared/icons/files/map";
-import NotionIcon from "@/shared/ui/shared/icons/files/notion";
-import PdfIcon from "@/shared/ui/shared/icons/files/pdf";
-import SheetIcon from "@/shared/ui/shared/icons/files/sheet";
-import SlidesIcon from "@/shared/ui/shared/icons/files/slides";
-import VideoIcon from "@/shared/ui/shared/icons/files/video";
 
 export function fileIcon({
   fileType,
@@ -20,56 +11,8 @@ export function fileIcon({
   isLight?: boolean;
 }) {
   switch (fileType) {
-    case "pdf":
-    case "application/pdf":
-      return <PdfIcon className={className} isLight={isLight} />;
-    case "image/png":
-    case "image/jpeg":
-    case "image/jpg":
-    case "image":
-      return <ImageFileIcon className={className} isLight={isLight} />;
-    case "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-    case "application/msword":
-    case "application/vnd.oasis.opendocument.text":
-    case "text/plain":
-    case "text/markdown":
-    case "docs":
-      return <DocsIcon className={className} isLight={isLight} />;
-    case "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-    case "application/vnd.ms-powerpoint":
-    case "application/vnd.oasis.opendocument.presentation":
-    case "application/vnd.apple.keynote":
-    case "application/x-iwork-keynote-sffkey":
-    case "slides":
-      return <SlidesIcon className={className} isLight={isLight} />;
-    case "application/vnd.ms-excel":
-    case "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-    case "text/csv":
-    case "text/tab-separated-values":
-    case "application/vnd.oasis.opendocument.spreadsheet":
-    case "sheet":
-      return <SheetIcon className={className} isLight={isLight} />;
-    case "notion":
-      return <NotionIcon className={className} />;
     case "link":
       return <LinkIcon className={className} />;
-    case "image/vnd.dwg":
-    case "image/vnd.dxf":
-    case "cad":
-      return <CadIcon className={className} isLight={isLight} />;
-    case "video/mp4":
-    case "video/quicktime":
-    case "video/webm":
-    case "video/ogg":
-    case "video/x-msvideo":
-    case "video":
-    case "audio/mp4":
-    case "audio/mpeg":
-      return <VideoIcon className={className} isLight={isLight} />;
-    case "application/vnd.google-earth.kml+xml":
-    case "application/vnd.google-earth.kmz":
-    case "map":
-      return <MapIcon className={className} isLight={isLight} />;
     case "application/vnd.ms-outlook":
     case "email":
       return <MailIcon className={className} />;

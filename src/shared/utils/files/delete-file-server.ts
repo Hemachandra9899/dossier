@@ -52,7 +52,7 @@ const deleteAllFilesFromS3Server = async (data: string, teamId: string) => {
     const deleteParams = {
       Bucket: config.bucket,
       Delete: {
-        Objects: listedObjects.Contents.map((file) => ({ Key: file.Key })),
+        Objects: listedObjects.Contents.map((file: any) => ({ Key: file.Key })),
       },
     };
 

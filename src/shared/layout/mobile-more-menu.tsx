@@ -18,7 +18,7 @@ import { useSlackIntegration } from "@/shared/utils/swr/use-slack-integration";
 import { Team } from "@/shared/utils/types";
 import { cn } from "@/shared/utils/utils";
 
-import { SlackIcon } from "../shared/icons/slack-icon";
+import { SlackIcon } from "@/shared/ui/shared/icons/slack-icon";
 import { MobileTeamSwitcher } from "./mobile-team-switcher";
 
 interface MobileMoreMenuProps {

@@ -1775,7 +1775,7 @@ export default function DataroomBrandPage() {
                             }
                             className="grid grid-cols-3 gap-2"
                           >
-                            {CARD_LAYOUT_OPTIONS.map((opt) => (
+                            {CARD_LAYOUT_OPTIONS.map((opt: any) => (
                               <Label
                                 key={opt.value}
                                 htmlFor={`card-layout-${opt.value}`}

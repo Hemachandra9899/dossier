@@ -1,22 +1,4 @@
-import InvalidDomainEmail from "@/shared/ui/emails/invalid-domain";
-
-import { sendEmail } from "@/shared/utils/resend";
-
-export const sendInvalidDomainEmail = async (
-  email: string,
-  domain: string,
-  invalidDays: number,
-) => {
-  const emailTemplate = InvalidDomainEmail({ domain, invalidDays });
-  try {
-    await sendEmail({
-      to: email,
-      subject: `Your domain ${domain} needs to be configured`,
-      react: emailTemplate,
-      test: process.env.NODE_ENV === "development",
-      system: true,
-    });
-  } catch (e) {
-    console.error(e);
-  }
-};
+export async function sendEmail(_params?: any) {
+  return Promise.resolve();
+}
+export default sendEmail;

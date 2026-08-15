@@ -18,8 +18,14 @@ import { durationFormat } from "@/shared/utils/utils";
 import { authOptions } from "../auth/[...nextauth]";
 
 const analyticsQuerySchema = z.object({
-  interval: z.enum(["24h", "7d", "30d", "custom"]),
-  type: z.enum(["overview", "links", "documents", "visitors", "views"]),
+  interval: z
+    .enum(["24h", "7d", "30d", "custom"])
+    .default("7d")
+    .catch("7d"),
+  type: z
+    .enum(["overview", "links", "documents", "visitors", "views"])
+    .default("overview")
+    .catch("overview"),
   teamId: z.string(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
@@ -45,7 +51,15 @@ export default async function handler(
   }
 
   try {
-    const result = analyticsQuerySchema.safeParse(req.query);
+    const rawQuery = { ...req.query };
+    if (rawQuery.interval === "undefined" || !rawQuery.interval) {
+      rawQuery.interval = "7d";
+    }
+    if (rawQuery.type === "undefined" || !rawQuery.type) {
+      rawQuery.type = "overview";
+    }
+
+    const result = analyticsQuerySchema.safeParse(rawQuery);
 
     if (!result.success) {
       return res

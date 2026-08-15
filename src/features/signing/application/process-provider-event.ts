@@ -12,6 +12,8 @@ import { assertCanTransitionTo } from "../domain/state-machine";
 import { SigningNotFoundError } from "../domain/signing-errors";
 import { mapDocumensoRecipientStatusToStatus } from "../providers/documenso/mapper";
 
+import prisma from "@/platform/db";
+
 export type ProviderEventEffect = {
   nextStatus: SignatureRequestStatus | null;
   timestampField: "completedAt" | "cancelledAt" | null;
@@ -28,44 +30,36 @@ export function planProviderEventEffect(input: {
   mapEventToStatus: ProviderEventMapper;
 }): ProviderEventEffect {
   const mapped = input.mapEventToStatus(input.event);
-  if (!mapped) return { nextStatus: null, timestampField: null };
-
-  // Duplicate/out-of-order delivery: the event would not change state.
+  if (!mapped) {
+    return { nextStatus: null, timestampField: null };
+  }
   if (mapped === input.currentStatus) {
     return { nextStatus: null, timestampField: null };
   }
-
   assertCanTransitionTo(input.currentStatus, mapped);
-
-  const timestampField: ProviderEventEffect["timestampField"] =
-    mapped === "COMPLETED"
-      ? "completedAt"
-      : mapped === "CANCELLED"
-        ? "cancelledAt"
-        : null;
-
-  return { nextStatus: mapped, timestampField };
-}
-
-export interface ProcessProviderEventInput {
-  event: string;
-  externalId: string;
+  return {
+    nextStatus: mapped,
+    timestampField:
+      mapped === "COMPLETED"
+        ? "completedAt"
+        : mapped === "CANCELLED"
+          ? "cancelledAt"
+          : null,
+  };
 }
 
 export async function processProviderEvent(
   ctx: SigningContext,
-  input: ProcessProviderEventInput,
+  input: { providerDocumentId?: string; externalId?: string; event: string },
 ): Promise<RequestDTO> {
-  const request = await ctx.requests.findByProviderExternalId(input.externalId);
+  const docId = input.providerDocumentId || input.externalId;
+  const request = docId
+    ? await ctx.requests.findByProviderDocumentIdWithRecipients(docId)
+    : null;
   if (!request) {
-    throw new SigningNotFoundError("Signature request was not found.");
-  }
-
-  // Idempotent re-delivery / retry after a mirror handoff failure: the request
-  // is already COMPLETED, so re-drive the mirror handoff and return as-is.
-  if (request.status === "COMPLETED") {
-    await ctx.artifactMirror.enqueue(request.id);
-    return toRequestDTO(request);
+    throw new SigningNotFoundError(
+      `No signature request matches provider document "${docId}"`,
+    );
   }
 
   const effect = planProviderEventEffect({
@@ -74,6 +68,17 @@ export async function processProviderEvent(
     mapEventToStatus: ctx.mapEventToStatus,
   });
 
+  const getEnvelope = (ctx.provider as any)?.getEnvelope
+    ? (id: string) => (ctx.provider as any).getEnvelope(id)
+    : async (_id: string) => null;
+
+  // Idempotent re-delivery / retry after a mirror handoff failure: the request
+  // is already COMPLETED, so re-drive the mirror handoff and return as-is.
+  if (request.status === "COMPLETED") {
+    await ctx.artifactMirror.enqueue(request.id);
+    return toRequestDTO(request);
+  }
+
   // Fetch envelope to sync recipients
   if (request.providerEnvelopeId) {
     try {
@@ -81,7 +86,7 @@ export async function processProviderEvent(
       if (envelope && Array.isArray(envelope.recipients)) {
         for (const provRecipient of envelope.recipients) {
           const localRecipient = request.recipients.find(
-            (r) => r.email?.toLowerCase() === provRecipient.email?.toLowerCase()
+            (r: any) => r.email?.toLowerCase() === provRecipient.email?.toLowerCase()
           );
           if (localRecipient) {
             const nextRecipientStatus = mapDocumensoRecipientStatusToStatus((provRecipient as any).status);
@@ -126,7 +131,7 @@ export async function processProviderEvent(
         }
       }
     } catch (err) {
-      ctx.logger.warn("signing.sync_recipients_failed", { requestId: request.id }, err);
+      ctx.logger.warn("signing.sync_recipients_failed", { requestId: request.id, error: String(err) });
     }
   }
 

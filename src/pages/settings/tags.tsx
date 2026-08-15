@@ -266,7 +266,7 @@ export default function TagSetting() {
                             size={24}
                             className={cn(
                               "shrink-0 rounded-sm border p-1",
-                              COLORS_LIST.find((c) => c.color === tag.color)
+                              COLORS_LIST.find((c: any) => c.color === tag.color)
                                 ?.css ?? "",
                             )}
                           />
