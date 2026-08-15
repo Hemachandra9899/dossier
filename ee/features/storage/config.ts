@@ -1,4 +1,4 @@
-import { getFeatureFlags } from "@/lib/featureFlags";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
 
 export interface StorageConfig {
   bucket: string;

@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 
 import { useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { EditFAQModal } from "@/ee/features/conversations/components/dashboard/edit-faq-modal";
 import {
   BookOpenCheckIcon,
@@ -21,13 +21,13 @@ import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 import { z } from "zod";
 
-import { useDataroom } from "@/lib/swr/use-dataroom";
-import { fetcher, timeAgo } from "@/lib/utils";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
+import { fetcher, timeAgo } from "@/shared/utils/utils";
 
-import AppLayout from "@/components/layouts/app";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import AppLayout from "@/shared/ui/layouts/app";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -35,15 +35,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/shared/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Switch } from "@/components/ui/switch";
+} from "@/shared/ui/dropdown-menu";
+import { Switch } from "@/shared/ui/switch";
 import {
   Table,
   TableBody,
@@ -51,8 +51,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@/shared/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 
 import { ConversationSummary } from "./conversation-overview";
 

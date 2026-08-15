@@ -5,12 +5,12 @@ import {
   FolderTemplate,
 } from "@/ee/features/templates/constants/dataroom-templates";
 import { applyTemplateSchema } from "@/ee/features/templates/schemas/dataroom-templates";
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import { getServerSession } from "next-auth/next";
 
-import prisma from "@/lib/prisma";
-import { safeSlugify } from "@/lib/utils";
-import { CustomUser } from "@/lib/types";
+import prisma from "@/platform/db";
+import { safeSlugify } from "@/shared/utils/utils";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handle(
   req: NextApiRequest,

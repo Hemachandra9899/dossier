@@ -1,7 +1,7 @@
-export { getLimits } from "@/modules/access/limits";
+export { getLimits } from "@/features/access/limits";
 export type {
   DossierLimits,
   LimitUsage,
   TFileSizeLimits,
   TOperationalLimits,
-} from "@/modules/access/limits";
+} from "@/features/access/limits";

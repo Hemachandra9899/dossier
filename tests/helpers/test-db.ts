@@ -17,22 +17,29 @@ if (!TEST_DATABASE_URL) {
 
 const prisma = new PrismaClient({ datasourceUrl: TEST_DATABASE_URL });
 
-/** Drops every row in the test database before each test file runs. */
+/**
+ * Drops every row in the test database before each test file runs.
+ * The truncate runs in a single statement across ~95 tables, so it needs a
+ * generous interactive-transaction timeout (default 5s is too short).
+ */
 export async function resetTestDatabase(): Promise<void> {
-  await prisma.$transaction(async (tx) => {
-    const result = await tx.$queryRawUnsafe<Array<{ tablename: string }>>(
-      `SELECT tablename
-         FROM pg_tables
-        WHERE schemaname = 'public'
-          AND tablename <> '_prisma_migrations'`,
-    );
-    const tables = result.map(({ tablename }) => `"${tablename}"`);
-    if (tables.length > 0) {
-      await tx.$executeRawUnsafe(
-        `TRUNCATE TABLE ${tables.join(", ")} CASCADE`,
+  await prisma.$transaction(
+    async (tx) => {
+      const result = await tx.$queryRawUnsafe<Array<{ tablename: string }>>(
+        `SELECT tablename
+           FROM pg_tables
+          WHERE schemaname = 'public'
+            AND tablename <> '_prisma_migrations'`,
       );
-    }
-  });
+      const tables = result.map(({ tablename }) => `"${tablename}"`);
+      if (tables.length > 0) {
+        await tx.$executeRawUnsafe(
+          `TRUNCATE TABLE ${tables.join(", ")} CASCADE`,
+        );
+      }
+    },
+    { timeout: 60_000 },
+  );
 }
 
 export async function closeTestDatabase(): Promise<void> {

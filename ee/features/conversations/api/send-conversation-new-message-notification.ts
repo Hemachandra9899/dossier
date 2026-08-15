@@ -2,9 +2,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { sendConversationNotification } from "@/ee/features/conversations/emails/lib/send-conversation-notification";
 
-import prisma from "@/lib/prisma";
-import { log } from "@/lib/utils";
-import { generateUnsubscribeUrl } from "@/lib/utils/unsubscribe";
+import prisma from "@/platform/db";
+import { log } from "@/shared/utils/utils";
+import { generateUnsubscribeUrl } from "@/shared/utils/utils/unsubscribe";
 
 export default async function handle(
   req: NextApiRequest,

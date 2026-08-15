@@ -5,8 +5,8 @@ import {
   SIGNING_STATE_TRANSITIONS,
   assertCanTransitionTo,
   canTransitionTo,
-} from "@/modules/signing/domain/state-machine";
-import { SigningStateError } from "@/modules/signing/domain/signing-errors";
+} from "@/features/signing/domain/state-machine";
+import { SigningStateError } from "@/features/signing/domain/signing-errors";
 
 describe("signing state machine", () => {
   it("allows documented happy-path transitions", () => {

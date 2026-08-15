@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import prisma from "@/platform/db";
 
 export const notificationService = {
   // Toggle notifications for a conversation

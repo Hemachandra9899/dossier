@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 import { getLimits } from "@/ee/limits/server";
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import { getServerSession } from "next-auth/next";
 
-import { getFeatureFlags } from "@/lib/featureFlags";
-import { CustomUser } from "@/lib/types";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handle(
   req: NextApiRequest,

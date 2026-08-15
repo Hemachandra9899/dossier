@@ -9,9 +9,9 @@ import {
   seedTeam,
   seedUser,
   testPrisma,
-} from "@/tests/helpers/test-db";
-import { createDossierFile } from "@/modules/files/application/create-file";
-import { getCompletionReadiness } from "@/modules/completion/application/get-completion-readiness";
+} from "../../helpers/test-db";
+import { createDossierFile } from "@/features/files/application/create-file";
+import { getCompletionReadiness } from "@/features/completion/application/get-completion-readiness";
 import {
   DocumentAnalysisRunStatus,
   SignatureRecipientStatus,

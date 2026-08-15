@@ -7,9 +7,9 @@ import {
   seedTeam,
   seedUser,
   testPrisma,
-} from "@/tests/helpers/test-db";
-import { createDossierFile } from "@/modules/files/application/create-file";
-import { evaluateVerificationChecks } from "@/lib/verification/evaluate-checks";
+} from "../../helpers/test-db";
+import { createDossierFile } from "@/features/files/application/create-file";
+import { evaluateVerificationChecks } from "@/shared/utils/verification/evaluate-checks";
 
 describe("document verification workflows (integration)", () => {
   before(async () => {

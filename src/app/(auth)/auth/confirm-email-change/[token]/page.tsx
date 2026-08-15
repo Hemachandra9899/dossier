@@ -1,0 +1,114 @@
+import { redirect } from "next/navigation";
+
+import NotFound from "@/pages/404";
+import { VerificationToken } from "@prisma/client";
+import { waitUntil } from "@vercel/functions";
+
+import { hashToken } from "@/shared/utils/api/auth/token";
+import prisma from "@/platform/db";
+import { redis } from "@/shared/utils/redis";
+import { sendEmail, subscribe, unsubscribe } from "@/shared/utils/resend";
+import { CustomUser } from "@/shared/utils/types";
+
+import EmailUpdated from "@/shared/ui/emails/email-updated";
+import { buildMetadata } from "@/shared/config/metadata";
+
+import ConfirmEmailChangePageClient from "./page-client";
+import { getSession } from "./utils";
+
+export const runtime = "nodejs";
+
+const data = {
+  description: "Confirm email change",
+  title: "Confirm email change",
+  url: "/auth/confirm-email-change",
+};
+
+export const metadata = buildMetadata({
+  title: data.title,
+  description: data.description,
+  url: data.url,
+});
+
+interface PageProps {
+  params: { token: string };
+}
+
+export default async function ConfirmEmailChangePage(props: PageProps) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-6 text-center">
+      <VerifyEmailChange {...props} />
+    </div>
+  );
+}
+
+const VerifyEmailChange = async ({ params: { token } }: PageProps) => {
+  const tokenFound = await prisma.verificationToken.findUnique({
+    where: {
+      token: hashToken(token),
+    },
+  });
+
+  if (!tokenFound || tokenFound.expires < new Date()) return <NotFound />;
+
+  const session = await getSession();
+
+  if (!session) {
+    redirect(`/login?next=/auth/confirm-email-change/${token}`);
+  }
+
+  const currentUserId = (session.user as CustomUser).id;
+  const tokenUserId = tokenFound.identifier;
+
+  if (tokenUserId !== currentUserId) return <NotFound />;
+
+  const data = await redis.get<{ email: string; newEmail: string }>(
+    `email-change-request:user:${tokenUserId}`,
+  );
+
+  if (!data) return <NotFound />;
+
+  await unsubscribe(data.email);
+
+  await prisma.user.update({
+    where: {
+      id: tokenUserId,
+    },
+    data: {
+      email: data.newEmail,
+    },
+  });
+
+  waitUntil(
+    Promise.all([
+      deleteRequest(tokenFound),
+
+      subscribe(data.newEmail),
+
+      sendEmail({
+        to: data.email,
+        subject: "Your email address has been changed",
+        system: true,
+        react: EmailUpdated({
+          oldEmail: data.email,
+          newEmail: data.newEmail,
+        }),
+        test: process.env.NODE_ENV === "development",
+      }),
+    ]),
+  );
+
+  return <ConfirmEmailChangePageClient />;
+};
+
+const deleteRequest = async (tokenFound: VerificationToken) => {
+  await Promise.all([
+    prisma.verificationToken.delete({
+      where: {
+        token: tokenFound.token,
+      },
+    }),
+
+    redis.del(`email-change-request:user:${tokenFound.identifier}`),
+  ]);
+};

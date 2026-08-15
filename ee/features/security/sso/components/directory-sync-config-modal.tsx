@@ -5,9 +5,9 @@ import { useState } from "react";
 import { Copy, Eye, EyeOff, FolderSync, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import useSCIM from "@/lib/swr/use-scim";
+import useSCIM from "@/shared/utils/swr/use-scim";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -16,15 +16,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+} from "@/shared/ui/dialog";
+import { Label } from "@/shared/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 
 import { SAML_PROVIDERS, type SCIMProviderKey } from "../constants";
 

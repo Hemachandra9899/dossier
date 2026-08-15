@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 
 import { CheckCircle, Loader2, XCircle } from "lucide-react";
 
-import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
+import PapermarkSparkle from "@/shared/ui/shared/icons/papermark-sparkle";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
-import { cn } from "@/lib/utils";
+import { useFeatureFlags } from "@/shared/utils/hooks/use-feature-flags";
+import { cn } from "@/shared/utils/utils";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Card,
   CardContent,
@@ -19,11 +19,11 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import { Progress } from "@/components/ui/progress";
-import { Switch } from "@/components/ui/switch";
+} from "@/shared/ui/card";
+import { Label } from "@/shared/ui/label";
+import LoadingSpinner from "@/shared/ui/loading-spinner";
+import { Progress } from "@/shared/ui/progress";
+import { Switch } from "@/shared/ui/switch";
 
 import { useAIIndexingStatus } from "../hooks/use-ai-indexing-status";
 

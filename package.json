@@ -14,6 +14,8 @@
     "test:unit": "node --import tsx --test \"tests/unit/**/*.test.ts\"",
     "test:integration": "node --import tsx --test --test-concurrency=1 \"tests/integration/**/*.test.ts\"",
     "test:signing": "node --import tsx --test \"tests/unit/signing/*.test.ts\"",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run lint && npm run test:unit && npm run test:integration && npm run build",
     "check:access-form": "tsx scripts/check-access-form-footer.ts",
     "check:brand-logo": "tsx scripts/check-brand-logo.ts",
     "postinstall": "prisma generate",

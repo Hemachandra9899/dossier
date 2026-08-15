@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { useRealtimeRunsWithTag } from "@trigger.dev/react-hooks";
 import useSWR, { mutate } from "swr";
 
-import { fetcher } from "@/lib/utils";
+import { fetcher } from "@/shared/utils/utils";
 
 interface UseFreezeProgressOptions {
   dataroomId: string | undefined;

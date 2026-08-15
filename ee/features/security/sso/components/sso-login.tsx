@@ -6,9 +6,9 @@ import { Shield } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
 
 import { JACKSON_PRODUCT } from "../product";
 

@@ -7,10 +7,10 @@ import {
   seedTeam,
   seedUser,
   testPrisma,
-} from "@/tests/helpers/test-db";
-import { createDossierFile } from "@/modules/files/application/create-file";
-import { syncDossierFileStatus } from "@/modules/files/application/sync-file-status";
-import { getFilesBoard } from "@/modules/files/application/get-files-board";
+} from "../../helpers/test-db";
+import { createDossierFile } from "@/features/files/application/create-file";
+import { syncDossierFileStatus } from "@/features/files/application/sync-file-status";
+import { getFilesBoard } from "@/features/files/application/get-files-board";
 import { DossierFileStatus } from "@prisma/client";
 
 describe("files workspace workflows (integration)", () => {

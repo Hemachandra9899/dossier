@@ -1,7 +1,7 @@
 import { Link } from "@prisma/client";
 
-import { dispatchNotification } from "@/lib/notifications/dispatch";
-import prisma from "@/lib/prisma";
+import { dispatchNotification } from "@/shared/utils/notifications/dispatch";
+import prisma from "@/platform/db";
 
 import { sendBlockedEmailAttemptNotification } from "./send-blocked-email-attempt";
 

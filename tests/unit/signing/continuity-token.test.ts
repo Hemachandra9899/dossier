@@ -4,7 +4,7 @@ import { afterEach, describe, it } from "node:test";
 import {
   mintRequestSessionContinuityToken,
   verifyRequestSessionContinuityToken,
-} from "@/modules/signing/domain/continuity-token";
+} from "@/features/signing/domain/continuity-token";
 
 const originalSecret = process.env.NEXT_PRIVATE_VERIFICATION_SECRET;
 

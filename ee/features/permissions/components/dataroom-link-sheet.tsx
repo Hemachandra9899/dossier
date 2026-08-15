@@ -5,7 +5,7 @@ import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
 import { useHotkeys } from "react-hotkeys-hook";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import {
   ItemType,
   LinkAudienceType,
@@ -20,42 +20,42 @@ import z from "zod";
 
 import { InviteViewersModal } from "@/ee/features/dataroom-invitations/components/invite-viewers-modal";
 
-import { useAnalytics } from "@/lib/analytics";
-import { useDataroom } from "@/lib/swr/use-dataroom";
-import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
-import { useDomains } from "@/lib/swr/use-domains";
-import { LinkWithViews } from "@/lib/types";
-import { convertDataUrlToFile, fetcher, uploadImage } from "@/lib/utils";
+import { useAnalytics } from "@/shared/utils/analytics";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
+import useDataroomGroups from "@/shared/utils/swr/use-dataroom-groups";
+import { useDomains } from "@/shared/utils/swr/use-domains";
+import { LinkWithViews } from "@/shared/utils/types";
+import { convertDataUrlToFile, fetcher, uploadImage } from "@/shared/utils/utils";
 
 import {
   DEFAULT_LINK_PROPS as BASE_DEFAULT_LINK_PROPS,
   DEFAULT_LINK_TYPE as BASE_DEFAULT_LINK_TYPE,
-} from "@/components/links/link-sheet";
-import DomainSection from "@/components/links/link-sheet/domain-section";
-import { LinkOptions } from "@/components/links/link-sheet/link-options";
-import LinkSuccessSheet from "@/components/links/link-sheet/link-success-sheet";
-import TagSection from "@/components/links/link-sheet/tags/tag-section";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@/shared/ui/links/link-sheet";
+import DomainSection from "@/shared/ui/links/link-sheet/domain-section";
+import { LinkOptions } from "@/shared/ui/links/link-sheet/link-options";
+import LinkSuccessSheet from "@/shared/ui/links/link-sheet/link-success-sheet";
+import TagSection from "@/shared/ui/links/link-sheet/tags/tag-section";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+} from "@/shared/ui/select";
+import { Separator } from "@/shared/ui/separator";
 import {
   Sheet,
   SheetContent,
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BadgeTooltip, ButtonTooltip } from "@/components/ui/tooltip";
+} from "@/shared/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { BadgeTooltip, ButtonTooltip } from "@/shared/ui/tooltip";
 
 import { PermissionsSheet } from "./permissions-sheet";
 

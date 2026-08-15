@@ -1,13 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import { runs } from "@trigger.dev/sdk";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
-import prisma from "@/lib/prisma";
-import { sendConversationMessageNotificationTask } from "@/lib/trigger/conversation-message-notification";
-import { CustomUser } from "@/lib/types";
+import prisma from "@/platform/db";
+import { sendConversationMessageNotificationTask } from "@/shared/utils/trigger/conversation-message-notification";
+import { CustomUser } from "@/shared/utils/types";
 
 import {
   CreateConversationInput,

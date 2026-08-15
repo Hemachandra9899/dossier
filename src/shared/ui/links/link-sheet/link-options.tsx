@@ -1,0 +1,315 @@
+import { useState } from "react";
+
+import { LinkAudienceType, LinkType } from "@prisma/client";
+import { LinkPreset } from "@prisma/client";
+import { ChevronDown } from "lucide-react";
+
+import { useFeatureFlags } from "@/shared/utils/hooks/use-feature-flags";
+import { cn } from "@/shared/utils/utils";
+
+import { DEFAULT_LINK_TYPE } from "@/shared/ui/links/link-sheet";
+import AllowBlockListSection from "@/shared/ui/links/link-sheet/allow-block-list-section";
+import AllowDownloadSection from "@/shared/ui/links/link-sheet/allow-download-section";
+import AllowListSection from "@/shared/ui/links/link-sheet/allow-list-section";
+import AllowNotificationSection from "@/shared/ui/links/link-sheet/allow-notification-section";
+import DenyListSection from "@/shared/ui/links/link-sheet/deny-list-section";
+import EmailAccessSection from "@/shared/ui/links/link-sheet/email-access-section";
+import EmailAuthenticationSection from "@/shared/ui/links/link-sheet/email-authentication-section";
+import EmailProtectionSection from "@/shared/ui/links/link-sheet/email-protection-section";
+import ExpirationSection from "@/shared/ui/links/link-sheet/expiration-section";
+import FeedbackSection from "@/shared/ui/links/link-sheet/feedback-section";
+import OGSection from "@/shared/ui/links/link-sheet/og-section";
+import PasswordSection from "@/shared/ui/links/link-sheet/password-section";
+import { ProBannerSection } from "@/shared/ui/links/link-sheet/pro-banner-section";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/shared/ui/collapsible";
+import { Separator } from "@/shared/ui/separator";
+
+import AgreementSection from "./agreement-section";
+import AIAgentsSection from "./ai-agents-section";
+import ConversationSection from "./conversation-section";
+import CustomFieldsSection from "./custom-fields-section";
+import IndexFileSection from "./index-file-section";
+import QuestionSection from "./question-section";
+import ScreenshotProtectionSection from "./screenshot-protection-section";
+import UploadSection from "./upload-section";
+import WatermarkSection from "./watermark-section";
+import { WelcomeMessageSection } from "./welcome-message-section";
+
+export type LinkUpgradeOptions = {
+  state: boolean;
+  trigger: string;
+  plan?: "Pro" | "Business" | "Data Rooms" | "Data Rooms Plus";
+  highlightItem?: string[];
+};
+
+// Collapsible Section Component
+const CollapsibleSection = ({
+  title,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <CollapsibleTrigger className="group relative mb-5 mt-4 flex w-full items-center">
+        <Separator className="absolute top-1/2 -translate-y-1/2" />
+        <div className="relative mx-auto flex items-center gap-1.5 bg-background px-3 dark:bg-gray-900">
+          <span className="text-sm text-muted-foreground transition-colors group-hover:text-foreground">
+            {title}
+          </span>
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 text-muted-foreground transition-transform duration-200 group-hover:text-foreground",
+              isOpen ? "rotate-180" : "",
+            )}
+          />
+        </div>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+        <div className="pt-2">{children}</div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+};
+
+export const LinkOptions = ({
+  data,
+  setData,
+  targetId,
+  linkType,
+  editLink,
+  currentPreset = null,
+  setValidationError,
+  defaultExpandSections = true,
+  dataroomStyle = false,
+}: {
+  data: DEFAULT_LINK_TYPE;
+  setData: React.Dispatch<React.SetStateAction<DEFAULT_LINK_TYPE>>;
+  targetId?: string;
+  linkType: Omit<LinkType, "WORKFLOW_LINK">;
+  editLink?: boolean;
+  currentPreset?: LinkPreset | null;
+  setValidationError?: (key: string, errors: string[]) => void;
+  /**
+   * Controls whether the "Custom branding" and "Advanced controls" sections
+   * start expanded. Defaults to `true` to preserve the create-link sheet's
+   * behaviour; the full-page builder passes `false` to start them collapsed.
+   */
+  defaultExpandSections?: boolean;
+  /**
+   * Opt into the data room-style layout for document links: a single
+   * "Identity verification" segmented control, a unified allow & block list,
+   * "Allow downloading" relocated under the expiration date, a flattened
+   * (non-collapsible) security controls group, and the view notification moved
+   * to the bottom of the sheet (rendered by the parent). Data room links always
+   * use this layout regardless of the flag.
+   */
+  dataroomStyle?: boolean;
+}) => {
+  const { isFeatureEnabled } = useFeatureFlags();
+  const isAIFeatureEnabled = isFeatureEnabled("ai");
+  // The "Advanced controls" section only renders content for data room links
+  // (upload, file indexing, conversations) or when the AI agents feature is
+  // enabled for the team. For document links without AI, it would be empty.
+  const showAdvancedControls =
+    linkType === LinkType.DATAROOM_LINK || isAIFeatureEnabled;
+  // Data room links always use the consolidated layout; document links opt in
+  // via the `dataroomStyle` prop (e.g. the create/edit link modal).
+  const useDataroomStyleLayout =
+    linkType === LinkType.DATAROOM_LINK || dataroomStyle;
+
+  // `handleUpgradeStateChange` is passed to feature sections as a required
+  // prop. With billing removed, every feature is unlocked, so it is a no-op.
+  const handleUpgradeStateChange = () => {};
+
+  const securityControls = (
+    <div>
+      <PasswordSection {...{ data, setData }} />
+      <ExpirationSection {...{ data, setData }} presets={currentPreset} />
+      {/* In the consolidated layout, "Allow downloading" sits directly under
+          the expiration date. */}
+      {useDataroomStyleLayout && (
+        <AllowDownloadSection {...{ data, setData }} />
+      )}
+      <ScreenshotProtectionSection
+        {...{ data, setData }}
+        isAllowed={true}
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+      <WatermarkSection
+        {...{ data, setData }}
+        isAllowed={true}
+        handleUpgradeStateChange={handleUpgradeStateChange}
+        presets={currentPreset}
+      />
+      <AgreementSection
+        {...{ data, setData }}
+        isAllowed={true}
+        handleUpgradeStateChange={handleUpgradeStateChange}
+      />
+    </div>
+  );
+
+  return (
+    <div>
+      {/* Basic Options - Always visible */}
+      {/* In the consolidated layout the owner-facing view notification is moved
+          to the bottom of the sheet (rendered by the parent) so the list leads
+          with viewer-facing access controls. */}
+      {!useDataroomStyleLayout && (
+        <AllowNotificationSection {...{ data, setData }} />
+      )}
+      {useDataroomStyleLayout ? (
+        // Combine "require email" + "require verification" into a single
+        // segmented control to make the relationship between the two levels
+        // clear and save vertical space.
+        <EmailAccessSection
+          {...{ data, setData }}
+          isAllowed={true}
+          handleUpgradeStateChange={handleUpgradeStateChange}
+        />
+      ) : (
+        <>
+          <EmailProtectionSection {...{ data, setData }} />
+          <EmailAuthenticationSection
+            {...{ data, setData }}
+            isAllowed={true}
+            handleUpgradeStateChange={handleUpgradeStateChange}
+          />
+        </>
+      )}
+      {/* In the consolidated layout "Allow downloading" is relocated under the
+          expiration date within the (flattened) security controls below. */}
+      {!useDataroomStyleLayout && (
+        <AllowDownloadSection {...{ data, setData }} />
+      )}
+
+      {data.audienceType === LinkAudienceType.GENERAL ? (
+        useDataroomStyleLayout ? (
+          // Combine the allow + block lists under a single toggle (both lists
+          // remain configurable).
+          <AllowBlockListSection
+            key={`allow-block-${data.id ?? "new"}`}
+            {...{ data, setData }}
+            isAllowed={true}
+            handleUpgradeStateChange={handleUpgradeStateChange}
+            presets={currentPreset}
+            setValidationError={setValidationError}
+          />
+        ) : (
+          <>
+            <AllowListSection
+              key={`allow-list-${data.id ?? "new"}`}
+              {...{ data, setData }}
+              isAllowed={true}
+              handleUpgradeStateChange={handleUpgradeStateChange}
+              presets={currentPreset}
+              setValidationError={setValidationError}
+            />
+            <DenyListSection
+              key={`deny-list-${data.id ?? "new"}`}
+              {...{ data, setData }}
+              isAllowed={true}
+              handleUpgradeStateChange={handleUpgradeStateChange}
+              presets={currentPreset}
+              setValidationError={setValidationError}
+            />
+          </>
+        )
+      ) : null}
+
+      {/* Security Section. In the consolidated layout the security controls are
+          merged into the main list (no collapsible subgroup/separator); the
+          standalone layout keeps the collapsible group. */}
+      {useDataroomStyleLayout ? (
+        securityControls
+      ) : (
+        <CollapsibleSection title="Security controls" defaultOpen={true}>
+          {securityControls}
+        </CollapsibleSection>
+      )}
+
+      {/* Custom Branding Section */}
+      <CollapsibleSection title="Custom branding" defaultOpen={defaultExpandSections}>
+        <div>
+          <CustomFieldsSection
+            {...{ data, setData }}
+            isAllowed={true}
+            handleUpgradeStateChange={handleUpgradeStateChange}
+            presets={currentPreset}
+          />
+          <WelcomeMessageSection
+            data={data}
+            setData={setData}
+            isAllowed={true}
+            handleUpgradeStateChange={handleUpgradeStateChange}
+          />
+          <OGSection
+            {...{ data, setData }}
+            isAllowed={true}
+            handleUpgradeStateChange={handleUpgradeStateChange}
+            editLink={editLink ?? false}
+            presets={currentPreset}
+          />
+          <ProBannerSection
+            {...{ data, setData }}
+            isAllowed={true}
+            handleUpgradeStateChange={handleUpgradeStateChange}
+          />
+        </div>
+      </CollapsibleSection>
+
+      {/* Advanced Section */}
+      {showAdvancedControls && (
+        <CollapsibleSection
+          title="Advanced controls"
+          defaultOpen={defaultExpandSections}
+        >
+          <div>
+            {/* AI Agents - Available for both document and dataroom links */}
+            <AIAgentsSection
+              {...{ data, setData }}
+              isAllowed={true}
+              handleUpgradeStateChange={handleUpgradeStateChange}
+            />
+
+            {/* Dataroom-specific options */}
+            {linkType === LinkType.DATAROOM_LINK ? (
+              <>
+                {targetId ? (
+                  <UploadSection
+                    {...{ data, setData }}
+                    isAllowed={true}
+                    handleUpgradeStateChange={handleUpgradeStateChange}
+                    targetId={targetId}
+                  />
+                ) : null}
+
+                <IndexFileSection
+                  {...{ data, setData }}
+                  isAllowed={true}
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                />
+
+                <ConversationSection
+                  {...{ data, setData }}
+                  isAllowed={true}
+                  handleUpgradeStateChange={handleUpgradeStateChange}
+                />
+              </>
+            ) : null}
+          </div>
+        </CollapsibleSection>
+      )}
+    </div>
+  );
+};

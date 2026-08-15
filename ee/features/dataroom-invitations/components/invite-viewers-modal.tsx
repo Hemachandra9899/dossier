@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import {
   MAX_INVITATION_EMAILS_PER_DAY,
   MAX_INVITATION_EMAILS_PER_REQUEST,
@@ -12,25 +12,25 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
-import { fetcher } from "@/lib/utils";
+import { fetcher } from "@/shared/utils/utils";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/shared/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/shared/ui/select";
+import { Separator } from "@/shared/ui/separator";
+import { Textarea } from "@/shared/ui/textarea";
 
 type InviteViewersModalProps = {
   open: boolean;

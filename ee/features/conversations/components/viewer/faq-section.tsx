@@ -2,17 +2,17 @@ import { useEffect, useRef, useState } from "react";
 
 import useSWR from "swr";
 
-import { fetcher } from "@/lib/utils";
+import { fetcher } from "@/shared/utils/utils";
 
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+} from "@/shared/ui/accordion";
+import { Badge } from "@/shared/ui/badge";
+import { ScrollArea } from "@/shared/ui/scroll-area";
+import { Separator } from "@/shared/ui/separator";
 
 interface FAQ {
   id: string;

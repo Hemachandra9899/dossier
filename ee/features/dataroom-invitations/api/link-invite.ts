@@ -6,13 +6,13 @@ import {
   SendLinkInvitationSchema,
   invitationEmailSchema,
 } from "@/ee/features/dataroom-invitations/lib/schema/dataroom-invitations";
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import { LinkType } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { constructLinkUrl } from "@/lib/utils/link-url";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { constructLinkUrl } from "@/shared/utils/utils/link-url";
 
 import { sendDataroomViewerInvite } from "../emails/lib/send-dataroom-viewer-invite";
 

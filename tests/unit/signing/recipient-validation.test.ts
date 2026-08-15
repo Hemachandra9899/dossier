@@ -4,8 +4,8 @@ import { describe, it } from "node:test";
 import {
   normalizeRecipientEmail,
   validateAndNormalizeRecipients,
-} from "@/modules/signing/domain/recipient-validation";
-import { SigningValidationError } from "@/modules/signing/domain/signing-errors";
+} from "@/features/signing/domain/recipient-validation";
+import { SigningValidationError } from "@/features/signing/domain/signing-errors";
 
 describe("recipient validation + normalization", () => {
   it("normalizes emails to trimmed lowercase", () => {

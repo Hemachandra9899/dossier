@@ -3,7 +3,7 @@ import { DocumentStorageType } from "@prisma/client";
 import { toFile } from "openai";
 import path from "path";
 
-import { getFile } from "@/lib/files/get-file";
+import { getFile } from "@/shared/utils/files/get-file";
 
 /**
  * Process a document and prepare it for vector store upload

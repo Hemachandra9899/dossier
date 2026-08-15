@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import {
   BriefcaseIcon,
   BuildingIcon,
@@ -18,8 +18,8 @@ import { motion } from "motion/react";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { useAnalytics } from "@/lib/analytics";
-import { STAGGER_CHILD_VARIANTS } from "@/lib/constants";
+import { useAnalytics } from "@/shared/utils/analytics";
+import { STAGGER_CHILD_VARIANTS } from "@/shared/utils/constants";
 
 const TEMPLATES = [
   {

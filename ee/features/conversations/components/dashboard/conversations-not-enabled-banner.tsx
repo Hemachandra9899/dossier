@@ -6,7 +6,7 @@ import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { toast } from "sonner";
 import z from "zod";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Card,
   CardContent,
@@ -14,8 +14,8 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
+} from "@/shared/ui/card";
+import { Switch } from "@/shared/ui/switch";
 
 interface ConversationsNotEnabledBannerProps {
   dataroomId: string;

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
-import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
-import LinkItem from "@/components/links/link-sheet/link-item";
-import { LinkUpgradeOptions } from "@/components/links/link-sheet/link-options";
+import { DEFAULT_LINK_TYPE } from "@/shared/ui/links/link-sheet";
+import LinkItem from "@/shared/ui/links/link-sheet/link-item";
+import { LinkUpgradeOptions } from "@/shared/ui/links/link-sheet/link-options";
 
 export default function ConversationSection({
   data,

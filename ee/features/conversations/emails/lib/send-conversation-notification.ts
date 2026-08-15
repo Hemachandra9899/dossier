@@ -1,6 +1,6 @@
 import ConversationNotification from "@/ee/features/conversations/emails/components/conversation-notification";
 
-import { sendEmail } from "@/lib/resend";
+import { sendEmail } from "@/shared/utils/resend";
 
 export const sendConversationNotification = async ({
   dataroomName,

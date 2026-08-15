@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import prisma from "@/platform/db";
 
 import {
   type Action,

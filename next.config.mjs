@@ -1,8 +1,16 @@
+import path from "path";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   pageExtensions: ["js", "jsx", "ts", "tsx", "mdx"],
   transpilePackages: ["@boxyhq/saml-jackson", "@libpdf/core"],
+  webpack: (config) => {
+    config.resolve.alias["@ee"] = path.resolve("./ee");
+    config.resolve.alias["@/ee"] = path.resolve("./ee");
+    config.resolve.alias["@/public"] = path.resolve("./public");
+    return config;
+  },
   images: {
     minimumCacheTTL: 2592000, // 30 days
     remotePatterns: prepareRemotePatterns(),

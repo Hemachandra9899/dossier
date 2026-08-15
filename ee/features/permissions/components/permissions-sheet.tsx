@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { ItemType, PermissionGroupAccessControls } from "@prisma/client";
 import {
   ColumnDef,
@@ -23,24 +23,24 @@ import {
 } from "lucide-react";
 import useSWR from "swr";
 
-import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
-import { useDataroomFoldersTree } from "@/lib/swr/use-dataroom";
-import { cn, fetcher } from "@/lib/utils";
+import { useFeatureFlags } from "@/shared/utils/hooks/use-feature-flags";
+import { useDataroomFoldersTree } from "@/shared/utils/swr/use-dataroom";
+import { cn, fetcher } from "@/shared/utils/utils";
 import {
   HIERARCHICAL_DISPLAY_STYLE,
   getHierarchicalDisplayName,
-} from "@/lib/utils/hierarchical-display";
+} from "@/shared/utils/utils/hierarchical-display";
 
-import CloudDownloadOff from "@/components/shared/icons/cloud-download-off";
-import { Button } from "@/components/ui/button";
+import CloudDownloadOff from "@/shared/ui/shared/icons/cloud-download-off";
+import { Button } from "@/shared/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { Switch } from "@/components/ui/switch";
+} from "@/shared/ui/sheet";
+import { Switch } from "@/shared/ui/switch";
 import {
   Table,
   TableBody,
@@ -48,8 +48,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+} from "@/shared/ui/table";
+import { ToggleGroup, ToggleGroupItem } from "@/shared/ui/toggle-group";
 
 const PermissionGroupItemName = ({ item }: { item: FileOrFolder }) => {
   const { isFeatureEnabled } = useFeatureFlags();

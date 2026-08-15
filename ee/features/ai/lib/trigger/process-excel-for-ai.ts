@@ -3,10 +3,10 @@ import { logger, metadata, task } from "@trigger.dev/sdk";
 import path from "path";
 import * as XLSX from "xlsx";
 
-import { getFile } from "@/lib/files/get-file";
-import { putFileServer } from "@/lib/files/put-file-server";
-import prisma from "@/lib/prisma";
-import { processExcelForAIQueue } from "@/lib/trigger/queues";
+import { getFile } from "@/shared/utils/files/get-file";
+import { putFileServer } from "@/shared/utils/files/put-file-server";
+import prisma from "@/platform/db";
+import { processExcelForAIQueue } from "@/shared/utils/trigger/queues";
 
 import type { ProcessFilePayload } from "./types";
 

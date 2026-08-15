@@ -4,7 +4,7 @@ import { describe, it } from "node:test";
 import {
   createProviderEventDedupeKey,
   providerEventPayloadSchema,
-} from "@/modules/signing/domain/signing-event";
+} from "@/features/signing/domain/signing-event";
 
 describe("createProviderEventDedupeKey", () => {
   it("is deterministic for identical deliveries", () => {

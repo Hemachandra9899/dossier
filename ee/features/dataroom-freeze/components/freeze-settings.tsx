@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { useFreezeProgress } from "@/ee/features/dataroom-freeze/lib/swr/use-freeze-progress";
 import {
   AlertTriangleIcon,
@@ -13,7 +13,7 @@ import {
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Card,
   CardContent,
@@ -21,16 +21,16 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+} from "@/shared/ui/card";
+import { Input } from "@/shared/ui/input";
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from "@/components/ui/input-otp";
-import { Modal } from "@/components/ui/modal";
-import { Progress } from "@/components/ui/progress";
-import { TimestampTooltip } from "@/components/ui/timestamp-tooltip";
+} from "@/shared/ui/input-otp";
+import { Modal } from "@/shared/ui/modal";
+import { Progress } from "@/shared/ui/progress";
+import { TimestampTooltip } from "@/shared/ui/timestamp-tooltip";
 
 const CONFIRMATION_TEXT = "confirm freeze dataroom";
 

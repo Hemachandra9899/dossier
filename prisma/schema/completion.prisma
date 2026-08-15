@@ -1,0 +1,101 @@
+// Dossier completion domain.
+//
+// A DossierCompletionRun is the durable, idempotent execution unit that a
+// future CP10.4 finalization worker drives through PENDING -> PROCESSING ->
+// COMPLETED / FAILED. CP10.2 only ever creates PENDING runs.
+//
+// A DossierCompletionRecord is the immutable, versioned result of a completed
+// run. It stores the manifest snapshot and is the source of truth for
+// "file finalized at version N". No update/delete APIs are ever exposed for
+// records or artifacts.
+
+enum DossierCompletionRunStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum DossierCompletionArtifactKind {
+  REQUIREMENT_DOCUMENT
+  SIGNED_DOCUMENT
+}
+
+model DossierCompletionRun {
+  id            String @id @default(cuid())
+  dossierFileId String
+  initiatedById String
+
+  idempotencyKey String @unique
+
+  status DossierCompletionRunStatus @default(PENDING)
+
+  errorCode    String?
+  errorMessage String?
+
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  dossierFile DossierFile @relation(fields: [dossierFileId], references: [id], onDelete: Cascade)
+  initiatedBy User        @relation("DossierCompletionRunInitiator", fields: [initiatedById], references: [id], onDelete: Restrict)
+
+  record DossierCompletionRecord?
+
+  @@index([dossierFileId, createdAt(sort: Desc)])
+  @@index([status, createdAt])
+}
+
+model DossierCompletionRecord {
+  id            String @id @default(cuid())
+  dossierFileId String
+  runId         String @unique
+
+  version       Int
+  schemaVersion Int @default(1)
+
+  snapshot     Json
+  manifestHash String
+
+  completedById String
+  completedAt   DateTime
+
+  createdAt DateTime @default(now())
+
+  dossierFile DossierFile          @relation(fields: [dossierFileId], references: [id], onDelete: Restrict)
+  run         DossierCompletionRun @relation(fields: [runId], references: [id], onDelete: Restrict)
+  completedBy User                 @relation("DossierCompletionRecordCompletedBy", fields: [completedById], references: [id], onDelete: Restrict)
+
+  artifacts DossierCompletionArtifact[]
+
+  @@unique([dossierFileId, version])
+  @@index([dossierFileId, completedAt(sort: Desc)])
+}
+
+model DossierCompletionArtifact {
+  id                 String @id @default(cuid())
+  completionRecordId String
+
+  kind DossierCompletionArtifactKind
+
+  sourceDocumentId          String?
+  sourceDocumentVersionId   String?
+  sourceSignatureArtifactId String?
+
+  fileName  String
+  mimeType  String?
+  sizeBytes BigInt
+  sha256    String
+
+  storageType DocumentStorageType
+  storageKey  String
+
+  createdAt DateTime @default(now())
+
+  completionRecord DossierCompletionRecord @relation(fields: [completionRecordId], references: [id], onDelete: Restrict)
+
+  @@index([completionRecordId])
+  @@index([sha256])
+}

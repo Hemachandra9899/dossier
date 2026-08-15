@@ -5,8 +5,8 @@
 
 import http from "http";
 
-import type { SigningContext } from "@/modules/signing/application/context";
-import { createSigningContext } from "@/modules/signing/application/context";
+import type { SigningContext } from "@/features/signing/application/context";
+import { createSigningContext } from "@/features/signing/application/context";
 import type {
   ProviderEditorSession,
   ProviderSigningDocument,
@@ -14,9 +14,9 @@ import type {
   ProviderSignedArtifact,
   ProviderTemplate,
   SigningProvider,
-} from "@/modules/signing/ports/signing-provider";
-import { mapDocumensoEventToStatus } from "@/modules/signing/providers/documenso/mapper";
-import type { SignedArtifactStorage } from "@/modules/signing/storage/signed-artifact-storage";
+} from "@/features/signing/providers/signing-provider";
+import { mapDocumensoEventToStatus } from "@/features/signing/providers/documenso/mapper";
+import type { SignedArtifactStorage } from "@/platform/storage";
 import { testPrisma } from "./test-db";
 
 const silentLogger: SigningContext["logger"] = {
@@ -201,7 +201,7 @@ export function buildTestSigningContext(
   if (options.runMirrorInline) {
     mirror.runner = async (requestId) => {
       const { mirrorSignedArtifact } = await import(
-        "@/modules/signing/application/mirror-signed-artifact"
+        "@/features/signing/application/mirror-signed-artifact"
       );
       await mirrorSignedArtifact(
         createSigningContext({

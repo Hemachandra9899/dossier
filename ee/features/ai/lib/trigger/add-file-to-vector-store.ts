@@ -1,7 +1,7 @@
 import { logger, metadata, task } from "@trigger.dev/sdk";
 
 import { openai } from "@/ee/features/ai/lib/models/openai";
-import { addFileToVectorStoreQueue } from "@/lib/trigger/queues";
+import { addFileToVectorStoreQueue } from "@/shared/utils/trigger/queues";
 
 import type { AddToVectorStorePayload } from "./types";
 

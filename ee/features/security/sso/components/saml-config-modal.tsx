@@ -5,10 +5,10 @@ import { useState } from "react";
 import { Copy, Shield, Trash2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 
-import useSAML from "@/lib/swr/use-saml";
-import { copyToClipboard } from "@/lib/utils";
+import useSAML from "@/shared/utils/swr/use-saml";
+import { copyToClipboard } from "@/shared/utils/utils";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -17,16 +17,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/shared/ui/dialog";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 
 import { type SAMLProviderKey, SAML_PROVIDERS } from "../constants";
 

@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 // Validation schema for the request body
 const toggleConversationsSchema = z.object({

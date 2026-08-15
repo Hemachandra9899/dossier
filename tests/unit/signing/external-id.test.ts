@@ -5,7 +5,7 @@ import {
   buildRequestExternalId,
   buildTemplateExternalId,
   isDossierSigningExternalId,
-} from "@/modules/signing/domain/external-id";
+} from "@/features/signing/domain/external-id";
 
 describe("external ids", () => {
   it("builds deterministic template external ids", () => {

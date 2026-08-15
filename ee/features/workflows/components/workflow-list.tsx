@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-import { timeAgo } from "@/lib/utils";
+import { timeAgo } from "@/shared/utils/utils";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/ui/badge";
 
 interface Workflow {
   id: string;

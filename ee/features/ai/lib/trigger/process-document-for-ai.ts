@@ -1,7 +1,7 @@
 import { logger, metadata, task } from "@trigger.dev/sdk";
 
-import prisma from "@/lib/prisma";
-import { processDocumentForAIQueue } from "@/lib/trigger/queues";
+import prisma from "@/platform/db";
+import { processDocumentForAIQueue } from "@/shared/utils/trigger/queues";
 
 import { addFileToVectorStoreTask } from "./add-file-to-vector-store";
 import { processExcelForAITask } from "./process-excel-for-ai";

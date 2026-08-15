@@ -10,13 +10,13 @@ import { ArrowLeftIcon, BellIcon, BellOffIcon, Plus } from "lucide-react";
 import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 
-import { fetcher } from "@/lib/utils";
-import { MAX_MESSAGE_LENGTH } from "@/lib/utils/sanitize-html";
+import { fetcher } from "@/shared/utils/utils";
+import { MAX_MESSAGE_LENGTH } from "@/shared/utils/utils/sanitize-html";
 
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Button } from "@/shared/ui/button";
+import { ScrollArea } from "@/shared/ui/scroll-area";
+import { Separator } from "@/shared/ui/separator";
+import { Sheet, SheetContent } from "@/shared/ui/sheet";
 
 // Type definitions
 interface Message {

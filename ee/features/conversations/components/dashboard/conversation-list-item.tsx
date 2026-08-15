@@ -1,8 +1,8 @@
 import { formatDistanceToNow } from "date-fns";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils/utils";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/shared/ui/badge";
 
 export function ConversationListItem({
   navigateToConversation,

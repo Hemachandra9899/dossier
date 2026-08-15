@@ -14,7 +14,7 @@ import {
   PresentationIcon,
 } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils/utils";
 
 import {
   Message,
@@ -22,8 +22,8 @@ import {
   MessageActions,
   MessageContent,
   MessageResponse,
-} from "@/components/ai-elements/message";
-import { Shimmer } from "@/components/ai-elements/shimmer";
+} from "@/shared/ui/ai-elements/message";
+import { Shimmer } from "@/shared/ui/ai-elements/shimmer";
 
 import type { ChatStreamSource } from "../lib/chat/send-message";
 

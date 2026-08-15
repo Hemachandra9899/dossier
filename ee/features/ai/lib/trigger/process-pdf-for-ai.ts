@@ -2,9 +2,9 @@ import { logger, metadata, task } from "@trigger.dev/sdk";
 import path from "path";
 
 import { openai } from "@/ee/features/ai/lib/models/openai";
-import { getFile } from "@/lib/files/get-file";
-import prisma from "@/lib/prisma";
-import { processPdfForAIQueue } from "@/lib/trigger/queues";
+import { getFile } from "@/shared/utils/files/get-file";
+import prisma from "@/platform/db";
+import { processPdfForAIQueue } from "@/shared/utils/trigger/queues";
 
 import type { ProcessFilePayload } from "./types";
 
