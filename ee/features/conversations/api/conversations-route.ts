@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { runs } from "@trigger.dev/sdk";
 import { waitUntil } from "@vercel/functions";
 
-import prisma from "@/lib/prisma";
+import prisma from "@/platform/db";
 
 import {
   CreateConversationInput,

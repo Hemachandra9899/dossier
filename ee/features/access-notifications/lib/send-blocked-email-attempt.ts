@@ -1,4 +1,4 @@
-import { sendEmail } from "@/lib/resend";
+import { sendEmail } from "@/shared/utils/resend";
 
 import BlockedEmailAttempt from "../components/blocked-email-attempt";
 

@@ -1,8 +1,8 @@
 import useSWR from "swr";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 
-import { fetcher } from "@/lib/utils";
+import { fetcher } from "@/shared/utils/utils";
 
 type UninvitedMembersResponse = {
   count: number;

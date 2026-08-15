@@ -4,14 +4,14 @@ import { useState } from "react";
 
 import { ExternalLink, Shield } from "lucide-react";
 
-import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
+import PapermarkSparkle from "@/shared/ui/shared/icons/papermark-sparkle";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
-import { cn } from "@/lib/utils";
+import { useFeatureFlags } from "@/shared/utils/hooks/use-feature-flags";
+import { cn } from "@/shared/utils/utils";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -19,9 +19,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+} from "@/shared/ui/dialog";
+import { Label } from "@/shared/ui/label";
+import { Switch } from "@/shared/ui/switch";
 
 import { AIIndexingStatus } from "./ai-indexing-status";
 

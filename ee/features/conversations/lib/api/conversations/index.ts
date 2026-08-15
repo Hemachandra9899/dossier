@@ -1,7 +1,7 @@
 import { ConversationVisibility, ParticipantRole } from "@prisma/client";
 
-import prisma from "@/lib/prisma";
-import { validateContent } from "@/lib/utils/sanitize-html";
+import prisma from "@/platform/db";
+import { validateContent } from "@/shared/utils/utils/sanitize-html";
 
 export type CreateConversationInput = {
   title?: string;

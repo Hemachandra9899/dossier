@@ -21,15 +21,15 @@ import { toast } from "sonner";
 import useSWR, { mutate } from "swr";
 import z from "zod";
 
-import { useDataroom } from "@/lib/swr/use-dataroom";
-import { CustomUser } from "@/lib/types";
-import { fetcher } from "@/lib/utils";
-import { MAX_MESSAGE_LENGTH } from "@/lib/utils/sanitize-html";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
+import { CustomUser } from "@/shared/utils/types";
+import { fetcher } from "@/shared/utils/utils";
+import { MAX_MESSAGE_LENGTH } from "@/shared/utils/utils/sanitize-html";
 
-import AppLayout from "@/components/layouts/app";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import AppLayout from "@/shared/ui/layouts/app";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -37,17 +37,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
+} from "@/shared/ui/dialog";
+import { Input } from "@/shared/ui/input";
+import { ScrollArea } from "@/shared/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { Textarea } from "@/shared/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@/shared/ui/tooltip";
 
 import { PublishedFAQ } from "./faq-overview";
 

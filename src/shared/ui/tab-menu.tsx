@@ -1,54 +1,103 @@
-import React from "react";
 import Link from "next/link";
 
-export interface TabItem {
-  label: string;
-  href: string;
-  value: string;
-  currentValue?: string;
-  count?: number;
-}
+import * as React from "react";
 
-export function TabMenu({
-  navigation,
-  className = "",
-}: {
-  navigation: TabItem[];
+import { Badge } from "@/shared/ui/badge";
+import { Separator } from "@/shared/ui/separator";
+
+import { cn } from "@/shared/utils/utils";
+
+type Props = {
+  navigation: {
+    label: string;
+    href: string;
+    value: string;
+    currentValue: string;
+    count?: number;
+    tag?: string;
+    disabled?: boolean;
+  }[];
   className?: string;
-}) {
-  return (
-    <div className={`flex border-b border-border/80 ${className}`}>
-      <div className="flex space-x-2">
-        {navigation.map((tab) => {
-          const isActive = tab.currentValue === tab.value;
-          return (
-            <Link
-              key={tab.value}
-              href={tab.href}
-              className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
-                isActive
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground"
-              }`}
-            >
-              <span>{tab.label}</span>
-              {typeof tab.count === "number" && (
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                    isActive
-                      ? "bg-primary/10 text-primary"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {tab.count}
-                </span>
-              )}
-            </Link>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+};
 
-export default TabMenu;
+export const TabMenu: React.FC<React.PropsWithChildren<Props>> = ({
+  navigation,
+  className,
+}) => {
+  return (
+    <nav
+      className={cn("sticky top-0 bg-background dark:bg-gray-950", className)}
+    >
+      <div className="flex w-full items-center overflow-x-auto px-0 md:px-4">
+        <ul className="flex flex-row gap-4">
+          {navigation.map(
+            ({ label, href, value, currentValue, count, tag, disabled }) => (
+              <TabItem
+                key={label}
+                label={label}
+                href={href}
+                value={value}
+                currentValue={currentValue}
+                count={count}
+                tag={tag}
+                disabled={disabled}
+              />
+            ),
+          )}
+        </ul>
+      </div>
+      <Separator />
+    </nav>
+  );
+};
+
+const TabItem: React.FC<Props["navigation"][0]> = ({
+  label,
+  href,
+  value,
+  currentValue,
+  count,
+  tag,
+  disabled,
+}) => {
+  const active = value === currentValue;
+
+  return (
+    <li
+      className={cn(
+        "flex shrink-0 list-none border-b-2 border-transparent p-2",
+        {
+          "border-primary": active,
+          hidden: disabled,
+        },
+      )}
+    >
+      <Link
+        href={href}
+        className={cn(
+          "-mx-3 flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted hover:text-primary",
+          {
+            "font-medium": active,
+          },
+        )}
+      >
+        {label}
+        {count !== undefined && (
+          <Badge
+            variant="secondary"
+            className={cn("ml-auto", {
+              "bg-primary/10 hover:bg-primary/20": active,
+            })}
+          >
+            {count}
+          </Badge>
+        )}
+        {tag ? (
+          <div className="rounded border bg-background px-1 py-0.5 font-mono text-xs">
+            {tag}
+          </div>
+        ) : null}
+      </Link>
+    </li>
+  );
+};

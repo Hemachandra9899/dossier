@@ -1,34 +1,51 @@
-import React from "react";
+import { ReactNode } from "react";
 
-export interface AnalyticsCardProps {
+import { cn } from "@/shared/utils/utils";
+
+interface AnalyticsCardProps {
   title: string;
-  description?: string;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
+  columnHeaders?: {
+    label: string;
+    width?: string;
+  }[];
+  children: ReactNode;
+  className?: string;
   contentClassName?: string;
-  children?: React.ReactNode;
 }
 
 export function AnalyticsCard({
   title,
-  description,
   icon,
-  contentClassName = "",
+  columnHeaders,
   children,
+  className,
+  contentClassName,
 }: AnalyticsCardProps) {
   return (
-    <div className="rounded-xl border bg-card text-card-foreground shadow-sm transition-all">
-      <div className="flex items-center justify-between border-b px-6 py-4">
-        <div className="flex items-center gap-2.5">
-          {icon && <span className="text-primary">{icon}</span>}
-          <div>
-            <h3 className="text-base font-semibold leading-none tracking-tight">{title}</h3>
-            {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
+    <div
+      className={cn(
+        "relative z-0 overflow-hidden border border-border bg-card sm:rounded-xl",
+        className,
+      )}
+    >
+      <div className="flex items-center justify-between border-b border-border py-4 pl-5 pr-4">
+        <h3 className="text-sm font-medium">{title}</h3>
+        {columnHeaders ? (
+          <div className="flex items-center justify-end space-x-1 text-sm text-muted-foreground">
+            {columnHeaders.map((header, index) => (
+              <div key={index} className={cn("text-xs", header.width)}>
+                {header.label}
+              </div>
+            ))}
           </div>
-        </div>
+        ) : icon ? (
+          <div className="flex items-center gap-1 text-muted-foreground">
+            {icon}
+          </div>
+        ) : null}
       </div>
-      <div className={`p-6 ${contentClassName}`}>{children}</div>
+      <div className={cn("py-4", contentClassName)}>{children}</div>
     </div>
   );
 }
-
-export default AnalyticsCard;

@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { PlusIcon } from "lucide-react";
 import useSWR from "swr";
 
-import { fetcher } from "@/lib/utils";
+import { fetcher } from "@/shared/utils/utils";
 
-import AppLayout from "@/components/layouts/app";
-import { Button } from "@/components/ui/button";
+import AppLayout from "@/shared/ui/layouts/app";
+import { Button } from "@/shared/ui/button";
 
 import { WorkflowEmptyState } from "../components/workflow-empty-state";
 import { WorkflowList } from "../components/workflow-list";

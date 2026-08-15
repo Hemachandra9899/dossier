@@ -1,8 +1,8 @@
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import useSWR from "swr";
 
-import { DossierLimits } from "@/modules/access/limits";
-import { fetcher } from "@/lib/utils";
+import { DossierLimits } from "@/features/access/limits";
+import { fetcher } from "@/shared/utils/utils";
 
 export type LimitProps = DossierLimits;
 

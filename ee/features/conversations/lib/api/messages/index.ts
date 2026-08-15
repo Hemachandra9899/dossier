@@ -1,7 +1,7 @@
 import { waitUntil } from "@vercel/functions";
 
-import prisma from "@/lib/prisma";
-import { validateContent } from "@/lib/utils/sanitize-html";
+import prisma from "@/platform/db";
+import { validateContent } from "@/shared/utils/utils/sanitize-html";
 
 export const messageService = {
   // Add a message to a conversation

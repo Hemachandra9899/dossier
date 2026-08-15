@@ -1,6 +1,6 @@
 import { Ratelimit } from "@upstash/ratelimit";
 
-import { redis } from "@/lib/redis";
+import { redis } from "@/shared/utils/redis";
 
 /**
  * Simple rate limiters for core endpoints

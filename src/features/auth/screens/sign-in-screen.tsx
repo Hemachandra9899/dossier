@@ -1,111 +1,141 @@
 "use client";
 
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
-import { ProductEntryShell } from "@/shared/shell/product-entry-shell";
+import { LastUsed, useLastUsed } from "@/shared/ui/hooks/useLastUsed";
+import Google from "@/shared/ui/shared/icons/google";
+import { LogoCloud } from "@/shared/ui/shared/logo-cloud";
 import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
 import { toast } from "sonner";
 
 export function SignInScreen() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const rawCallbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
-  const callbackUrl =
-    rawCallbackUrl.startsWith("/") && !rawCallbackUrl.startsWith("//")
-      ? rawCallbackUrl
-      : "/dashboard";
-  const errorParam = searchParams?.get("error");
+  const rawNext = searchParams?.get("next") ?? searchParams?.get("callbackUrl") ?? undefined;
+  const next = rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/dashboard";
+  const authError = searchParams?.get("error");
 
-  const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [lastUsed, setLastUsed] = useLastUsed();
+  const [clickedMethod, setClickedMethod] = useState<"google" | undefined>(undefined);
 
-  const handleEmailSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) {
-      toast.error("Please enter a valid email address");
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const res = await signIn("email", {
-        email: email.trim().toLowerCase(),
-        callbackUrl,
-        redirect: false,
-      });
-      if (res?.error) {
-        toast.error(res.error);
+  React.useEffect(() => {
+    if (authError) {
+      if (authError === "OAuthAccountNotLinked") {
+        toast.error("This email is already associated with an account.");
       } else {
-        toast.success("Check your email for a sign-in link!");
+        toast.error(`Authentication error: ${authError}`);
       }
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to send sign-in link.");
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
-    try {
-      await signIn("google", { callbackUrl });
-    } catch (err: any) {
-      toast.error("Google sign in failed.");
-      setIsGoogleLoading(false);
-    }
-  };
+  }, [authError]);
 
   return (
-    <ProductEntryShell
-      title="Sign in to Dossier"
-      subtitle="Enter your email to receive a magic link"
-    >
-      {errorParam && (
-        <div className="mb-4 p-3 bg-red-50 text-red-700 text-xs rounded border border-red-200">
-          Authentication failed: {errorParam}
-        </div>
-      )}
-      <form onSubmit={handleEmailSignIn} className="space-y-4">
-        <div>
-          <Label htmlFor="email">Email address</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="name@company.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={isLoading}
-            required
-            className="mt-1"
-          />
-        </div>
-        <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? "Sending link..." : "Sign in with Email"}
-        </Button>
-      </form>
+    <div className="flex min-h-screen w-full flex-wrap">
+      {/* Left Login Form Panel */}
+      <div className="flex w-full justify-center bg-background md:w-[55%] lg:w-[55%]">
+        <div className="z-10 mx-5 mt-0 h-fit w-full max-w-md overflow-hidden sm:mx-0 sm:mt-[calc(5vh)] md:mt-[calc(8vh)]">
+          <div className="flex flex-col space-y-3 px-4 py-6 pt-5 sm:px-12 sm:pt-6">
+            <Link href="/dashboard" className="flex items-center gap-2.5 mb-16 sm:mb-12">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-lg shadow">
+                D
+              </div>
+              <span className="text-xl font-bold tracking-tight text-foreground">Dossier</span>
+            </Link>
+            <span className="text-balance text-3xl font-semibold tracking-tight text-foreground">
+              Welcome to Dossier
+            </span>
+            <h3 className="text-balance text-sm text-muted-foreground">
+              Secure client dossiers, data rooms, verification, and closing binders.
+            </h3>
+          </div>
 
-      <div className="relative my-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-neutral-200 dark:border-neutral-700" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white dark:bg-neutral-800 px-2 text-neutral-500">
-            Or continue with
-          </span>
+          <div className="flex flex-col space-y-3 px-4 sm:px-12">
+            <div className="relative">
+              <Button
+                onClick={() => {
+                  setClickedMethod("google");
+                  setLastUsed("google");
+                  signIn("google", {
+                    callbackUrl: next,
+                  }).then(() => {
+                    setClickedMethod(undefined);
+                  });
+                }}
+                loading={clickedMethod === "google"}
+                disabled={!!clickedMethod && clickedMethod !== "google"}
+                className="flex w-full items-center justify-center space-x-2 border border-border bg-muted/50 font-medium text-foreground hover:bg-muted py-5 text-sm"
+              >
+                <Google className="h-5 w-5 shrink-0" />
+                <span>Continue with Google</span>
+                {clickedMethod !== "google" && lastUsed === "google" && (
+                  <LastUsed />
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <p className="mt-12 w-full max-w-md px-4 text-xs text-muted-foreground sm:px-12">
+            By continuing, you agree to Dossier&apos;s{" "}
+            <a
+              href="https://dossier.com/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-foreground"
+            >
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a
+              href="https://dossier.com/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-foreground"
+            >
+              Privacy Policy
+            </a>
+            .
+          </p>
         </div>
       </div>
 
-      <Button
-        variant="outline"
-        onClick={handleGoogleSignIn}
-        disabled={isGoogleLoading}
-        className="w-full"
+      {/* Right Testimonial & Logo Panel */}
+      <div
+        className="relative hidden w-full justify-center overflow-hidden md:flex md:w-[45%] lg:w-[45%] border-l bg-muted/20"
       >
-        {isGoogleLoading ? "Connecting..." : "Sign in with Google"}
-      </Button>
-    </ProductEntryShell>
+        <div className="flex h-full w-full flex-col items-center justify-center px-6 py-12">
+          <div className="flex w-full max-w-lg flex-col items-center text-center">
+            <div className="mb-8 w-full max-w-md overflow-hidden rounded-xl border bg-card p-6 shadow-sm">
+              <div className="flex items-center gap-3 text-left">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold">
+                  D
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-foreground">Verified Client Dossiers</h4>
+                  <p className="text-xs text-muted-foreground">Automated diligence and signing workflow</p>
+                </div>
+              </div>
+            </div>
+
+            <blockquote className="leading-relaxed text-foreground text-lg sm:text-xl font-medium max-w-md">
+              &quot;We manage multi-million dollar transactions with Dossier Data Rooms. Secure, branded, and automated from intake to closing binder.&quot;
+            </blockquote>
+            <figcaption className="mt-4">
+              <div className="font-semibold text-sm text-foreground">
+                Executive Partner
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Global Capital & Advisory
+              </div>
+            </figcaption>
+          </div>
+
+          <div className="mt-16 flex w-full max-w-md flex-col items-center">
+            <LogoCloud />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

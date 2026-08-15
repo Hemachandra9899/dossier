@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import LinkItem from "@/components/links/link-sheet/link-item";
+import LinkItem from "@/shared/ui/links/link-sheet/link-item";
 
 export default function ConfidentialViewSection({
   data,

@@ -2,14 +2,14 @@ import { useRouter } from "next/router";
 
 import { useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { toast } from "sonner";
 import useSWR from "swr";
 import { z } from "zod";
 
-import { fetcher } from "@/lib/utils";
+import { fetcher } from "@/shared/utils/utils";
 
-import AppLayout from "@/components/layouts/app";
+import AppLayout from "@/shared/ui/layouts/app";
 
 import { StepFormDialog } from "../components/step-form-dialog";
 import { StepList } from "../components/step-list";

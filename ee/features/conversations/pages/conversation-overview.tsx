@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 
 import { useEffect, useMemo, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { ConversationListItem } from "@/ee/features/conversations/components/dashboard/conversation-list-item";
 import { ConversationsNotEnabledBanner } from "@/ee/features/conversations/components/dashboard/conversations-not-enabled-banner";
 import {
@@ -17,13 +17,13 @@ import { toast } from "sonner";
 import useSWR from "swr";
 import z from "zod";
 
-import { useDataroom } from "@/lib/swr/use-dataroom";
-import { fetcher } from "@/lib/utils";
-import { localStorage as safeLocalStorage } from "@/lib/webstorage";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
+import { fetcher } from "@/shared/utils/utils";
+import { localStorage as safeLocalStorage } from "@/shared/utils/webstorage";
 
-import AppLayout from "@/components/layouts/app";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import AppLayout from "@/shared/ui/layouts/app";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -31,10 +31,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@/shared/ui/dialog";
+import { Input } from "@/shared/ui/input";
+import { ScrollArea } from "@/shared/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 
 import { PublishedFAQ } from "./faq-overview";
 

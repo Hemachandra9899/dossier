@@ -1,1 +1,1 @@
-export { openai } from "@/lib/openai";
+export { openai } from "@/shared/utils/openai";

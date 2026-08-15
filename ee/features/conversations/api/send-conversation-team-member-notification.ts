@@ -3,8 +3,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { sendConversationTeamNotification } from "@/ee/features/conversations/emails/lib/send-conversation-team-notification";
 import { z } from "zod";
 
-import prisma from "@/lib/prisma";
-import { log } from "@/lib/utils";
+import prisma from "@/platform/db";
+import { log } from "@/shared/utils/utils";
 
 export default async function handle(
   req: NextApiRequest,

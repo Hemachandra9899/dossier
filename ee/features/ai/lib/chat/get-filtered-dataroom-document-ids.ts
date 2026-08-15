@@ -1,6 +1,6 @@
 import { ItemType } from "@prisma/client";
 
-import prisma from "@/lib/prisma";
+import prisma from "@/platform/db";
 
 /**
  * Get filtered dataroom document IDs based on link permissions

@@ -296,6 +296,28 @@ export async function POST(req: NextRequest) {
           { status: 404 },
         );
       }
+
+      // Verify that view belongs to this viewer and link
+      const view = await prisma.view.findUnique({
+        where: { id: viewId },
+        select: {
+          viewerId: true,
+          linkId: true,
+          documentId: true,
+        },
+      });
+
+      if (
+        !view ||
+        view.viewerId !== viewerId ||
+        view.linkId !== linkId ||
+        (documentId && view.documentId !== documentId)
+      ) {
+        return NextResponse.json(
+          { error: "Invalid view session for viewer and document" },
+          { status: 403 },
+        );
+      }
     } else {
       return NextResponse.json(
         { error: "Authentication required" },

@@ -5,9 +5,9 @@ import { useState } from "react";
 import { AlertTriangle, Lock, LockOpen } from "lucide-react";
 import { toast } from "sonner";
 
-import useSAML from "@/lib/swr/use-saml";
+import useSAML from "@/shared/utils/swr/use-saml";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@/shared/ui/dialog";
 
 interface SSOEnforcementToggleProps {
   teamId: string;

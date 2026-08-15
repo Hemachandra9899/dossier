@@ -1,17 +1,32 @@
-export function AccessFormTheme(_props: any) { return null; }
-export function AccessFormThemeProvider({ children }: any) { return children; }
-export function createAccessFormTheme(_params?: any) {
-  return {
-    backgroundColor: "#ffffff",
-    textColor: "#000000",
-    controlBgColor: "#ffffff",
-    controlBorderColor: "#cccccc",
-    controlPlaceholderColor: "#999999",
-    controlBorderStrongColor: "#666666",
-    subtleTextColor: "#666666",
-    controlIconColor: "#666666",
-    ctaBgColor: "#000000",
-    ctaTextColor: "#ffffff",
-  } as any;
+import { createContext, useContext } from "react";
+import type { ReactNode } from "react";
+
+import { createAdaptiveSurfacePalette } from "@/shared/utils/utils/create-adaptive-surface-palette";
+
+export type AccessFormTheme = ReturnType<typeof createAdaptiveSurfacePalette>;
+
+const defaultTheme = createAdaptiveSurfacePalette(undefined);
+
+const AccessFormThemeContext = createContext<AccessFormTheme>(defaultTheme);
+
+export function createAccessFormTheme(accentColor: string | null | undefined) {
+  return createAdaptiveSurfacePalette(accentColor || "#000000");
 }
-export default AccessFormTheme;
+
+export function AccessFormThemeProvider({
+  value,
+  children,
+}: {
+  value: AccessFormTheme;
+  children: ReactNode;
+}) {
+  return (
+    <AccessFormThemeContext.Provider value={value}>
+      {children}
+    </AccessFormThemeContext.Provider>
+  );
+}
+
+export function useAccessFormTheme() {
+  return useContext(AccessFormThemeContext);
+}

@@ -7,7 +7,7 @@ import { S3Store } from "@tus/s3-store";
 import type { Upload } from "@tus/server";
 import type { Readable } from "stream";
 
-import { getFeatureFlags } from "@/lib/featureFlags";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
 
 /**
  * Team-aware S3Store that routes uploads to different S3 buckets

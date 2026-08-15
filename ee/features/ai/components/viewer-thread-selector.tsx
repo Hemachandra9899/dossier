@@ -18,9 +18,9 @@ import {
 } from "lucide-react";
 import useSWR from "swr";
 
-import { cn, fetcher } from "@/lib/utils";
+import { cn, fetcher } from "@/shared/utils/utils";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +28,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/shared/ui/dropdown-menu";
 
 interface Chat {
   id: string;

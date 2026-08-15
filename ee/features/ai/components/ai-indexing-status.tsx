@@ -4,9 +4,9 @@ import { useEffect } from "react";
 
 import { CheckCircle, Loader2, XCircle } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/utils/utils";
 
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "@/shared/ui/progress";
 
 import { useAIIndexingStatus } from "../hooks/use-ai-indexing-status";
 

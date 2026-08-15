@@ -1,4 +1,4 @@
-import { sendEmail } from "@/lib/resend";
+import { sendEmail } from "@/shared/utils/resend";
 
 import DataroomViewerInvitation from "@/ee/features/dataroom-invitations/emails/components/dataroom-viewer-invitation";
 

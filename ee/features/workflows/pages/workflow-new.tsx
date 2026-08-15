@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { toast } from "sonner";
 import useSWR from "swr";
-import { fetcher } from "@/lib/utils";
-import AppLayout from "@/components/layouts/app";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { fetcher } from "@/shared/utils/utils";
+import AppLayout from "@/shared/ui/layouts/app";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { Textarea } from "@/shared/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/shared/ui/select";
 
 interface Domain {
   id: string;

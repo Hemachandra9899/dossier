@@ -1,7 +1,7 @@
 import { OpenAIResponsesProviderOptions, openai } from "@ai-sdk/openai";
 import { generateText, streamText } from "ai";
 
-import prisma from "@/lib/prisma";
+import prisma from "@/platform/db";
 
 interface SendMessageOptions {
   chatId: string;

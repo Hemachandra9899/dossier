@@ -6,8 +6,8 @@ import { toast } from "sonner";
 
 import AccessForm, {
   DEFAULT_ACCESS_FORM_TYPE,
-} from "@/components/view/access-form";
-import EmailVerificationMessage from "@/components/view/access-form/email-verification-form";
+} from "@/shared/ui/view/access-form";
+import EmailVerificationMessage from "@/shared/ui/view/access-form/email-verification-form";
 
 interface WorkflowAccessViewProps {
   entryLinkId: string;

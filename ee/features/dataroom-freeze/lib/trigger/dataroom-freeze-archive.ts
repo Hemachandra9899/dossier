@@ -12,11 +12,11 @@ import Bottleneck from "bottleneck";
 import { createHash } from "node:crypto";
 import { Readable, Transform } from "node:stream";
 
-import { getLambdaClientForTeam } from "@/lib/files/aws-client";
-import { parseS3PresignedUrl } from "@/lib/files/bulk-download-presign";
-import prisma from "@/lib/prisma";
-import { getViewPageDuration, getViewUserAgent } from "@/lib/tinybird";
-import { nanoid } from "@/lib/utils";
+import { getLambdaClientForTeam } from "@/shared/utils/files/aws-client";
+import { parseS3PresignedUrl } from "@/shared/utils/files/bulk-download-presign";
+import prisma from "@/platform/db";
+import { getViewPageDuration, getViewUserAgent } from "@/shared/utils/tinybird";
+import { nanoid } from "@/shared/utils/utils";
 
 const MAX_FILES_PER_BATCH = 500;
 const MAX_ZIP_SIZE_BYTES = 500 * 1024 * 1024;
