@@ -18,7 +18,6 @@ export const sendOtpVerificationEmail = async (
       to: email,
       subject: `${code} is your verification code`,
       react: emailTemplate,
-      test: process.env.NODE_ENV === "development",
       verify: true,
     });
   } catch (e) {

@@ -47,17 +47,20 @@ export const sendEmail = async ({
   const html = await render(react);
   const plainText = toPlainText(html);
 
+  const defaultFrom =
+    process.env.RESEND_FROM_EMAIL || "Dossier <onboarding@resend.dev>";
+
   const fromAddress =
     from ??
-    (marketing
-      ? "Marc from Papermark <marc@updates.papermark.com>"
-      : system
-        ? "Papermark <system@papermark.com>"
-        : verify
-          ? "Papermark <system@verify.papermark.com>"
-          : !!scheduledAt
-            ? "Marc Seitz <marc@papermark.com>"
-            : "Marc from Papermark <marc@papermark.com>");
+    (process.env.RESEND_FROM_EMAIL
+      ? process.env.RESEND_FROM_EMAIL
+      : marketing
+        ? "Dossier <onboarding@resend.dev>"
+        : system
+          ? "Dossier <onboarding@resend.dev>"
+          : verify
+            ? "Dossier <onboarding@resend.dev>"
+            : defaultFrom);
 
   try {
     const { data, error } = await resend.emails.send(
