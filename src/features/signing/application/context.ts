@@ -10,8 +10,16 @@ import type { SigningProvider } from "../providers/signing-provider";
 import { s3Storage } from "@/infrastructure/storage";
 import { signedArtifactStorage, SignedArtifactStorage } from "@/infrastructure/storage/signed-artifact-storage";
 import { getFile } from "@/shared/utils/files/get-file";
+import { sendEmail } from "@/shared/utils/resend";
 
 export type ProviderEventMapper = (event: string) => any;
+
+export type EmailDeliverer = (input: {
+  to: string;
+  subject: string;
+  react: any;
+  system?: boolean;
+}) => Promise<unknown>;
 
 export interface SigningContext {
   requests: SignatureRequestRepository;
@@ -23,6 +31,7 @@ export interface SigningContext {
   storage: SignedArtifactStorage;
   artifactMirror: any;
   getDocumentFileBytes: (input: { file: string; storageType: any }) => Promise<Buffer>;
+  deliverEmail: EmailDeliverer;
   logger: {
     info: (...args: any[]) => void;
     warn: (...args: any[]) => void;
@@ -84,6 +93,7 @@ export function createSigningContext(overrides?: Partial<SigningContext>): Signi
     storage,
     artifactMirror: null,
     getDocumentFileBytes,
+    deliverEmail: sendEmail,
     logger,
   };
 }

@@ -39,3 +39,24 @@ export class SigningValidationError extends SigningError {
     this.name = "SigningValidationError";
   }
 }
+
+export type SigningSendErrorCode =
+  | "SIGNATURE_FIELDS_REQUIRED"
+  | "SIGNATURE_REQUIRED";
+
+/** Send-time validation failed against the provider envelope (409). */
+export class SigningSendError extends SigningError {
+  code: SigningSendErrorCode;
+  recipients: string[];
+
+  constructor(
+    code: SigningSendErrorCode,
+    message: string,
+    recipients: string[],
+  ) {
+    super(message);
+    this.name = "SigningSendError";
+    this.code = code;
+    this.recipients = recipients;
+  }
+}

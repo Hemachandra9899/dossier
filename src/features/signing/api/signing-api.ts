@@ -110,11 +110,15 @@ export interface RecipientAccessTokenDTO {
 
 export class SigningApiError extends Error {
   status: number;
+  code?: string;
+  recipients?: string[];
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, code?: string, recipients?: string[]) {
     super(message);
     this.name = "SigningApiError";
     this.status = status;
+    this.code = code;
+    this.recipients = recipients;
   }
 }
 
@@ -143,13 +147,21 @@ async function request<T>(
 
   if (!response.ok) {
     let message = "Something went wrong. Please try again.";
+    let code: string | undefined;
+    let recipients: string[] | undefined;
     try {
-      const body = (await response.json()) as { message?: string };
+      const body = (await response.json()) as {
+        message?: string;
+        error?: string;
+        recipients?: string[];
+      };
       if (body.message) message = body.message;
+      code = body.error;
+      recipients = body.recipients;
     } catch {
       // keep the fallback
     }
-    throw new SigningApiError(message, response.status);
+    throw new SigningApiError(message, response.status, code, recipients);
   }
 
   return (await response.json()) as T;
@@ -190,6 +202,27 @@ export const signingApi = {
     );
   },
 
+  createDraft(input: {
+    teamId: string;
+    documentId: string;
+    recipients: RecipientInput[];
+    expiresAt?: string | null;
+    dossierFileId?: string | null;
+  }) {
+    return request<{ request: RequestDTO }>(
+      `/api/teams/${input.teamId}/signature-requests`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          documentId: input.documentId,
+          recipients: input.recipients,
+          expiresAt: input.expiresAt ?? null,
+          dossierFileId: input.dossierFileId ?? null,
+        }),
+      },
+    );
+  },
+
   createRequest(input: {
     teamId: string;
     documentId: string;
@@ -210,6 +243,20 @@ export const signingApi = {
           dossierFileId: input.dossierFileId ?? null,
         }),
       },
+    );
+  },
+
+  createRequestEditorSession(input: { teamId: string; requestId: string }) {
+    return request<{ session: EditorSessionDTO }>(
+      `/api/teams/${input.teamId}/signature-requests/${input.requestId}/editor-session`,
+      { method: "POST" },
+    );
+  },
+
+  sendRequest(input: { teamId: string; requestId: string }) {
+    return request<{ request: RequestDTO }>(
+      `/api/teams/${input.teamId}/signature-requests/${input.requestId}/send`,
+      { method: "POST" },
     );
   },
 

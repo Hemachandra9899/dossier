@@ -69,7 +69,7 @@ const authoringFeatures = {
     allowConfigureEnvelopeTitle: false,
     allowUploadAndRecipientStep: false,
     allowAddFieldsStep: true,
-    allowPreviewStep: false,
+    allowPreviewStep: true,
     minimizeLeftSidebar: true,
   },
   settings: null,

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/router";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -15,6 +16,7 @@ import {
   Download,
   AlertCircle,
   ExternalLink,
+  PenLine,
 } from "lucide-react";
 
 import { Button } from "@/shared/ui/button";
@@ -57,6 +59,7 @@ const ACTIVITY_LABELS: Record<string, string> = {
 };
 
 export function RequestManagement({ teamId, requestId, onStateChange }: RequestManagementProps) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { isCopied, copyToClipboard } = useCopyToClipboard({});
   const [copiedRecipientId, setCopiedRecipientId] = useState<string | null>(null);
@@ -82,6 +85,11 @@ export function RequestManagement({ teamId, requestId, onStateChange }: RequestM
   const remindMutation = useMutation(remindSignatureRequestOptions(queryClient));
 
   const request = requestQuery.data?.request;
+
+  const isEditable =
+    request?.status === "DRAFT" ||
+    request?.status === "PREPARING" ||
+    request?.status === "READY";
 
   if (requestQuery.isError) {
     return (
@@ -176,7 +184,18 @@ export function RequestManagement({ teamId, requestId, onStateChange }: RequestM
               <CardTitle className="text-xl font-bold tracking-tight">Signature Request</CardTitle>
               <CardDescription>Manage your document signing workflow.</CardDescription>
             </div>
-            <SignatureStatusBadge status={request.status} />
+            <div className="flex items-center gap-2">
+              {isEditable && (
+                <Button
+                  size="sm"
+                  onClick={() => void router.push(`/signing/prepare/${request.id}`)}
+                >
+                  <PenLine className="h-4 w-4 mr-1.5" />
+                  {request.status === "READY" ? "Preview & send" : "Continue preparing"}
+                </Button>
+              )}
+              <SignatureStatusBadge status={request.status} />
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Signers list */}

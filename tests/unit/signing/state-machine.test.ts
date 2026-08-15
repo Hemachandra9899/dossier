@@ -18,6 +18,9 @@ describe("signing state machine", () => {
     assert.equal(canTransitionTo("SIGNING", "PARTIALLY_SIGNED"), true);
     assert.equal(canTransitionTo("PARTIALLY_SIGNED", "COMPLETED"), true);
     assert.equal(canTransitionTo("SIGNING", "COMPLETED"), true);
+    // Send shortcuts: an author can send straight from a draft.
+    assert.equal(canTransitionTo("DRAFT", "READY"), true);
+    assert.equal(canTransitionTo("PREPARING", "SENT"), true);
   });
 
   it("allows provider-forced terminal transitions", () => {
@@ -41,9 +44,9 @@ describe("signing state machine", () => {
   });
 
   it("rejects impossible jumps", () => {
-    assert.equal(canTransitionTo("DRAFT", "READY"), false);
     assert.equal(canTransitionTo("READY", "COMPLETED"), false);
     assert.equal(canTransitionTo("SENT", "COMPLETED"), false);
+    assert.equal(canTransitionTo("DRAFT", "SENT"), false);
   });
 
   it("assertCanTransitionTo throws SigningStateError on invalid moves", () => {

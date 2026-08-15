@@ -9,15 +9,18 @@ import type { SigningContext } from "@/features/signing/application/context";
 import { createSigningContext } from "@/features/signing/application/context";
 import type {
   ProviderEditorSession,
+  ProviderEnvelope,
   ProviderSigningDocument,
   ProviderSigningSession,
   ProviderSignedArtifact,
   ProviderTemplate,
+  SendEnvelopeInput,
+  SentEnvelopeRecipient,
   SigningProvider,
+  SyncEnvelopeRecipientsInput,
 } from "@/features/signing/providers/signing-provider";
 import { mapDocumensoEventToStatus } from "@/features/signing/providers/documenso/mapper";
 import type { SignedArtifactStorage } from "@/platform/storage";
-import { testPrisma } from "./test-db";
 
 const silentLogger: SigningContext["logger"] = {
   info: () => {},
@@ -77,6 +80,18 @@ export class FakeSigningProvider implements SigningProvider {
   failCreateTemplate = false;
   failCreateSigningDocument = false;
   failGetSignedArtifact = false;
+
+  envelopeRecipients: Array<{ id: number; email: string; name: string }> = [];
+  envelopeFields: Array<{ recipientId: number | string; type: string }> = [];
+  sentEnvelopes: Array<{
+    providerTemplateId: string;
+    recipients: Array<{
+      providerRecipientId: string;
+      email: string;
+      name: string | null;
+      externalId: string;
+    }>;
+  }> = [];
 
   async createTemplate(input: {
     externalId: string;
@@ -148,23 +163,62 @@ export class FakeSigningProvider implements SigningProvider {
   async cancelRequest(input: { providerEnvelopeId: string }): Promise<void> {
     this.cancelRequestCalls.push(input.providerEnvelopeId);
   }
+
+  async syncRecipientsToEnvelope(
+    input: SyncEnvelopeRecipientsInput,
+  ): Promise<Array<{ email: string; providerRecipientId: string }>> {
+    this.envelopeRecipients = input.recipients.map((r, index) => ({
+      id: index + 1,
+      email: r.email,
+      name: r.name ?? "",
+    }));
+    return input.recipients.map((r, index) => ({
+      email: r.email,
+      providerRecipientId: String(index + 1),
+    }));
+  }
+
+  async getEnvelope(): Promise<ProviderEnvelope> {
+    return {
+      type: "TEMPLATE",
+      status: "DRAFT",
+      recipients: this.envelopeRecipients,
+      fields: this.envelopeFields,
+    };
+  }
+
+  async sendEnvelope(input: SendEnvelopeInput): Promise<SentEnvelopeRecipient[]> {
+    this.sentEnvelopes.push(input);
+    return input.recipients.map((recipient, index) => ({
+      providerRecipientId: recipient.providerRecipientId,
+      providerDocumentId: index + 1,
+      token: `fake_sign_token_${recipient.providerRecipientId}`,
+    }));
+  }
 }
 
 export class FakeArtifactStorage implements SignedArtifactStorage {
-  uploads: Array<{ requestId: string; fileName: string; body: Buffer }> = [];
+  uploads: Array<{ teamId: string; requestId: string; bytes: Buffer }> = [];
 
-  async upload(input: {
-    teamId: string;
-    requestId: string;
-    fileName: string;
-    body: Buffer;
-  }): Promise<{ storageKey: string }> {
-    this.uploads.push({
-      requestId: input.requestId,
-      fileName: input.fileName,
-      body: input.body,
-    });
-    return { storageKey: `s3://fake-signed/${input.requestId}.pdf` };
+  async putSignedPdf(
+    teamId: string,
+    requestId: string,
+    bytes: Buffer | Uint8Array,
+  ): Promise<string> {
+    const body = Buffer.from(bytes);
+    this.uploads.push({ teamId, requestId, bytes: body });
+    return `s3://fake-signed/${teamId}/${requestId}.pdf`;
+  }
+
+  async getSignedPdf(_teamId: string, _requestId: string): Promise<Buffer | null> {
+    return null;
+  }
+
+  async getSignedPdfDownloadUrl(
+    _teamId: string,
+    _requestId: string,
+  ): Promise<string> {
+    return "https://sign.fake.test/signed.pdf";
   }
 }
 
@@ -205,13 +259,11 @@ export function buildTestSigningContext(
       );
       await mirrorSignedArtifact(
         createSigningContext({
-          prisma: testPrisma,
           provider,
           storage,
-          getDocumentFileBytes: async () => fakeDocumentFileBytes,
+          getDocumentFileBytes: async () => Buffer.from(fakeDocumentFileBytes),
           artifactMirror: mirror,
           mapEventToStatus: mapDocumensoEventToStatus,
-          getSigningHost: () => "https://sign.fake.test",
           logger: silentLogger,
         }),
         { requestId },
@@ -220,13 +272,12 @@ export function buildTestSigningContext(
   }
 
   return createSigningContext({
-    prisma: testPrisma,
     provider,
     storage,
-    getDocumentFileBytes: async () => fakeDocumentFileBytes,
+    getDocumentFileBytes: async () => Buffer.from(fakeDocumentFileBytes),
+    deliverEmail: async () => ({ id: "mock-email-id" }),
     artifactMirror: mirror,
     mapEventToStatus: mapDocumensoEventToStatus,
-    getSigningHost: () => "https://sign.fake.test",
     logger: silentLogger,
   });
 }

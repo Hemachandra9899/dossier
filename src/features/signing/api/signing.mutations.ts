@@ -11,6 +11,51 @@ import type { QueryClient } from "@tanstack/react-query";
 import { signingApi } from "./signing-api";
 import { signingKeys } from "./signing.keys";
 
+export function createSignatureDraftOptions(queryClient: QueryClient) {
+  return {
+    mutationFn: signingApi.createDraft,
+    onSuccess: (
+      _result: { request: { id: string; documentId: string } },
+      input: Parameters<typeof signingApi.createDraft>[0],
+    ) => {
+      queryClient.invalidateQueries({
+        queryKey: signingKeys.requests.activeForDocument(
+          input.teamId,
+          input.documentId,
+        ),
+      });
+    },
+  };
+}
+
+export function createRequestEditorSessionOptions() {
+  // Editor tokens are one-shot credentials; never cache them.
+  return {
+    mutationFn: signingApi.createRequestEditorSession,
+  };
+}
+
+export function sendSignatureRequestOptions(queryClient: QueryClient) {
+  return {
+    mutationFn: signingApi.sendRequest,
+    onSuccess: (
+      data: { request: { id: string; documentId: string } },
+      input: Parameters<typeof signingApi.sendRequest>[0],
+    ) => {
+      queryClient.setQueryData(
+        signingKeys.requests.detail(input.teamId, input.requestId),
+        data,
+      );
+      queryClient.invalidateQueries({
+        queryKey: signingKeys.requests.activeForDocument(
+          input.teamId,
+          data.request.documentId,
+        ),
+      });
+    },
+  };
+}
+
 export function createSignatureRequestOptions(queryClient: QueryClient) {
   return {
     mutationFn: signingApi.createRequest,
