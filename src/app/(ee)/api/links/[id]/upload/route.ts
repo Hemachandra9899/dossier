@@ -4,6 +4,7 @@ import { runs } from "@trigger.dev/sdk";
 import { waitUntil } from "@vercel/functions";
 
 import { processDocument } from "@/shared/utils/api/documents/process-document";
+import { triggerDocumentProcessing } from "@/shared/utils/api/documents/trigger-document-processing";
 import { verifyDataroomSession } from "@/shared/utils/auth/dataroom-auth";
 import { DocumentData } from "@/shared/utils/documents/create-document";
 import prisma from "@/platform/db";
@@ -439,6 +440,30 @@ export async function POST(
 
       return { newDataroomDocument, taskUpdated, dossierFileId, analysisId, documentVersionId };
     });
+
+    // Initial uploads must produce page previews: enqueue the conversion task
+    // for page-based documents (the created version starts hasPages=false).
+    const initialVersion = document.versions[0];
+    if (initialVersion) {
+      try {
+        await triggerDocumentProcessing({
+          teamId: link.teamId,
+          documentId: document.id,
+          documentVersionId: initialVersion.id,
+          versionNumber: initialVersion.versionNumber,
+          type: document.type,
+          plan: link.team?.plan ?? "free",
+          url: documentData.key,
+          contentType: documentData.contentType,
+          fileSize: documentData.fileSize,
+        });
+      } catch (processingErr) {
+        console.error(
+          "Failed to enqueue document processing on upload:",
+          processingErr,
+        );
+      }
+    }
 
     if (taskUpdated && dossierFileId) {
       try {

@@ -40,7 +40,7 @@ import {
 } from "@/shared/ui/dropdown-menu";
 
 import { AddToDataroomModal } from "@/shared/ui/documents/add-document-to-dataroom-modal";
-import { DocumentPreviewButton } from "@/shared/ui/documents/document-preview-button";
+import { DocumentPreviewButton } from "@/features/documents/components/preview/document-preview-button";
 import FileProcessStatusBar from "@/shared/ui/documents/file-process-status-bar";
 import { EditDataroomDocumentModal } from "./edit-dataroom-document-modal";
 import { SetUnifiedPermissionsModal } from "./groups/set-unified-permissions-modal";

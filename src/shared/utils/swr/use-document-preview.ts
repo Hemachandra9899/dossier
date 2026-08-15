@@ -1,5 +1,5 @@
 import { useTeam } from "@/features/workspace/providers/workspace-provider";
-import useSWRImmutable from "swr/immutable";
+import useSWR from "swr";
 
 import { DocumentPreviewData } from "@/shared/utils/types/document-preview";
 import { fetcher } from "@/shared/utils/utils";
@@ -11,7 +11,7 @@ export function useDocumentPreview(documentId: string, isOpen: boolean) {
     data: document,
     error,
     mutate,
-  } = useSWRImmutable<DocumentPreviewData>(
+  } = useSWR<DocumentPreviewData>(
     isOpen && currentTeamId && documentId
       ? `/api/teams/${currentTeamId}/documents/${documentId}/preview-data`
       : null,
@@ -20,6 +20,8 @@ export function useDocumentPreview(documentId: string, isOpen: boolean) {
       dedupingInterval: 10000,
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
+      revalidateOnMount: true,
+      revalidateIfStale: true,
     },
   );
 

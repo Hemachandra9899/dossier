@@ -1,5 +1,6 @@
 import { DocumentStorageType } from "@prisma/client";
 import prisma from "@/platform/db";
+import { initialHasPages } from "@/shared/utils/documents/document-processing";
 import { nanoid } from "@/shared/utils/utils";
 
 export interface ProcessDocumentData {
@@ -84,7 +85,7 @@ export async function processDocument({
           fileSize: documentData.fileSize ? BigInt(documentData.fileSize) : null,
           storageType: storageTypeEnum,
           numPages: documentData.numPages || 1,
-          hasPages: true,
+          hasPages: initialHasPages(documentData.supportedFileType),
           isPrimary: true,
         },
       },
@@ -92,9 +93,9 @@ export async function processDocument({
         ? {
             links: {
               create: {
-                linkId: nanoid(7),
+                id: nanoid(7),
                 name: "Default Link",
-                type: "DOCUMENT",
+                linkType: "DOCUMENT_LINK",
               },
             },
           }

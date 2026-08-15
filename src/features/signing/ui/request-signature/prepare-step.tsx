@@ -4,6 +4,7 @@
 
 import { AlertCircleIcon, ChevronLeftIcon } from "lucide-react";
 
+import { DocumentPreviewData } from "@/shared/utils/types/document-preview";
 import LoadingSpinner from "@/shared/ui/loading-spinner";
 import { Button } from "@/shared/ui/button";
 
@@ -15,6 +16,7 @@ export function PrepareStep({
   editorReady,
   isPreparing,
   error,
+  previewData,
   onEditorReady,
   onRetry,
   onBack,
@@ -24,6 +26,7 @@ export function PrepareStep({
   editorReady: boolean;
   isPreparing: boolean;
   error: string | null;
+  previewData?: DocumentPreviewData | null;
   onEditorReady: () => void;
   onRetry: () => void;
   onBack: () => void;
@@ -53,12 +56,51 @@ export function PrepareStep({
   }
 
   if (!session || isPreparing) {
+    const previewImage = previewData?.pages?.[0]?.file;
+    const previewPdf =
+      previewData?.fileType === "pdf" && previewData.file
+        ? previewData.file
+        : undefined;
+
     return (
       <div className="flex h-full min-h-[600px] flex-col items-center justify-center gap-3 rounded-lg border">
-        <LoadingSpinner className="h-8 w-8" />
-        <p className="text-sm text-muted-foreground">
-          {isPreparing ? "Preparing document…" : "Loading signature editor…"}
-        </p>
+        {previewImage ? (
+          <div className="relative w-full max-w-md overflow-hidden rounded-lg border">
+            <img
+              src={previewImage}
+              alt={previewData.documentName}
+              className="max-h-[420px] w-full object-contain"
+              draggable={false}
+            />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40">
+              <LoadingSpinner className="h-8 w-8" />
+              <p className="text-sm text-white">
+                {isPreparing ? "Preparing document…" : "Loading signature editor…"}
+              </p>
+            </div>
+          </div>
+        ) : previewPdf ? (
+          <div className="relative w-full max-w-md overflow-hidden rounded-lg border">
+            <iframe
+              src={`${previewPdf}#toolbar=0&navpanes=0`}
+              title={previewData?.documentName || "PDF document"}
+              className="h-[420px] w-full border-0 bg-white"
+            />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/40">
+              <LoadingSpinner className="h-8 w-8" />
+              <p className="text-sm text-white">
+                {isPreparing ? "Preparing document…" : "Loading signature editor…"}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <LoadingSpinner className="h-8 w-8" />
+            <p className="text-sm text-muted-foreground">
+              {isPreparing ? "Preparing document…" : "Loading signature editor…"}
+            </p>
+          </>
+        )}
       </div>
     );
   }

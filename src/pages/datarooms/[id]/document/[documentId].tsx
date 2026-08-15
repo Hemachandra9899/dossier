@@ -13,7 +13,7 @@ import { useDataroomDocumentOverview } from "@/shared/utils/swr/use-dataroom-doc
 import { useDocumentLinks } from "@/shared/utils/swr/use-document";
 
 import DocumentHeader from "@/shared/ui/documents/document-header";
-import { DocumentPreviewButton } from "@/shared/ui/documents/document-preview-button";
+import { DocumentPreviewButton } from "@/features/documents/components/preview/document-preview-button";
 import LinkDocumentIndicator from "@/shared/ui/documents/link-document-indicator";
 import NotionAccessibilityIndicator from "@/shared/ui/documents/notion-accessibility-indicator";
 import AppLayout from "@/shared/ui/layouts/app";

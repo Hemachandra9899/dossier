@@ -31,7 +31,7 @@ import { isDossierSigningEnabled } from "@/features/signing/config";
 import { RequestSignatureDialog } from "@/features/signing/ui/request-signature/request-signature-dialog";
 
 import { AddToDataroomModal } from "@/shared/ui/documents/add-document-to-dataroom-modal";
-import { DocumentPreviewModal } from "@/shared/ui/documents/document-preview-modal";
+import { DocumentPreviewModal } from "@/features/documents/components/preview/document-preview-modal";
 import { MoveToFolderModal } from "@/shared/ui/documents/move-folder-modal";
 import BarChart from "@/shared/ui/shared/icons/bar-chart";
 import { Button } from "@/shared/ui/button";

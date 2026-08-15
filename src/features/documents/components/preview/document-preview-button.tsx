@@ -1,7 +1,8 @@
 import { useState } from "react";
 
-import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { EyeIcon } from "lucide-react";
 
+import { shouldHavePages } from "@/shared/utils/documents/document-processing";
 import { cn } from "@/shared/utils/utils";
 
 import { Button } from "@/shared/ui/button";
@@ -38,12 +39,16 @@ export function DocumentPreviewButton({
 }: DocumentPreviewButtonProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-  // Check if document type supports preview
+  // Check if document type supports preview.
   const supportsPreview = () => {
     if (!primaryVersion) return false;
 
     // Support documents with pages (PDFs, docs, slides, etc.)
     if (primaryVersion.hasPages) return true;
+
+    // Raw PDFs can still be previewed inline while pages are converting
+    // (or as a fallback when no page images exist).
+    if (primaryVersion.type === "pdf") return true;
 
     // Support image documents
     if (primaryVersion.type === "image") return true;
@@ -130,9 +135,5 @@ export function isDocumentProcessing(primaryVersion?: {
   if (!primaryVersion) return false;
 
   // Check if document type should have pages but doesn't
-  const shouldHavePages = ["pdf", "docs", "slides", "cad"].includes(
-    primaryVersion.type || "",
-  );
-
-  return shouldHavePages && !primaryVersion.hasPages;
+  return shouldHavePages(primaryVersion.type) && !primaryVersion.hasPages;
 }

@@ -1,3 +1,5 @@
+import { DocumentStorageType } from "@prisma/client";
+
 import { DocumentRepository } from "../server/document.repository";
 import { ProviderEventRepository } from "../server/provider-event.repository";
 import { SignatureRequestRepository } from "../server/signature-request.repository";
@@ -7,6 +9,7 @@ import { mapDocumensoEventToStatus } from "../providers/documenso/mapper";
 import type { SigningProvider } from "../providers/signing-provider";
 import { s3Storage } from "@/infrastructure/storage";
 import { signedArtifactStorage, SignedArtifactStorage } from "@/infrastructure/storage/signed-artifact-storage";
+import { getFile } from "@/shared/utils/files/get-file";
 
 export type ProviderEventMapper = (event: string) => any;
 
@@ -39,9 +42,28 @@ export function createSigningContext(overrides?: Partial<SigningContext>): Signi
   const getDocumentFileBytes =
     overrides?.getDocumentFileBytes ??
     (async (input: { file: string; storageType: any }) => {
-      const buffer = await s3Storage.getBuffer(input.file);
+      const { file, storageType } = input;
+
+      // VERCEL_BLOB files are not reachable through the S3 client; resolve a
+      // (server-side) download URL and stream the bytes instead.
+      if (storageType === DocumentStorageType.VERCEL_BLOB) {
+        const url = await getFile({
+          type: DocumentStorageType.VERCEL_BLOB,
+          data: file,
+          isDownload: true,
+        });
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(
+            `Failed to download document for signing: ${response.status}`,
+          );
+        }
+        return Buffer.from(await response.arrayBuffer());
+      }
+
+      const buffer = await s3Storage.getBuffer(file);
       if (!buffer) {
-        throw new Error(`File buffer not found in storage for key ${input.file}`);
+        throw new Error(`File buffer not found in storage for key ${file}`);
       }
       return buffer;
     });

@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@/shared/ui/dialog";
 import LoadingSpinner from "@/shared/ui/loading-spinner";
+import { useDocumentPreview } from "@/shared/utils/swr/use-document-preview";
 import { useCopyToClipboard } from "@/shared/utils/utils/use-copy-to-clipboard";
 
 import {
@@ -95,6 +96,7 @@ function RequestSignatureDialogInner({
   dossierFileId?: string | null;
 }) {
   const { state, dispatch } = useRequestSignature();
+  const { document: previewData } = useDocumentPreview(documentId, open);
 
   const [activeRequest, setActiveRequest] = useState<
     RequestDTO | null | undefined
@@ -260,6 +262,7 @@ function RequestSignatureDialogInner({
                 editorReady={state.draft.editorReady}
                 isPreparing={state.isCreatingTemplate}
                 error={state.error}
+                previewData={previewData}
                 onEditorReady={() =>
                   dispatch({ type: "SET_EDITOR_READY", ready: true })
                 }

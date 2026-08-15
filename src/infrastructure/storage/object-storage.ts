@@ -27,8 +27,18 @@ export interface ObjectStorage {
   getBuffer(key: string, bucket?: string): Promise<Buffer | null>;
   get(key: string, bucket?: string): Promise<GetObjectOutput | null>;
   head(key: string, bucket?: string): Promise<HeadObjectOutput>;
-  getDownloadUrl(key: string, expiresInSeconds?: number, bucket?: string): Promise<string>;
-  getSignedUrl(key: string, expiresInSeconds?: number, bucket?: string): Promise<string>;
+  getDownloadUrl(
+    key: string,
+    expiresInSeconds?: number,
+    bucket?: string,
+    responseContentDisposition?: string,
+  ): Promise<string>;
+  getSignedUrl(
+    key: string,
+    expiresInSeconds?: number,
+    bucket?: string,
+    responseContentDisposition?: string,
+  ): Promise<string>;
   getPresignedPutUrl(
     key: string,
     contentType: string,
