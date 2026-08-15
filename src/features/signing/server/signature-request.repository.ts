@@ -168,14 +168,17 @@ export class SignatureRequestRepository {
     });
   }
 
-  async updateRecipientProviderIds(requestId: string, recipientMap: Record<string, { providerRecipientId?: string; providerDocumentId?: number }>) {
-    const updates = Object.entries(recipientMap).map(([id, data]) =>
-      prisma.signatureRecipient.update({
-        where: { id },
-        data,
-      })
-    );
-    return prisma.$transaction(updates);
+  async updateRecipientProviderIds(
+    recipientId: string,
+    data: { providerRecipientId?: string; providerDocumentId?: number },
+  ) {
+    return prisma.signatureRecipient.update({
+      where: { id: recipientId },
+      data: {
+        providerRecipientId: data.providerRecipientId,
+        providerDocumentId: data.providerDocumentId,
+      },
+    });
   }
 
   async updateRecipientStatus(recipientId: string, status: any, extra: any = {}) {

@@ -6,12 +6,14 @@ import { z } from "zod";
 
 import { SigningValidationError } from "./signing-errors";
 
-export const signatureRecipientInputSchema = z.object({
-  name: z.string().max(255).trim().nullable().optional(),
-  email: z.string().email("Invalid recipient email.").max(255),
-  phone: z.string().max(50).nullable().optional(),
-  signingOrder: z.number().int().positive().default(1),
-});
+export const signatureRecipientInputSchema = z
+  .object({
+    name: z.string().max(255).trim().nullish(),
+    email: z.string().email("Invalid recipient email.").max(255),
+    phone: z.string().max(50).nullish(),
+    signingOrder: z.coerce.number().int().positive().default(1),
+  })
+  .passthrough();
 
 export const signatureRecipientsInputSchema = z
   .array(signatureRecipientInputSchema)

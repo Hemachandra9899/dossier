@@ -67,11 +67,11 @@ export async function deliverSignatureRequest(
       to: recipient.email,
       subject: `Review and sign: ${documentName}`,
       react: SignatureInvitation({
-        senderName: (request as any).senderName ?? "A user",
-        senderEmail: (request as any).senderEmail ?? "noreply@dossier.com",
-        documentName: (request as any).document.name,
+        senderName: senderName,
+        senderEmail: senderEmail,
+        documentName: documentName,
         url: signingUrl,
-        customMessage: (request as any).customMessage ?? undefined,
+        customMessage: undefined,
       }) as any,
       system: true,
     });

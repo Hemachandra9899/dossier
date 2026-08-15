@@ -15,8 +15,15 @@ const bodySchema = z.object({
   documentId: z.string().min(1),
   templateId: z.string().min(1),
   recipients: signatureRecipientsInputSchema,
-  expiresAt: z.string().datetime().nullable().optional(),
-  dossierFileId: z.string().optional(),
+  expiresAt: z
+    .union([z.string(), z.date()])
+    .nullish()
+    .transform((val) => {
+      if (!val) return null;
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? null : d.toISOString();
+    }),
+  dossierFileId: z.string().nullish(),
 });
 
 export default async function handle(
@@ -38,7 +45,16 @@ export default async function handle(
   try {
     const parsed = bodySchema.safeParse(req.body);
     if (!parsed.success) {
-      return res.status(400).json({ message: "Invalid request payload." });
+      console.error(
+        "[signature-requests.POST] Validation error:",
+        JSON.stringify(parsed.error.format(), null, 2),
+        "Body was:",
+        req.body,
+      );
+      return res.status(400).json({
+        message: "Invalid request payload.",
+        errors: parsed.error.format(),
+      });
     }
 
     const result = await createRequest(createSigningContext(), {

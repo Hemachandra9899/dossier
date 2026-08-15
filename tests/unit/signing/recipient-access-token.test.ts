@@ -116,15 +116,26 @@ describe("recipient access token", () => {
     );
   });
 
-  it("throws when the verification secret is not configured", () => {
+  it("throws when the verification secret is not configured (in production)", () => {
+    const originalEnv = process.env.NODE_ENV;
+    const originalSecret = process.env.NEXT_PRIVATE_VERIFICATION_SECRET;
+    // Simulate production environment where the fallback is not allowed
+    (process.env as any).NODE_ENV = "production";
     delete process.env.NEXT_PRIVATE_VERIFICATION_SECRET;
-    assert.throws(() =>
-      mintRecipientAccessToken({
-        signatureRequestId: "req_1",
-        recipientId: "rec_1",
-        expiresAt: new Date(Date.now() + 60_000),
-      }),
-    );
+    try {
+      assert.throws(() =>
+        mintRecipientAccessToken({
+          signatureRequestId: "req_1",
+          recipientId: "rec_1",
+          expiresAt: new Date(Date.now() + 60_000),
+        }),
+      );
+    } finally {
+      (process.env as any).NODE_ENV = originalEnv;
+      if (originalSecret !== undefined) {
+        process.env.NEXT_PRIVATE_VERIFICATION_SECRET = originalSecret;
+      }
+    }
   });
 });
 

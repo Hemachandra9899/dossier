@@ -24,12 +24,23 @@ export const RECIPIENT_ACCESS_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 /** HttpOnly cookie lifetime after the invitation token is exchanged. */
 export const RECIPIENT_ACCESS_COOKIE_TTL_MS = 12 * 60 * 60 * 1000;
 
+const DEV_FALLBACK_SECRET =
+  "dossier-local-dev-signing-secret-do-not-use-in-production";
+
 function getSigningSecret(): string {
   const secret = process.env.NEXT_PRIVATE_VERIFICATION_SECRET;
   if (!secret) {
-    throw new Error(
-      "NEXT_PRIVATE_VERIFICATION_SECRET is required for signing sessions.",
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "NEXT_PRIVATE_VERIFICATION_SECRET is required for signing sessions.",
+      );
+    }
+    // In local dev, use a stable fallback so the server doesn't crash when
+    // the env var is not yet configured.
+    console.warn(
+      "[signing] NEXT_PRIVATE_VERIFICATION_SECRET is not set — using insecure dev fallback. Set it in .env for production.",
     );
+    return DEV_FALLBACK_SECRET;
   }
   return secret;
 }
