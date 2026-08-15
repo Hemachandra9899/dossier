@@ -12,7 +12,7 @@ import {
   SheetTitle,
 } from "@/shared/ui/sheet";
 
-import type { SigningSessionDTO } from "../signing-api";
+import type { SigningSessionDTO } from "@/features/signing/api/signing-api";
 
 const EmbedDirectTemplate = dynamic(
   () => import("@documenso/embed-react").then((mod) => mod.EmbedDirectTemplate),

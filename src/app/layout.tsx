@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 
 import { buildMetadata } from "@/shared/config/metadata";
 import { CoreProviders } from "@/shared/providers/core-providers";
+import { QueryProvider } from "@/platform/query/query-provider";
 
 import "@/styles/globals.css";
 
@@ -17,7 +18,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <CoreProviders>{children}</CoreProviders>
+        <CoreProviders>
+          <QueryProvider>{children}</QueryProvider>
+        </CoreProviders>
       </body>
     </html>
   );

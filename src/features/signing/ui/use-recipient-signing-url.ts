@@ -6,7 +6,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { buildRecipientSigningUrl, signingApi } from "./signing-api";
+import {
+  buildRecipientSigningUrl,
+  signingApi,
+} from "@/features/signing/api/signing-api";
 
 export function useRecipientSigningUrl(input: {
   teamId: string;

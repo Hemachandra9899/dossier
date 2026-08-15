@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
 
-import { buildRecipientSigningUrl } from "@/features/signing/ui/signing-api";
+import { buildRecipientSigningUrl } from "@/features/signing/api/signing-api";
 
 const originalMarketingUrl = process.env.NEXT_PUBLIC_MARKETING_URL;
 

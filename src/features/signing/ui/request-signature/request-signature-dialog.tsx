@@ -6,6 +6,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { isDossierSigningEnabled } from "@/features/signing/config";
 
@@ -22,10 +23,13 @@ import LoadingSpinner from "@/shared/ui/loading-spinner";
 import { useDocumentPreview } from "@/shared/utils/swr/use-document-preview";
 import { useCopyToClipboard } from "@/shared/utils/utils/use-copy-to-clipboard";
 
+import { activeSignatureRequestQuery } from "@/features/signing/api/signing.queries";
+import { createSignatureRequestOptions } from "@/features/signing/api/signing.mutations";
 import {
   signingApi,
   type RequestDTO,
-} from "../signing-api";
+} from "@/features/signing/api/signing-api";
+import { canExposeSigningLink } from "@/features/signing/domain/signature-request";
 import { SignatureStatusBadge } from "../signature-status-badge";
 import { useRecipientSigningUrl } from "../use-recipient-signing-url";
 import { PrepareStep } from "./prepare-step";
@@ -98,32 +102,18 @@ function RequestSignatureDialogInner({
   const { state, dispatch } = useRequestSignature();
   const { document: previewData } = useDocumentPreview(documentId, open);
 
-  const [activeRequest, setActiveRequest] = useState<
-    RequestDTO | null | undefined
-  >(undefined);
+  // Active request lookup: staleTime 0 so reopening the dialog always reflects
+  // the current server state even if the page-level query stopped polling after
+  // a terminal state.
+  const activeRequestQuery = useQuery({
+    ...activeSignatureRequestQuery(teamId, documentId),
+    staleTime: 0,
+  });
+  const activeRequest = activeRequestQuery.data?.request;
+
   const [successRecipientId, setSuccessRecipientId] = useState<string | null>(
     null,
   );
-
-  useEffect(() => {
-    if (!open) return;
-
-    let cancelled = false;
-    setActiveRequest(undefined);
-
-    signingApi
-      .getActiveRequest({ teamId, documentId })
-      .then(({ request }) => {
-        if (!cancelled) setActiveRequest(request);
-      })
-      .catch(() => {
-        if (!cancelled) setActiveRequest(null);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [open, teamId, documentId]);
 
   const prepareDocument = useCallback(async () => {
     dispatch({ type: "SET_ERROR", message: null });
@@ -168,19 +158,12 @@ function RequestSignatureDialogInner({
     prepareDocument,
   ]);
 
-  const createRequest = async () => {
-    if (!state.draft.templateId) return;
-    dispatch({ type: "SET_ERROR", message: null });
-    dispatch({ type: "CREATING_REQUEST", value: true });
-    try {
-      const result = await signingApi.createRequest({
-        teamId,
-        documentId,
-        templateId: state.draft.templateId,
-        recipients: state.draft.recipients,
-        expiresAt: state.draft.expiresAt,
-        dossierFileId,
-      });
+  const queryClient = useQueryClient();
+  const createRequestOptions = createSignatureRequestOptions(queryClient);
+  const createRequestMutation = useMutation({
+    ...createRequestOptions,
+    onSuccess: (result, input) => {
+      createRequestOptions.onSuccess?.(result, input);
       dispatch({
         type: "SET_RESULT",
         requestId: result.requestId,
@@ -189,15 +172,28 @@ function RequestSignatureDialogInner({
       dispatch({ type: "GO_TO_STEP", step: "SUCCESS" });
       onCreated?.(result.requestId);
 
-      try {
-        const { request } = await signingApi.getRequest({
-          teamId,
-          requestId: result.requestId,
-        });
-        setSuccessRecipientId(request.recipients[0]?.id ?? null);
-      } catch {
-        setSuccessRecipientId(null);
-      }
+      signingApi
+        .getRequest({ teamId: input.teamId, requestId: result.requestId })
+        .then(({ request }) =>
+          setSuccessRecipientId(request.recipients[0]?.id ?? null),
+        )
+        .catch(() => setSuccessRecipientId(null));
+    },
+  });
+
+  const createRequest = async () => {
+    if (!state.draft.templateId) return;
+    dispatch({ type: "SET_ERROR", message: null });
+    dispatch({ type: "CREATING_REQUEST", value: true });
+    try {
+      await createRequestMutation.mutateAsync({
+        teamId,
+        documentId,
+        templateId: state.draft.templateId,
+        recipients: state.draft.recipients,
+        expiresAt: state.draft.expiresAt,
+        dossierFileId,
+      });
     } catch (error) {
       dispatch({
         type: "SET_ERROR",
@@ -319,12 +315,7 @@ function ActiveRequestSummary({
   const { isCopied, copyToClipboard } = useCopyToClipboard({});
 
   const firstRecipient = request.recipients[0];
-  const linkable =
-    request.status === "READY" ||
-    request.status === "SENT" ||
-    request.status === "VIEWED" ||
-    request.status === "SIGNING" ||
-    request.status === "PARTIALLY_SIGNED";
+  const linkable = canExposeSigningLink(request.status);
 
   const { url: signingUrl, isLoading, error } = useRecipientSigningUrl({
     teamId,

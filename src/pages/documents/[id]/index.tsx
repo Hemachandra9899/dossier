@@ -3,10 +3,10 @@ import dynamic from "next/dynamic";
 import ErrorPage from "next/error";
 
 import { Suspense, useState } from "react";
-import useSWR from "swr";
+import { useQuery } from "@tanstack/react-query";
 
 import { useTeam } from "@/features/workspace/providers/workspace-provider";
-import { signingApi } from "@/features/signing/ui/signing-api";
+import { activeSignatureRequestQuery } from "@/features/signing/api/signing.queries";
 import { RequestManagement } from "@/features/signing/ui/request-management";
 
 import { useDocumentLinks } from "@/shared/utils/swr/use-document";
@@ -89,10 +89,8 @@ export default function DocumentPage() {
   const teamInfo = useTeam();
   const teamId = teamInfo?.currentTeam?.id;
 
-  const { data: activeRequestData, mutate: refreshActiveRequest } = useSWR(
-    prismaDocument?.id && teamId ? [teamId, prismaDocument.id, "active-request"] : null,
-    ([tId, dId]) => signingApi.getActiveRequest({ teamId: tId, documentId: dId }),
-    { refreshInterval: 5000 }
+  const { data: activeRequestData, refetch: refreshActiveRequest } = useQuery(
+    activeSignatureRequestQuery(teamId, prismaDocument?.id),
   );
   const activeRequest = activeRequestData?.request;
 

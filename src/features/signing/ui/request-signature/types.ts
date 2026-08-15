@@ -1,4 +1,4 @@
-import type { RecipientInput } from "../signing-api";
+import type { RecipientInput } from "@/features/signing/api/signing-api";
 
 export type RequestSignatureStep = "RECIPIENTS" | "PREPARE" | "REVIEW" | "SUCCESS";
 
