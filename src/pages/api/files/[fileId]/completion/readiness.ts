@@ -3,11 +3,11 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import {
   requireFileAccess,
   sendAuthorizationError,
-} from "@/modules/files/server/authorization";
+} from "@/features/files/server/authorization";
 import {
   CompletionReadinessFileNotFoundError,
   getCompletionReadiness,
-} from "@/modules/completion/application/get-completion-readiness";
+} from "@/features/completion/application/get-completion-readiness";
 
 export default async function handler(
   req: NextApiRequest,

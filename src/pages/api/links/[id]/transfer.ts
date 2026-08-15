@@ -9,11 +9,11 @@ import {
   enforceDataroomMemberScope,
   enforceDocumentMemberScope,
   enforceLinkMemberScope,
-} from "@/lib/api/rbac/guard";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { decryptEncrpytedPassword } from "@/lib/utils";
+} from "@/shared/utils/api/rbac/guard";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { decryptEncrpytedPassword } from "@/shared/utils/utils";
 
 /**
  * POST /api/links/:id/transfer

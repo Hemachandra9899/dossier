@@ -2,10 +2,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth";
 
-import { revokeUserBoundTeamTokens } from "@/lib/api/auth/restricted-tokens";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { revokeUserBoundTeamTokens } from "@/shared/utils/api/auth/restricted-tokens";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 import { authOptions } from "../../auth/[...nextauth]";
 

@@ -4,9 +4,9 @@ import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl as getCloudfrontSignedUrl } from "@aws-sdk/cloudfront-signer";
 import { getSignedUrl as getS3SignedUrl } from "@aws-sdk/s3-request-presigner";
 
-import { ONE_HOUR, ONE_SECOND, TWO_MINUTES } from "@/lib/constants";
-import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
-import { log } from "@/lib/utils";
+import { ONE_HOUR, ONE_SECOND, TWO_MINUTES } from "@/shared/utils/constants";
+import { getTeamS3ClientAndConfig } from "@/shared/utils/files/aws-client";
+import { log } from "@/shared/utils/utils";
 
 export default async function handler(
   req: NextApiRequest,

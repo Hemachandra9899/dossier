@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { type HandleUploadBody, handleUpload } from "@vercel/blob/client";
 import { getServerSession } from "next-auth/next";
 
-import { CustomUser } from "@/lib/types";
+import { CustomUser } from "@/shared/utils/types";
 
 import { authOptions } from "../auth/[...nextauth]";
 

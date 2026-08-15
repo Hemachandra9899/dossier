@@ -15,16 +15,16 @@ import {
 import {
   teamPlanAllowsCustomWelcomeAndCta,
   teamPlanAllowsLayoutCustomization,
-} from "@/modules/access/team-plan-custom-messaging";
-import { validateRedirectUrl } from "@/lib/api/domains/validate-redirect-url";
-import { errorhandler } from "@/lib/errorHandler";
-import { getFeatureFlags } from "@/lib/featureFlags";
-import prisma from "@/lib/prisma";
+} from "@/features/access/team-plan-custom-messaging";
+import { validateRedirectUrl } from "@/shared/utils/api/domains/validate-redirect-url";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import prisma from "@/platform/db";
 import {
   clearCachedBrandLogo,
   writeCachedBrandLogo,
-} from "@/lib/redis/brand-logo-cache";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/redis/brand-logo-cache";
+import { CustomUser } from "@/shared/utils/types";
 
 import { authOptions } from "../../auth/[...nextauth]";
 

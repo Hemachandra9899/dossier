@@ -3,11 +3,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { View } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
-import { enforceDataroomMemberScope } from "@/lib/api/rbac/guard";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { getTotalDataroomDuration } from "@/lib/tinybird";
-import { CustomUser } from "@/lib/types";
+import { enforceDataroomMemberScope } from "@/shared/utils/api/rbac/guard";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { getTotalDataroomDuration } from "@/shared/utils/tinybird";
+import { CustomUser } from "@/shared/utils/types";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
 

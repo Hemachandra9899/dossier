@@ -4,9 +4,9 @@ import { z } from "zod";
 import {
   requireTeamMembership,
   sendAuthorizationError,
-} from "@/modules/files/server/authorization";
-import { createDossierFile } from "@/modules/files/application/create-file";
-import { getFilesBoard } from "@/modules/files/application/get-files-board";
+} from "@/features/files/server/authorization";
+import { createDossierFile } from "@/features/files/application/create-file";
+import { getFilesBoard } from "@/features/files/application/get-files-board";
 
 const CreateFileSchema = z.object({
   teamId: z.string().min(1),

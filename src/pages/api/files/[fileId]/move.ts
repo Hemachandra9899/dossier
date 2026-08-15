@@ -2,11 +2,11 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { DossierFileStatus } from "@prisma/client";
 import { z } from "zod";
 
-import prisma from "@/lib/prisma";
+import prisma from "@/platform/db";
 import {
   requireFileAccess,
   sendAuthorizationError,
-} from "@/modules/files/server/authorization";
+} from "@/features/files/server/authorization";
 
 const MoveSchema = z.object({
   status: z.nativeEnum(DossierFileStatus),

@@ -1,22 +1,22 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/modules/access/is-team-paused";
+import { isTeamPausedById } from "@/features/access/is-team-paused";
 import type { convertFilesToPdfTask } from "@/ee/features/conversions/lib/trigger/convert-files";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { tasks } from "@trigger.dev/sdk";
 import { getServerSession } from "next-auth/next";
 
-import { hashToken } from "@/lib/api/auth/token";
-import { enforceDocumentMemberScope } from "@/lib/api/rbac/guard";
-import { getFeatureFlags } from "@/lib/featureFlags";
-import prisma from "@/lib/prisma";
-import { processVideo } from "@/lib/trigger/optimize-video-files";
-import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
-import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
-import { isMarkdownFile } from "@/lib/utils/get-content-type";
-import { conversionQueueName } from "@/lib/utils/trigger-utils";
-import { documentUploadSchema } from "@/lib/zod/url-validation";
+import { hashToken } from "@/shared/utils/api/auth/token";
+import { enforceDocumentMemberScope } from "@/shared/utils/api/rbac/guard";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import prisma from "@/platform/db";
+import { processVideo } from "@/platform/queue/trigger/optimize-video-files";
+import { convertPdfToImageRoute } from "@/platform/queue/trigger/pdf-to-image-route";
+import { CustomUser } from "@/shared/utils/types";
+import { log } from "@/shared/utils/utils";
+import { isMarkdownFile } from "@/shared/utils/utils/get-content-type";
+import { conversionQueueName } from "@/shared/utils/utils/trigger-utils";
+import { documentUploadSchema } from "@/shared/utils/zod/url-validation";
 
 export default async function handle(
   req: NextApiRequest,

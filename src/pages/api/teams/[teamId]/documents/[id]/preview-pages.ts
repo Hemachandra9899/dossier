@@ -2,12 +2,12 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
-import { enforceDocumentMemberScope } from "@/lib/api/rbac/guard";
-import { getFile } from "@/lib/files/get-file";
-import { signPageLinks } from "@/lib/files/sign-page-links";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
+import { enforceDocumentMemberScope } from "@/shared/utils/api/rbac/guard";
+import { getFile } from "@/shared/utils/files/get-file";
+import { signPageLinks } from "@/shared/utils/files/sign-page-links";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { log } from "@/shared/utils/utils";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
 

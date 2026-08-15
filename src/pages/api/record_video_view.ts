@@ -2,14 +2,14 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { z } from "zod";
 
-import { EU_COUNTRY_CODES, VIDEO_EVENT_TYPES } from "@/lib/constants";
-import { newId } from "@/lib/id-helper";
-import { recordVideoView } from "@/lib/tinybird";
-import { Geo } from "@/lib/types";
-import { capitalize, getDomainWithoutWWW, log } from "@/lib/utils";
-import { LOCALHOST_GEO_DATA, getGeoData } from "@/lib/utils/geo";
-import { getIpAddress } from "@/lib/utils/ip";
-import { userAgentFromString } from "@/lib/utils/user-agent";
+import { EU_COUNTRY_CODES, VIDEO_EVENT_TYPES } from "@/shared/utils/constants";
+import { newId } from "@/shared/utils/id-helper";
+import { recordVideoView } from "@/shared/utils/tinybird";
+import { Geo } from "@/shared/utils/types";
+import { capitalize, getDomainWithoutWWW, log } from "@/shared/utils/utils";
+import { LOCALHOST_GEO_DATA, getGeoData } from "@/shared/utils/utils/geo";
+import { getIpAddress } from "@/shared/utils/utils/ip";
+import { userAgentFromString } from "@/shared/utils/utils/user-agent";
 
 const bodyValidation = z.object({
   timestamp: z.string(),

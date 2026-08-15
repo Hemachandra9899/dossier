@@ -4,14 +4,14 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
-import { TeamError, errorhandler } from "@/lib/errorHandler";
-import { getFile } from "@/lib/files/get-file";
-import prisma from "@/lib/prisma";
-import { getAgreementResponseSignedState } from "@/lib/signing/agreements";
-import { getEnvelopeSignedDownloadUrl } from "@/lib/signing/envelopes";
-import { mirrorSignedAgreementToStorage } from "@/lib/signing/mirror";
-import { buildContentDisposition } from "@/lib/utils";
-import { CustomUser } from "@/lib/types";
+import { TeamError, errorhandler } from "@/shared/utils/errorHandler";
+import { getFile } from "@/shared/utils/files/get-file";
+import prisma from "@/platform/db";
+import { getAgreementResponseSignedState } from "@/shared/utils/signing/agreements";
+import { getEnvelopeSignedDownloadUrl } from "@/shared/utils/signing/envelopes";
+import { mirrorSignedAgreementToStorage } from "@/shared/utils/signing/mirror";
+import { buildContentDisposition } from "@/shared/utils/utils";
+import { CustomUser } from "@/shared/utils/types";
 
 // `waitUntil` requires response streaming to be enabled on Pages API routes.
 export const config = {

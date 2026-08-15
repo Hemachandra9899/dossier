@@ -3,8 +3,8 @@ import { useRouter } from "next/router";
 import { ArrowLeft as ArrowLeftIcon } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 
-import { Button } from "@/components/ui/button";
-import DeckGeneratorUpload from "@/components/welcome/special-upload";
+import { Button } from "@/shared/ui/button";
+import DeckGeneratorUpload from "@/shared/ui/welcome/special-upload";
 
 export default function DocumentNew() {
   const router = useRouter();

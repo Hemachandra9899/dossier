@@ -5,8 +5,8 @@ import { getServerSession } from "next-auth/next";
 
 import { runs } from "@trigger.dev/sdk";
 
-import { jobStore } from "@/lib/redis-job-store";
-import { CustomUser } from "@/lib/types";
+import { jobStore } from "@/shared/utils/redis-job-store";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handler(
   req: NextApiRequest,

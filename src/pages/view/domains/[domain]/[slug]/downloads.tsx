@@ -3,11 +3,11 @@ import { GetServerSideProps } from "next";
 import {
   type ViewerI18nPageProps,
   buildViewerI18nPageProps,
-} from "@/lib/i18n/viewer-page-props";
-import prisma from "@/lib/prisma";
+} from "@/shared/utils/i18n/viewer-page-props";
+import prisma from "@/platform/db";
 
-import { DownloadsPanel } from "@/components/view/dataroom/downloads-panel";
-import { ViewerI18nProvider } from "@/components/view/viewer-i18n-provider";
+import { DownloadsPanel } from "@/shared/ui/view/dataroom/downloads-panel";
+import { ViewerI18nProvider } from "@/shared/ui/view/viewer-i18n-provider";
 
 type Props = Partial<ViewerI18nPageProps> & { linkId: string };
 

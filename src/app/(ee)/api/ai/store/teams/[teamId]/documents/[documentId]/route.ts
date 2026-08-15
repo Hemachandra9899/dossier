@@ -7,12 +7,12 @@ import {
 } from "@/ee/features/ai/lib/trigger";
 import { createTeamVectorStore } from "@/ee/features/ai/lib/vector-stores/create-team-vector-store";
 import { removeFileFromVectorStore } from "@/ee/features/ai/lib/vector-stores/remove-file-from-vector-store";
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import { getServerSession } from "next-auth";
 
-import { getFeatureFlags } from "@/lib/featureFlags";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 /**
  * POST /api/ai/store/teams/[teamId]/documents/[documentId]

@@ -3,18 +3,18 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
-import { TeamError, errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
+import { TeamError, errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
 import {
   deleteSigningTemplateDirectLink,
   ensureSigningTemplateDirectLink,
   ensureSigningTemplateViewerRecipient,
   ensureTeamSigningFolders,
   isSigningAgreement,
-} from "@/lib/signing/agreements";
-import { getSigningClient } from "@/lib/signing/client";
-import { getEnvelope } from "@/lib/signing/envelopes";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/signing/agreements";
+import { getSigningClient } from "@/shared/utils/signing/client";
+import { getEnvelope } from "@/shared/utils/signing/envelopes";
+import { CustomUser } from "@/shared/utils/types";
 
 import { authOptions } from "../../../../../auth/[...nextauth]";
 

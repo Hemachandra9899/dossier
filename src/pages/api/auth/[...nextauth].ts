@@ -3,14 +3,14 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { checkRateLimit, rateLimiters } from "@/ee/features/security";
 import NextAuth, { type NextAuthOptions } from "next-auth";
 
-import { identifyUser, trackAnalytics } from "@/lib/analytics";
-import { authOptions } from "@/lib/auth/auth-options";
-import { dub } from "@/lib/dub";
-import { isBlacklistedEmail } from "@/lib/edge-config/blacklist";
-import { log } from "@/lib/utils";
-import { getIpAddress } from "@/lib/utils/ip";
+import { identifyUser, trackAnalytics } from "@/shared/utils/analytics";
+import { authOptions } from "@/shared/utils/auth/auth-options";
+import { dub } from "@/shared/utils/dub";
+import { isBlacklistedEmail } from "@/shared/utils/edge-config/blacklist";
+import { log } from "@/shared/utils/utils";
+import { getIpAddress } from "@/shared/utils/utils/ip";
 
-export { authOptions } from "@/lib/auth/auth-options";
+export { authOptions } from "@/shared/utils/auth/auth-options";
 
 export const config = {
   maxDuration: 180,

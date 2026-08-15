@@ -3,16 +3,16 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { ItemType, ViewType } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
 
-import { getDataroomSessionByLinkIdInPagesRouter } from "@/lib/auth/dataroom-auth";
-import { getFile } from "@/lib/files/get-file";
-import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
-import prisma from "@/lib/prisma";
+import { getDataroomSessionByLinkIdInPagesRouter } from "@/shared/utils/auth/dataroom-auth";
+import { getFile } from "@/shared/utils/files/get-file";
+import { notifyDocumentDownload } from "@/shared/utils/integrations/slack/events";
+import prisma from "@/platform/db";
 import {
   buildAttachmentDispositionForName,
   getFileNameWithPdfExtension,
-} from "@/lib/utils";
-import { ensureFileExtension } from "@/lib/utils/get-content-type";
-import { getIpAddress } from "@/lib/utils/ip";
+} from "@/shared/utils/utils";
+import { ensureFileExtension } from "@/shared/utils/utils/get-content-type";
+import { getIpAddress } from "@/shared/utils/utils/ip";
 
 export const config = {
   maxDuration: 300,

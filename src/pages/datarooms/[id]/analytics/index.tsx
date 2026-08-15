@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import { useEffect } from "react";
-import AppLayout from "@/components/layouts/app";
-import LoadingSpinner from "@/components/ui/loading-spinner";
+import AppLayout from "@/shared/ui/layouts/app";
+import LoadingSpinner from "@/shared/ui/loading-spinner";
 
 export default function DataroomAnalyticsPage() {
   const router = useRouter();

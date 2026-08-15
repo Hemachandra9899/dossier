@@ -3,10 +3,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser, LinkWithViews } from "@/lib/types";
-import { decryptEncrpytedPassword, log } from "@/lib/utils";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser, LinkWithViews } from "@/shared/utils/types";
+import { decryptEncrpytedPassword, log } from "@/shared/utils/utils";
 
 export default async function handle(
   req: NextApiRequest,

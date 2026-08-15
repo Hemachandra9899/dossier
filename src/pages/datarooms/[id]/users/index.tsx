@@ -1,10 +1,10 @@
 import { CircleHelpIcon } from "lucide-react";
 
-import { useDataroom } from "@/lib/swr/use-dataroom";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
 
-import AppLayout from "@/components/layouts/app";
-import { BadgeTooltip } from "@/components/ui/tooltip";
-import DataroomViewersTable from "@/components/visitors/dataroom-viewers";
+import AppLayout from "@/shared/ui/layouts/app";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
+import DataroomViewersTable from "@/shared/ui/visitors/dataroom-viewers";
 
 export default function DataroomUsersPage() {
   const { dataroom } = useDataroom();

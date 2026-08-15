@@ -4,14 +4,14 @@ import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
 
-import { enforceDataroomMemberScope } from "@/lib/api/rbac/guard";
-import { buildBulkDownloadStructure } from "@/lib/dataroom/build-bulk-download-structure";
-import { collectDescendantIds } from "@/lib/dataroom/build-folder-hierarchy";
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
-import { downloadJobStore } from "@/lib/redis-download-job-store";
-import { bulkDownloadTask } from "@/lib/trigger/bulk-download";
-import { CustomUser } from "@/lib/types";
+import { enforceDataroomMemberScope } from "@/shared/utils/api/rbac/guard";
+import { buildBulkDownloadStructure } from "@/shared/utils/dataroom/build-bulk-download-structure";
+import { collectDescendantIds } from "@/shared/utils/dataroom/build-folder-hierarchy";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
+import { downloadJobStore } from "@/shared/utils/redis-download-job-store";
+import { bulkDownloadTask } from "@/platform/queue/trigger/bulk-download";
+import { CustomUser } from "@/shared/utils/types";
 
 export const config = {
   maxDuration: 60, // Reduced since we're just triggering the async task

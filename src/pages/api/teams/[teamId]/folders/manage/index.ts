@@ -6,11 +6,11 @@ import { getServerSession } from "next-auth/next";
 import {
   ALLOWED_FOLDER_COLORS,
   ALLOWED_FOLDER_ICONS,
-} from "@/lib/constants/folder-constants";
-import { safeSlugify } from "@/lib/utils";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/constants/folder-constants";
+import { safeSlugify } from "@/shared/utils/utils";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handle(
   req: NextApiRequest,

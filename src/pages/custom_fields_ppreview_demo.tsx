@@ -8,14 +8,14 @@ import {
   ACCESS_PREVIEW_MESSAGE,
   ACCESS_PREVIEW_READY,
   type AccessPreviewPayload,
-} from "@/components/links/link-sheet/access-preview-message";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+} from "@/shared/ui/links/link-sheet/access-preview-message";
+import { Button } from "@/shared/ui/button";
+import { Checkbox } from "@/shared/ui/checkbox";
 import {
   AccessFormThemeProvider,
   createAccessFormTheme,
-} from "@/components/view/access-form/access-form-theme";
-import CustomFieldsViewer from "@/components/view/access-form/custom-fields-section";
+} from "@/shared/ui/view/access-form/access-form-theme";
+import CustomFieldsViewer from "@/shared/ui/view/access-form/custom-fields-section";
 
 type PreviewState = {
   accentColor?: string;

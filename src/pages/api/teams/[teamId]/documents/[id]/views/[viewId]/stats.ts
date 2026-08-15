@@ -3,11 +3,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import { enforceDocumentMemberScope } from "@/lib/api/rbac/guard";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { getViewPageDuration } from "@/lib/tinybird";
-import { CustomUser } from "@/lib/types";
+import { enforceDocumentMemberScope } from "@/shared/utils/api/rbac/guard";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { getViewPageDuration } from "@/shared/utils/tinybird";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handle(
   req: NextApiRequest,

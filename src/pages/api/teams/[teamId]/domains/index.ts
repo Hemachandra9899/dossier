@@ -2,13 +2,13 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
-import { setDomainRedirectUrl } from "@/lib/api/domains/redis";
-import { validateRedirectUrl } from "@/lib/api/domains/validate-redirect-url";
-import { addDomainToVercel, validDomainRegex } from "@/lib/domains";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
+import { setDomainRedirectUrl } from "@/shared/utils/api/domains/redis";
+import { validateRedirectUrl } from "@/shared/utils/api/domains/validate-redirect-url";
+import { addDomainToVercel, validDomainRegex } from "@/shared/utils/domains";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { log } from "@/shared/utils/utils";
 
 import { authOptions } from "../../../auth/[...nextauth]";
 

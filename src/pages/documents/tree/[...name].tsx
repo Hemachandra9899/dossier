@@ -1,13 +1,13 @@
 import { useRouter } from "next/router";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 
-import { AddDocumentDropdown } from "@/components/documents/add-document-dropdown";
-import { DocumentsList } from "@/components/documents/documents-list";
-import AppLayout from "@/components/layouts/app";
-import { Separator } from "@/components/ui/separator";
+import { AddDocumentDropdown } from "@/shared/ui/documents/add-document-dropdown";
+import { DocumentsList } from "@/shared/ui/documents/documents-list";
+import AppLayout from "@/shared/ui/layouts/app";
+import { Separator } from "@/shared/ui/separator";
 
-import { useFolder, useFolderDocuments } from "@/lib/swr/use-documents";
+import { useFolder, useFolderDocuments } from "@/shared/utils/swr/use-documents";
 
 export default function DocumentTreePage() {
   const router = useRouter();

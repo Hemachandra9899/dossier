@@ -10,22 +10,22 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getServerSession } from "next-auth";
 import path from "node:path";
 
-import { isTeamPausedById } from "@/modules/access/is-team-paused";
+import { isTeamPausedById } from "@/features/access/is-team-paused";
 import { getLimits } from "@/ee/limits/server";
 import {
   ONE_HOUR,
   ONE_SECOND,
   SUPPORTED_DOCUMENT_MIME_TYPES,
-} from "@/lib/constants";
-import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
-import { buildContentDisposition, safeSlugify } from "@/lib/utils";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/constants";
+import { getTeamS3ClientAndConfig } from "@/shared/utils/files/aws-client";
+import { buildContentDisposition, safeSlugify } from "@/shared/utils/utils";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 import {
   getFileSizeLimit,
   getFileSizeLimits,
-} from "@/lib/utils/get-file-size-limits";
-import { MultipartUploadSchema } from "@/lib/zod/schemas/multipart";
+} from "@/shared/utils/utils/get-file-size-limits";
+import { MultipartUploadSchema } from "@/shared/utils/zod/schemas/multipart";
 
 import { authOptions } from "../../auth/[...nextauth]";
 

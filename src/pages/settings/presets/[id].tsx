@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 
 import { FormEvent, useEffect, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import ConfidentialViewSection from "@/ee/features/permissions/components/confidential-view/confidential-view-section";
 
 import { LinkPreset } from "@prisma/client";
@@ -11,41 +11,41 @@ import { toast } from "sonner";
 import useSWR from "swr";
 import z from "zod";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import useLimits from "@/lib/swr/use-limits";
-import { WatermarkConfig } from "@/lib/types";
-import { fetcher } from "@/lib/utils";
+import { usePlan } from "@/shared/utils/swr/use-billing";
+import useLimits from "@/shared/utils/swr/use-limits";
+import { WatermarkConfig } from "@/shared/utils/types";
+import { fetcher } from "@/shared/utils/utils";
 
-import AppLayout from "@/components/layouts/app";
-import { DEFAULT_LINK_TYPE } from "@/components/links/link-sheet";
-import AgreementSection from "@/components/links/link-sheet/agreement-section";
-import AllowDownloadSection from "@/components/links/link-sheet/allow-download-section";
-import AllowListSection from "@/components/links/link-sheet/allow-list-section";
-import AllowNotificationSection from "@/components/links/link-sheet/allow-notification-section";
-import { CustomFieldData } from "@/components/links/link-sheet/custom-fields-panel";
-import CustomFieldsSection from "@/components/links/link-sheet/custom-fields-section";
-import DenyListSection from "@/components/links/link-sheet/deny-list-section";
-import EmailAuthenticationSection from "@/components/links/link-sheet/email-authentication-section";
-import EmailProtectionSection from "@/components/links/link-sheet/email-protection-section";
-import ExpirationInSection from "@/components/links/link-sheet/expirationIn-section";
-import { LinkUpgradeOptions } from "@/components/links/link-sheet/link-options";
-import OGSection from "@/components/links/link-sheet/og-section";
-import PasswordSection from "@/components/links/link-sheet/password-section";
-import { ProBannerSection } from "@/components/links/link-sheet/pro-banner-section";
-import ScreenshotProtectionSection from "@/components/links/link-sheet/screenshot-protection-section";
-import WatermarkSection from "@/components/links/link-sheet/watermark-section";
-import Preview from "@/components/settings/og-preview";
-import { SettingsHeader } from "@/components/settings/settings-header";
+import AppLayout from "@/shared/ui/layouts/app";
+import { DEFAULT_LINK_TYPE } from "@/shared/ui/links/link-sheet";
+import AgreementSection from "@/shared/ui/links/link-sheet/agreement-section";
+import AllowDownloadSection from "@/shared/ui/links/link-sheet/allow-download-section";
+import AllowListSection from "@/shared/ui/links/link-sheet/allow-list-section";
+import AllowNotificationSection from "@/shared/ui/links/link-sheet/allow-notification-section";
+import { CustomFieldData } from "@/shared/ui/links/link-sheet/custom-fields-panel";
+import CustomFieldsSection from "@/shared/ui/links/link-sheet/custom-fields-section";
+import DenyListSection from "@/shared/ui/links/link-sheet/deny-list-section";
+import EmailAuthenticationSection from "@/shared/ui/links/link-sheet/email-authentication-section";
+import EmailProtectionSection from "@/shared/ui/links/link-sheet/email-protection-section";
+import ExpirationInSection from "@/shared/ui/links/link-sheet/expirationIn-section";
+import { LinkUpgradeOptions } from "@/shared/ui/links/link-sheet/link-options";
+import OGSection from "@/shared/ui/links/link-sheet/og-section";
+import PasswordSection from "@/shared/ui/links/link-sheet/password-section";
+import { ProBannerSection } from "@/shared/ui/links/link-sheet/pro-banner-section";
+import ScreenshotProtectionSection from "@/shared/ui/links/link-sheet/screenshot-protection-section";
+import WatermarkSection from "@/shared/ui/links/link-sheet/watermark-section";
+import Preview from "@/shared/ui/settings/og-preview";
+import { SettingsHeader } from "@/shared/ui/settings/settings-header";
 import {
   Alert,
   AlertClose,
   AlertDescription,
   AlertTitle,
-} from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+} from "@/shared/ui/alert";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { Separator } from "@/shared/ui/separator";
 
 export type PRESET_DATA = Partial<DEFAULT_LINK_TYPE> & {
   name: string;

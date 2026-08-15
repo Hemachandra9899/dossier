@@ -5,8 +5,8 @@ import { getServerSession } from "next-auth/next";
 import {
   finishServerPasskeyRegistration,
   startServerPasskeyRegistration,
-} from "@/lib/api/auth/passkey";
-import { errorhandler } from "@/lib/errorHandler";
+} from "@/shared/utils/api/auth/passkey";
+import { errorhandler } from "@/shared/utils/errorHandler";
 
 import { authOptions } from "../auth/[...nextauth]";
 

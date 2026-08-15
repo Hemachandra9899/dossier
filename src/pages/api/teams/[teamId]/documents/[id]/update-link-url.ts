@@ -4,11 +4,11 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { get } from "@vercel/edge-config";
 import { getServerSession } from "next-auth/next";
 
-import { isTrustedTeam } from "@/lib/edge-config/trusted-teams";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
-import { linkUrlUpdateSchema } from "@/lib/zod/url-validation";
+import { isTrustedTeam } from "@/shared/utils/edge-config/trusted-teams";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { log } from "@/shared/utils/utils";
+import { linkUrlUpdateSchema } from "@/shared/utils/zod/url-validation";
 
 export default async function handle(
   req: NextApiRequest,

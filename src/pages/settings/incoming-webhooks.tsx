@@ -2,28 +2,28 @@ import { useRouter } from "next/navigation";
 
 import { useEffect, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { format } from "date-fns";
 import { CircleHelpIcon, CopyIcon, Loader } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
-import AppLayout from "@/components/layouts/app";
-import { SettingsHeader } from "@/components/settings/settings-header";
-import { Button } from "@/components/ui/button";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SettingsHeader } from "@/shared/ui/settings/settings-header";
+import { Button } from "@/shared/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { BadgeTooltip } from "@/components/ui/tooltip";
+} from "@/shared/ui/card";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { Separator } from "@/shared/ui/separator";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
 
-import { copyToClipboard, fetcher } from "@/lib/utils";
+import { copyToClipboard, fetcher } from "@/shared/utils/utils";
 
 interface Webhook {
   id: string;

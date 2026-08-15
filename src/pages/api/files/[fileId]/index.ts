@@ -1,11 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import prisma from "@/lib/prisma";
+import prisma from "@/platform/db";
 import {
   requireFileAccess,
   sendAuthorizationError,
-} from "@/modules/files/server/authorization";
-import { getFileTimeline } from "@/modules/files/application/get-file-timeline";
+} from "@/features/files/server/authorization";
+import { getFileTimeline } from "@/features/files/application/get-file-timeline";
 
 export default async function handler(
   req: NextApiRequest,

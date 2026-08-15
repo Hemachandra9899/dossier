@@ -4,16 +4,16 @@ import { useEffect, useState } from "react";
 
 import { Brand, DataroomBrand } from "@prisma/client";
 
-import { useAnalytics } from "@/lib/analytics";
-import { useUrlPasscode } from "@/lib/hooks/use-url-passcode";
-import { type ViewerI18nPageProps } from "@/lib/i18n/viewer-page-props";
-import { LinkWithDataroom, LinkWithDocument } from "@/lib/types";
+import { useAnalytics } from "@/shared/utils/analytics";
+import { useUrlPasscode } from "@/shared/utils/hooks/use-url-passcode";
+import { type ViewerI18nPageProps } from "@/shared/utils/i18n/viewer-page-props";
+import { LinkWithDataroom, LinkWithDocument } from "@/shared/utils/types";
 
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import DataroomView from "@/components/view/dataroom/dataroom-view";
-import DocumentView from "@/components/view/document-view";
-import { ViewerI18nProvider } from "@/components/view/viewer-i18n-provider";
-import { ViewerNotFound } from "@/components/view/viewer-not-found";
+import LoadingSpinner from "@/shared/ui/loading-spinner";
+import DataroomView from "@/shared/ui/view/dataroom/dataroom-view";
+import DocumentView from "@/shared/ui/view/document-view";
+import { ViewerI18nProvider } from "@/shared/ui/view/viewer-i18n-provider";
+import { ViewerNotFound } from "@/shared/ui/view/viewer-not-found";
 
 // Reuse the same getStaticProps and getStaticPaths from the main domain view page
 export { getStaticProps, getStaticPaths } from "./index";

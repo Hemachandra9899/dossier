@@ -1,20 +1,20 @@
 import { useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { AgentsSettingsCard } from "@/ee/features/ai/components/agents-settings-card";
 import { useRequestListFeatureEnabled } from "@/ee/features/request-lists/lib/use-request-list-feature";
 import { Check, CircleHelpIcon, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { useSelfMembership } from "@/lib/hooks/use-self-membership";
-import { useDataroom } from "@/lib/swr/use-dataroom";
+import { useSelfMembership } from "@/shared/utils/hooks/use-self-membership";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
 
-import DataroomTagSection from "@/components/datarooms/settings/dataroom-tag-section";
-import DuplicateDataroom from "@/components/datarooms/settings/duplicate-dataroom";
-import AppLayout from "@/components/layouts/app";
-import { Button } from "@/components/ui/button";
-import { BadgeTooltip } from "@/components/ui/tooltip";
+import DataroomTagSection from "@/shared/ui/datarooms/settings/dataroom-tag-section";
+import DuplicateDataroom from "@/shared/ui/datarooms/settings/duplicate-dataroom";
+import AppLayout from "@/shared/ui/layouts/app";
+import { Button } from "@/shared/ui/button";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
 import {
   Card,
   CardContent,
@@ -22,9 +22,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Form } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "@/shared/ui/card";
+import { Form } from "@/shared/ui/form";
+import { Input } from "@/shared/ui/input";
 
 export default function Settings() {
   const { dataroom } = useDataroom();

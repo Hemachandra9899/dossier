@@ -8,12 +8,12 @@ import {
   generateSessionFingerprint,
   getDataroomSessionByLinkIdInPagesRouter,
   updateDataroomSessionVerified,
-} from "@/lib/auth/dataroom-auth";
-import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
-import { generateOTP } from "@/lib/utils/generate-otp";
-import { getIpAddress } from "@/lib/utils/ip";
+} from "@/shared/utils/auth/dataroom-auth";
+import { sendOtpVerificationEmail } from "@/shared/utils/emails/send-email-otp-verification";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
+import { generateOTP } from "@/shared/utils/utils/generate-otp";
+import { getIpAddress } from "@/shared/utils/utils/ip";
 
 const OTP_IDENTIFIER_PREFIX = "download-otp:";
 

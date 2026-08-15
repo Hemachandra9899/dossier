@@ -2,11 +2,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
-import { enforceDataroomMemberScope } from "@/lib/api/rbac/guard";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser, LinkWithViews } from "@/lib/types";
-import { decryptEncrpytedPassword, log } from "@/lib/utils";
+import { enforceDataroomMemberScope } from "@/shared/utils/api/rbac/guard";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser, LinkWithViews } from "@/shared/utils/types";
+import { decryptEncrpytedPassword, log } from "@/shared/utils/utils";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
 

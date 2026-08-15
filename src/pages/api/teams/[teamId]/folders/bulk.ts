@@ -12,10 +12,10 @@ import {
   MAX_BULK_FOLDERS_PER_REQUEST,
   bulkCreateMainDocsFolders,
   getSafeBulkValidationMessage,
-} from "@/lib/folders/bulk-create";
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/folders/bulk-create";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
+import { CustomUser } from "@/shared/utils/types";
 
 const BulkSchema = z.object({
   rootPath: z.string().max(2000).optional(),

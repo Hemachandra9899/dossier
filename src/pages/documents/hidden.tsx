@@ -1,14 +1,14 @@
 import Link from "next/link";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { ArrowLeftIcon, EyeOffIcon } from "lucide-react";
 
-import { useHiddenDocuments } from "@/lib/swr/use-documents";
+import { useHiddenDocuments } from "@/shared/utils/swr/use-documents";
 
-import { HiddenDocumentsList } from "@/components/documents/hidden-documents-list";
-import AppLayout from "@/components/layouts/app";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { HiddenDocumentsList } from "@/shared/ui/documents/hidden-documents-list";
+import AppLayout from "@/shared/ui/layouts/app";
+import { Button } from "@/shared/ui/button";
+import { Separator } from "@/shared/ui/separator";
 
 export default function HiddenDocumentsPage() {
   const teamInfo = useTeam();

@@ -4,16 +4,16 @@ import { runs } from "@trigger.dev/sdk";
 import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
-import { authOptions } from "@/lib/auth/auth-options";
-import { TeamError, errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
+import { authOptions } from "@/shared/utils/auth/auth-options";
+import { TeamError, errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
 import {
   getSigningEmbedConfig,
   isSigningAgreement,
-} from "@/lib/signing/agreements";
-import { getSigningClient } from "@/lib/signing/client";
-import { DEFAULT_SIGNING_SETUP_FAILURE_MESSAGE } from "@/lib/signing/setup-status";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/signing/agreements";
+import { getSigningClient } from "@/shared/utils/signing/client";
+import { DEFAULT_SIGNING_SETUP_FAILURE_MESSAGE } from "@/shared/utils/signing/setup-status";
+import { CustomUser } from "@/shared/utils/types";
 
 const setupStatusQuerySchema = z.object({
   runId: z.string().min(1),

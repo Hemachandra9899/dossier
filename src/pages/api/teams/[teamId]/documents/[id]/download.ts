@@ -2,12 +2,12 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
-import { enforceDocumentMemberScope } from "@/lib/api/rbac/guard";
-import { getFile } from "@/lib/files/get-file";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { buildAttachmentDispositionForName, log } from "@/lib/utils";
-import { ensureFileExtension } from "@/lib/utils/get-content-type";
+import { enforceDocumentMemberScope } from "@/shared/utils/api/rbac/guard";
+import { getFile } from "@/shared/utils/files/get-file";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { buildAttachmentDispositionForName, log } from "@/shared/utils/utils";
+import { ensureFileExtension } from "@/shared/utils/utils/get-content-type";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
 

@@ -1,28 +1,28 @@
 import { useCallback, useMemo, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { CircleHelpIcon, FileTextIcon } from "lucide-react";
 import { mutate } from "swr";
 
 import {
   AgreementWithLinksCount,
   useAgreements,
-} from "@/lib/swr/use-agreements";
-import { usePlan } from "@/lib/swr/use-billing";
+} from "@/shared/utils/swr/use-agreements";
+import { usePlan } from "@/shared/utils/swr/use-billing";
 
-import AgreementRow from "@/components/agreements/agreement-row";
-import AppLayout from "@/components/layouts/app";
-import AgreementSheet from "@/components/links/link-sheet/agreement-panel";
-import { SettingsHeader } from "@/components/settings/settings-header";
-import { Button } from "@/components/ui/button";
+import AgreementRow from "@/shared/ui/agreements/agreement-row";
+import AppLayout from "@/shared/ui/layouts/app";
+import AgreementSheet from "@/shared/ui/links/link-sheet/agreement-panel";
+import { SettingsHeader } from "@/shared/ui/settings/settings-header";
+import { Button } from "@/shared/ui/button";
 import {
   Table,
   TableBody,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { BadgeTooltip } from "@/components/ui/tooltip";
+} from "@/shared/ui/table";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
 
 export default function NdaAgreements() {
   const { agreements, loading, error } = useAgreements();

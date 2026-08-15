@@ -9,10 +9,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { AlertCircleIcon } from "lucide-react";
 
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import { signingApi } from "@/modules/signing/ui/signing-api";
+import LoadingSpinner from "@/shared/ui/loading-spinner";
+import { signingApi } from "@/features/signing/ui/signing-api";
 
-import { SigningRequestPage } from "@/modules/signing/ui/signing/signing-request-page";
+import { SigningRequestPage } from "@/features/signing/ui/signing/signing-request-page";
 
 type AuthState = "loading" | "ready" | "error";
 

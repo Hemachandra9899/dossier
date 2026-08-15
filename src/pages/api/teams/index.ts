@@ -11,10 +11,10 @@ import {
 } from "@/ee/limits/constants";
 import { getServerSession } from "next-auth";
 
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { log } from "@/shared/utils/utils";
 
 import { authOptions } from "../auth/[...nextauth]";
 

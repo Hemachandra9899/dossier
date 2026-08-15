@@ -5,12 +5,12 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
-import { enforceDataroomMemberScope } from "@/lib/api/rbac/guard";
-import { isDataroomScopedRole } from "@/lib/api/rbac/permissions";
-import { getFeatureFlags } from "@/lib/featureFlags";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { serializeFileSize } from "@/lib/utils";
+import { enforceDataroomMemberScope } from "@/shared/utils/api/rbac/guard";
+import { isDataroomScopedRole } from "@/shared/utils/api/rbac/permissions";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { serializeFileSize } from "@/shared/utils/utils";
 
 /**
  * Dataroom-scoped document overview.

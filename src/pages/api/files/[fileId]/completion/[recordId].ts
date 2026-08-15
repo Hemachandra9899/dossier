@@ -3,9 +3,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import {
   requireFileAccess,
   sendAuthorizationError,
-} from "@/modules/files/server/authorization";
-import { toCompletionRecordDetailDTO } from "@/modules/completion/application/serialize";
-import prisma from "@/lib/prisma";
+} from "@/features/files/server/authorization";
+import { toCompletionRecordDetailDTO } from "@/features/completion/application/serialize";
+import prisma from "@/platform/db";
 
 export default async function handler(
   req: NextApiRequest,

@@ -4,11 +4,11 @@
 
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { requireTeamMember } from "@/lib/api/require-team-member";
-import { errorhandler } from "@/lib/errorHandler";
-import { createEditorSession } from "@/modules/signing/application/create-editor-session";
-import { createSigningContext } from "@/modules/signing/application/context";
-import { isDossierSigningEnabled } from "@/modules/signing/config";
+import { requireTeamMember } from "@/shared/utils/api/require-team-member";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import { createEditorSession } from "@/features/signing/application/create-editor-session";
+import { createSigningContext } from "@/features/signing/application/context";
+import { isDossierSigningEnabled } from "@/features/signing/config";
 
 export default async function handle(
   req: NextApiRequest,

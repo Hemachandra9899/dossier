@@ -11,32 +11,32 @@ import { ExtendedRecordMap } from "notion-types";
 import { parsePageId } from "notion-utils";
 import z from "zod";
 
-import { fetchLinkDataByDomainSlug } from "@/lib/api/links/link-data";
-import { getFeatureFlags } from "@/lib/featureFlags";
-import { useUrlPasscode } from "@/lib/hooks/use-url-passcode";
+import { fetchLinkDataByDomainSlug } from "@/shared/utils/api/links/link-data";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import { useUrlPasscode } from "@/shared/utils/hooks/use-url-passcode";
 import {
   type ViewerI18nPageProps,
   buildViewerI18nPageProps,
-} from "@/lib/i18n/viewer-page-props";
-import notion from "@/lib/notion";
+} from "@/shared/utils/i18n/viewer-page-props";
+import notion from "@/shared/utils/notion";
 import {
   addSignedUrls,
   fetchMissingPageReferences,
   normalizeRecordMap,
-} from "@/lib/notion/utils";
+} from "@/shared/utils/notion/utils";
 import {
   CustomUser,
   LinkWithDataroom,
   LinkWithDocument,
   NotionTheme,
-} from "@/lib/types";
+} from "@/shared/utils/types";
 
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import CustomMetaTag from "@/components/view/custom-metatag";
-import DataroomView from "@/components/view/dataroom/dataroom-view";
-import DocumentView from "@/components/view/document-view";
-import { ViewerI18nProvider } from "@/components/view/viewer-i18n-provider";
-import { ViewerNotFound } from "@/components/view/viewer-not-found";
+import LoadingSpinner from "@/shared/ui/loading-spinner";
+import CustomMetaTag from "@/shared/ui/view/custom-metatag";
+import DataroomView from "@/shared/ui/view/dataroom/dataroom-view";
+import DocumentView from "@/shared/ui/view/document-view";
+import { ViewerI18nProvider } from "@/shared/ui/view/viewer-i18n-provider";
+import { ViewerNotFound } from "@/shared/ui/view/viewer-not-found";
 
 type DocumentLinkData = {
   linkType: "DOCUMENT_LINK";

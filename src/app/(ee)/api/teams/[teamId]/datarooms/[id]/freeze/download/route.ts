@@ -5,11 +5,11 @@ import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getServerSession } from "next-auth";
 
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 
-import { ONE_MINUTE, ONE_SECOND } from "@/lib/constants";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { ONE_MINUTE, ONE_SECOND } from "@/shared/utils/constants";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 const FIVE_MINUTES = 5 * ONE_MINUTE;
 

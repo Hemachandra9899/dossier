@@ -13,26 +13,26 @@ import {
   SendIcon,
 } from "lucide-react";
 
-import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
-import { usePlan } from "@/lib/swr/use-billing";
-import { useDataroom, useDataroomLinks } from "@/lib/swr/use-dataroom";
+import { useFeatureFlags } from "@/shared/utils/hooks/use-feature-flags";
+import { usePlan } from "@/shared/utils/swr/use-billing";
+import { useDataroom, useDataroomLinks } from "@/shared/utils/swr/use-dataroom";
 
-import AppLayout from "@/components/layouts/app";
-import { DataroomLinkSheet } from "@/components/links/link-sheet/dataroom-link-sheet";
-import LinksTable from "@/components/links/links-table";
-import { TabMenu } from "@/components/tab-menu";
-import { Button } from "@/components/ui/button";
+import AppLayout from "@/shared/ui/layouts/app";
+import { DataroomLinkSheet } from "@/shared/ui/links/link-sheet/dataroom-link-sheet";
+import LinksTable from "@/shared/ui/links/links-table";
+import { TabMenu } from "@/shared/ui/tab-menu";
+import { Button } from "@/shared/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { BadgeTooltip } from "@/components/ui/tooltip";
+} from "@/shared/ui/dropdown-menu";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
 
 const BulkImportLinksModal = dynamic(
   () =>
-    import("@/components/links/bulk-import-modal").then((mod) => ({
+    import("@/shared/ui/links/bulk-import-modal").then((mod) => ({
       default: mod.BulkImportLinksModal,
     })),
   { ssr: false },

@@ -7,13 +7,13 @@ import { z } from "zod";
 import {
   SlackRateLimitError,
   getSlackClient,
-} from "@/lib/integrations/slack/client";
-import { getSlackEnv } from "@/lib/integrations/slack/env";
-import { SlackCredential } from "@/lib/integrations/slack/types";
-import { slackChannelsCacheKey } from "@/lib/integrations/slack/utils";
-import prisma from "@/lib/prisma";
-import { redis } from "@/lib/redis";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/integrations/slack/client";
+import { getSlackEnv } from "@/shared/utils/integrations/slack/env";
+import { SlackCredential } from "@/shared/utils/integrations/slack/types";
+import { slackChannelsCacheKey } from "@/shared/utils/integrations/slack/utils";
+import prisma from "@/platform/db";
+import { redis } from "@/shared/utils/redis";
+import { CustomUser } from "@/shared/utils/types";
 
 export const config = {
   maxDuration: 300,

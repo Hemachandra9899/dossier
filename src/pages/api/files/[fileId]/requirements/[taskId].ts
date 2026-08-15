@@ -1,12 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
 
-import prisma from "@/lib/prisma";
+import prisma from "@/platform/db";
 import {
   requireFileAccess,
   sendAuthorizationError,
-} from "@/modules/files/server/authorization";
-import { syncDossierFileStatus } from "@/modules/files/application/sync-file-status";
+} from "@/features/files/server/authorization";
+import { syncDossierFileStatus } from "@/features/files/application/sync-file-status";
 import { DossierFileStatus } from "@prisma/client";
 
 const UpdateSchema = z.object({

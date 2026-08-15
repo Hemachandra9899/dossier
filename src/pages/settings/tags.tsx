@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import {
   CircleHelpIcon,
   InfoIcon,
@@ -14,26 +14,26 @@ import {
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { useTags } from "@/lib/swr/use-tags";
-import { TagColorProps, tagColors } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { useTags } from "@/shared/utils/swr/use-tags";
+import { TagColorProps, tagColors } from "@/shared/utils/types";
+import { cn } from "@/shared/utils/utils";
 
-import { Pagination } from "@/components/documents/pagination";
-import AppLayout from "@/components/layouts/app";
+import { Pagination } from "@/shared/ui/documents/pagination";
+import AppLayout from "@/shared/ui/layouts/app";
 import {
   COLORS_LIST,
   randomBadgeColor,
-} from "@/components/links/link-sheet/tags/tag-badge";
-import { SearchBoxPersisted } from "@/components/search-box";
-import { SettingsHeader } from "@/components/settings/settings-header";
-import { AddTagsModal } from "@/components/tags/add-tag-modal";
-import { Button } from "@/components/ui/button";
+} from "@/shared/ui/links/link-sheet/tags/tag-badge";
+import { SearchBoxPersisted } from "@/shared/ui/search-box";
+import { SettingsHeader } from "@/shared/ui/settings/settings-header";
+import { AddTagsModal } from "@/shared/ui/tags/add-tag-modal";
+import { Button } from "@/shared/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/shared/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -41,8 +41,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { BadgeTooltip } from "@/components/ui/tooltip";
+} from "@/shared/ui/table";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
 
 const schema = z.object({
   name: z

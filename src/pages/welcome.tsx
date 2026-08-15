@@ -9,20 +9,20 @@ import { ArrowLeft as ArrowLeftIcon } from "lucide-react";
 import { AnimatePresence } from "motion/react";
 import { useSession } from "next-auth/react";
 
-import { CustomUser } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { CustomUser } from "@/shared/utils/types";
+import { cn } from "@/shared/utils/utils";
 
-import { GTMComponent } from "@/components/gtm-component";
-import { Button } from "@/components/ui/button";
-import Dataroom from "@/components/welcome/dataroom";
-import DataroomAIGenerate from "@/components/welcome/dataroom-ai-generate";
-import DataroomChoice from "@/components/welcome/dataroom-choice";
-import DataroomUpload from "@/components/welcome/dataroom-upload";
-import Intro from "@/components/welcome/intro";
-import Next from "@/components/welcome/next";
-import NotionForm from "@/components/welcome/notion-form";
-import Select from "@/components/welcome/select";
-import Upload from "@/components/welcome/upload";
+import { GTMComponent } from "@/shared/ui/gtm-component";
+import { Button } from "@/shared/ui/button";
+import Dataroom from "@/shared/ui/welcome/dataroom";
+import DataroomAIGenerate from "@/shared/ui/welcome/dataroom-ai-generate";
+import DataroomChoice from "@/shared/ui/welcome/dataroom-choice";
+import DataroomUpload from "@/shared/ui/welcome/dataroom-upload";
+import Intro from "@/shared/ui/welcome/intro";
+import Next from "@/shared/ui/welcome/next";
+import NotionForm from "@/shared/ui/welcome/notion-form";
+import Select from "@/shared/ui/welcome/select";
+import Upload from "@/shared/ui/welcome/upload";
 
 export default function Welcome() {
   const router = useRouter();

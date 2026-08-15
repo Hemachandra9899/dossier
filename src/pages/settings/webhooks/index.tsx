@@ -3,18 +3,18 @@ import { useRouter } from "next/router";
 
 import { useMemo } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 
 import { format } from "date-fns";
 import { CircleHelpIcon, CrownIcon, WebhookIcon } from "lucide-react";
 import useSWR from "swr";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import { fetcher } from "@/lib/utils";
+import { usePlan } from "@/shared/utils/swr/use-billing";
+import { fetcher } from "@/shared/utils/utils";
 
-import AppLayout from "@/components/layouts/app";
-import { SettingsHeader } from "@/components/settings/settings-header";
-import { Button } from "@/components/ui/button";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SettingsHeader } from "@/shared/ui/settings/settings-header";
+import { Button } from "@/shared/ui/button";
 import {
   Table,
   TableBody,
@@ -22,8 +22,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { BadgeTooltip } from "@/components/ui/tooltip";
+} from "@/shared/ui/table";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
 
 interface Webhook {
   id: string;

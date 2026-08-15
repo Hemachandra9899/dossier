@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { sendDataroomUploadNotification } from "@/lib/emails/send-dataroom-upload-notification";
-import { log } from "@/lib/utils";
+import { sendDataroomUploadNotification } from "@/shared/utils/emails/send-dataroom-upload-notification";
+import { log } from "@/shared/utils/utils";
 
 export const config = {
   maxDuration: 120,

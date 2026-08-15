@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { InvocationType, InvokeCommand } from "@aws-sdk/client-lambda";
 
-import { getLambdaClientForTeam } from "@/lib/files/aws-client";
+import { getLambdaClientForTeam } from "@/shared/utils/files/aws-client";
 
 // Internal API endpoint for processing download batches
 // Called by Trigger.dev task - authenticated via shared secret
@@ -91,7 +91,7 @@ export default async function handler(
     let s3KeyInfo: { bucket: string; key: string; region: string } | undefined;
     try {
       const { parseS3PresignedUrl } =
-        await import("@/lib/files/bulk-download-presign");
+        await import("@/shared/utils/files/bulk-download-presign");
       s3KeyInfo = parseS3PresignedUrl(body.downloadUrl);
     } catch {
       // Non-fatal: fall back to stored presigned URL

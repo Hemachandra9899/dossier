@@ -4,17 +4,17 @@ import { useState } from "react";
 
 import { CircleHelpIcon, UsersIcon } from "lucide-react";
 
-import { AddGroupModal } from "@/components/datarooms/groups/add-group-modal";
-import GroupCard from "@/components/datarooms/groups/group-card";
-import { GroupCardPlaceholder } from "@/components/datarooms/groups/group-card-placeholder";
-import AppLayout from "@/components/layouts/app";
-import { TabMenu } from "@/components/tab-menu";
-import { Button } from "@/components/ui/button";
-import { BadgeTooltip } from "@/components/ui/tooltip";
+import { AddGroupModal } from "@/shared/ui/datarooms/groups/add-group-modal";
+import GroupCard from "@/shared/ui/datarooms/groups/group-card";
+import { GroupCardPlaceholder } from "@/shared/ui/datarooms/groups/group-card-placeholder";
+import AppLayout from "@/shared/ui/layouts/app";
+import { TabMenu } from "@/shared/ui/tab-menu";
+import { Button } from "@/shared/ui/button";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
 
-import { useDataroom } from "@/lib/swr/use-dataroom";
-import useDataroomGroups from "@/lib/swr/use-dataroom-groups";
-import { cn } from "@/lib/utils";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
+import useDataroomGroups from "@/shared/utils/swr/use-dataroom-groups";
+import { cn } from "@/shared/utils/utils";
 
 export default function DataroomGroupPage() {
   const { dataroom } = useDataroom();

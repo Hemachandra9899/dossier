@@ -13,17 +13,17 @@ import {
   type DataroomViewerHeaderStyle,
   type DataroomViewerLayoutPreset,
 } from "@/ee/features/branding/lib/dataroom-viewer-layout";
-import { validateRedirectUrl } from "@/lib/api/domains/validate-redirect-url";
-import { enforceDataroomMemberScope } from "@/lib/api/rbac/guard";
-import { DEFAULT_LOCALE, SUPPORTED_LOCALE_CODES } from "@/lib/i18n/locales";
+import { validateRedirectUrl } from "@/shared/utils/api/domains/validate-redirect-url";
+import { enforceDataroomMemberScope } from "@/shared/utils/api/rbac/guard";
+import { DEFAULT_LOCALE, SUPPORTED_LOCALE_CODES } from "@/shared/utils/i18n/locales";
 import {
   teamPlanAllowsCustomWelcomeAndCta,
   teamPlanAllowsLayoutCustomization,
   teamPlanAllowsVisitorLanguage,
-} from "@/modules/access/team-plan-custom-messaging";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+} from "@/features/access/team-plan-custom-messaging";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 const updateDataroomBrandingSchema = z.object({
   logo: z.string().nullable().optional(),

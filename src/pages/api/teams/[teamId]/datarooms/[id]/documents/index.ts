@@ -5,20 +5,20 @@ import {
   addFileToVectorStoreTask,
   processDocumentForAITask,
 } from "@/ee/features/ai/lib/trigger";
-import { isTeamPausedById } from "@/modules/access/is-team-paused";
+import { isTeamPausedById } from "@/features/access/is-team-paused";
 import { runs } from "@trigger.dev/sdk";
 import { waitUntil } from "@vercel/functions";
 
-import { withTeamApi } from "@/lib/api/auth/with-session-team";
-import { assertDocumentAccess } from "@/lib/api/rbac/entitlements";
-import { isDataroomScopedRole } from "@/lib/api/rbac/permissions";
-import { onDataroomDocumentsAttached } from "@/lib/dataroom/apply-default-permissions";
-import { errorhandler } from "@/lib/errorHandler";
-import { getFeatureFlags } from "@/lib/featureFlags";
-import prisma from "@/lib/prisma";
-import { sendDataroomChangeNotificationTask } from "@/lib/trigger/dataroom-change-notification";
-import { log, serializeFileSize } from "@/lib/utils";
-import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
+import { withTeamApi } from "@/shared/utils/api/auth/with-session-team";
+import { assertDocumentAccess } from "@/shared/utils/api/rbac/entitlements";
+import { isDataroomScopedRole } from "@/shared/utils/api/rbac/permissions";
+import { onDataroomDocumentsAttached } from "@/shared/utils/dataroom/apply-default-permissions";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import prisma from "@/platform/db";
+import { sendDataroomChangeNotificationTask } from "@/platform/queue/trigger/dataroom-change-notification";
+import { log, serializeFileSize } from "@/shared/utils/utils";
+import { sortItemsByIndexAndName } from "@/shared/utils/utils/sort-items-by-index-name";
 
 export const config = {
   // in order to enable `waitUntil` function

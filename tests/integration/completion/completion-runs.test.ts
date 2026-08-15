@@ -2,18 +2,18 @@ import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 import crypto from "crypto";
 
-import "@/tests/helpers/mock-session";
-import { sessionState } from "@/tests/helpers/mock-session";
-import { mockReq, mockRes } from "@/tests/helpers/mock-api";
+import "../../helpers/mock-session";
+import { sessionState } from "../../helpers/mock-session";
+import { mockReq, mockRes } from "../../helpers/mock-api";
 import {
   closeTestDatabase,
   resetTestDatabase,
   seedTeam,
   seedUser,
   testPrisma,
-} from "@/tests/helpers/test-db";
-import { createDossierFile } from "@/modules/files/application/create-file";
-import { createCompletionRun } from "@/modules/completion/application/create-completion-run";
+} from "../../helpers/test-db";
+import { createDossierFile } from "@/features/files/application/create-file";
+import { createCompletionRun } from "@/features/completion/application/create-completion-run";
 import { default as completionHandler } from "@/pages/api/files/[fileId]/completion/index";
 import { default as recordHandler } from "@/pages/api/files/[fileId]/completion/[recordId]";
 

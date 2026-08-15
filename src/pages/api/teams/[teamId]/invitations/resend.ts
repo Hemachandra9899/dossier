@@ -3,13 +3,13 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
 
-import { hashToken } from "@/lib/api/auth/token";
-import { sendTeammateInviteEmail } from "@/lib/emails/send-teammate-invite";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { generateChecksum } from "@/lib/utils/generate-checksum";
-import { generateJWT } from "@/lib/utils/generate-jwt";
+import { hashToken } from "@/shared/utils/api/auth/token";
+import { sendTeammateInviteEmail } from "@/shared/utils/emails/send-teammate-invite";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { generateChecksum } from "@/shared/utils/utils/generate-checksum";
+import { generateJWT } from "@/shared/utils/utils/generate-jwt";
 
 export default async function handle(
   req: NextApiRequest,

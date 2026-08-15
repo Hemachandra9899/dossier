@@ -4,14 +4,14 @@ import { tasks } from "@trigger.dev/sdk";
 
 import { getServerSession } from "next-auth/next";
 
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
 import type { convertFilesToPdfTask } from "@/ee/features/conversions/lib/trigger/convert-files";
-import { convertPdfToImageRoute } from "@/lib/trigger/pdf-to-image-route";
-import { CustomUser } from "@/lib/types";
-import { getExtension, log, serializeFileSize } from "@/lib/utils";
-import { conversionQueueName } from "@/lib/utils/trigger-utils";
-import { documentUploadSchema } from "@/lib/zod/url-validation";
+import { convertPdfToImageRoute } from "@/platform/queue/trigger/pdf-to-image-route";
+import { CustomUser } from "@/shared/utils/types";
+import { getExtension, log, serializeFileSize } from "@/shared/utils/utils";
+import { conversionQueueName } from "@/shared/utils/utils/trigger-utils";
+import { documentUploadSchema } from "@/shared/utils/zod/url-validation";
 
 import { authOptions } from "../../../auth/[...nextauth]";
 

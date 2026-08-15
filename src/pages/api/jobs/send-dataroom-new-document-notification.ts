@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { sendDataroomDigestNotification } from "@/lib/emails/send-dataroom-digest-notification";
-import { sendDataroomNotification } from "@/lib/emails/send-dataroom-notification";
-import prisma from "@/lib/prisma";
-import { log } from "@/lib/utils";
-import { generateUnsubscribeUrl } from "@/lib/utils/unsubscribe";
+import { sendDataroomDigestNotification } from "@/shared/utils/emails/send-dataroom-digest-notification";
+import { sendDataroomNotification } from "@/shared/utils/emails/send-dataroom-notification";
+import prisma from "@/platform/db";
+import { log } from "@/shared/utils/utils";
+import { generateUnsubscribeUrl } from "@/shared/utils/utils/unsubscribe";
 
 export const config = {
   maxDuration: 120,

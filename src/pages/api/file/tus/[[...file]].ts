@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/modules/access/is-team-paused";
+import { isTeamPausedById } from "@/features/access/is-team-paused";
 import { getLimits } from "@/ee/limits/server";
 import { MultiRegionS3Store } from "@/ee/features/storage/s3-store";
 import { CopyObjectCommand } from "@aws-sdk/client-s3";
@@ -8,18 +8,18 @@ import { Server } from "@tus/server";
 import { getServerSession } from "next-auth/next";
 import path from "node:path";
 
-import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
-import { RedisLocker } from "@/lib/files/tus-redis-locker";
-import { MemoryLocker } from "@/lib/files/tus-memory-locker";
-import { newId } from "@/lib/id-helper";
-import prisma from "@/lib/prisma";
-import { lockerRedisClient } from "@/lib/redis";
-import { CustomUser } from "@/lib/types";
-import { buildContentDisposition, log, safeSlugify } from "@/lib/utils";
+import { getTeamS3ClientAndConfig } from "@/shared/utils/files/aws-client";
+import { RedisLocker } from "@/shared/utils/files/tus-redis-locker";
+import { MemoryLocker } from "@/shared/utils/files/tus-memory-locker";
+import { newId } from "@/shared/utils/id-helper";
+import prisma from "@/platform/db";
+import { lockerRedisClient } from "@/shared/utils/redis";
+import { CustomUser } from "@/shared/utils/types";
+import { buildContentDisposition, log, safeSlugify } from "@/shared/utils/utils";
 import {
   getFileSizeLimit,
   getFileSizeLimits,
-} from "@/lib/utils/get-file-size-limits";
+} from "@/shared/utils/utils/get-file-size-limits";
 
 import { authOptions } from "../../auth/[...nextauth]";
 

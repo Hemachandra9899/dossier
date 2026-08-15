@@ -5,28 +5,28 @@ import ErrorPage from "next/error";
 import { Suspense, useState } from "react";
 import useSWR from "swr";
 
-import { useTeam } from "@/context/team-context";
-import { signingApi } from "@/modules/signing/ui/signing-api";
-import { RequestManagement } from "@/modules/signing/ui/request-management";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
+import { signingApi } from "@/features/signing/ui/signing-api";
+import { RequestManagement } from "@/features/signing/ui/request-management";
 
-import { useDocumentLinks } from "@/lib/swr/use-document";
-import { useDocumentOverview } from "@/lib/swr/use-document-overview";
-import DocumentHeader from "@/components/documents/document-header";
-import { DocumentPreviewButton } from "@/components/documents/document-preview-button";
+import { useDocumentLinks } from "@/shared/utils/swr/use-document";
+import { useDocumentOverview } from "@/shared/utils/swr/use-document-overview";
+import DocumentHeader from "@/shared/ui/documents/document-header";
+import { DocumentPreviewButton } from "@/shared/ui/documents/document-preview-button";
 // Import placeholder components
-import DocumentStatsPlaceholder from "@/components/documents/document-stats-placeholder";
-import LinkDocumentIndicator from "@/components/documents/link-document-indicator";
-import NotionAccessibilityIndicator from "@/components/documents/notion-accessibility-indicator";
-import VideoStatsPlaceholder from "@/components/documents/video-stats-placeholder";
-import AppLayout from "@/components/layouts/app";
-import LinkSheet from "@/components/links/link-sheet";
-import LinksTable from "@/components/links/links-table";
-import { Button } from "@/components/ui/button";
-import LoadingSpinner from "@/components/ui/loading-spinner";
+import DocumentStatsPlaceholder from "@/shared/ui/documents/document-stats-placeholder";
+import LinkDocumentIndicator from "@/shared/ui/documents/link-document-indicator";
+import NotionAccessibilityIndicator from "@/shared/ui/documents/notion-accessibility-indicator";
+import VideoStatsPlaceholder from "@/shared/ui/documents/video-stats-placeholder";
+import AppLayout from "@/shared/ui/layouts/app";
+import LinkSheet from "@/shared/ui/links/link-sheet";
+import LinksTable from "@/shared/ui/links/links-table";
+import { Button } from "@/shared/ui/button";
+import LoadingSpinner from "@/shared/ui/loading-spinner";
 
 const StatsComponent = dynamic(
   () =>
-    import("@/components/documents/stats").then((mod) => ({
+    import("@/shared/ui/documents/stats").then((mod) => ({
       default: mod.StatsComponent,
     })),
   {
@@ -40,7 +40,7 @@ const StatsComponent = dynamic(
 );
 
 const VideoAnalytics = dynamic(
-  () => import("@/components/documents/video-analytics"),
+  () => import("@/shared/ui/documents/video-analytics"),
   {
     loading: () => (
       <div className="flex h-48 animate-pulse items-center justify-center rounded-lg bg-gray-100">
@@ -52,7 +52,7 @@ const VideoAnalytics = dynamic(
 );
 
 const VisitorsTable = dynamic(
-  () => import("@/components/visitors/visitors-table"),
+  () => import("@/shared/ui/visitors/visitors-table"),
   {
     loading: () => (
       <div className="flex h-64 animate-pulse items-center justify-center rounded-lg bg-gray-100">
@@ -65,7 +65,7 @@ const VisitorsTable = dynamic(
 
 const BulkImportLinksModal = dynamic(
   () =>
-    import("@/components/links/bulk-import-modal").then((mod) => ({
+    import("@/shared/ui/links/bulk-import-modal").then((mod) => ({
       default: mod.BulkImportLinksModal,
     })),
   { ssr: false },

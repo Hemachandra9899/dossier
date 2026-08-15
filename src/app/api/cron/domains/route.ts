@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { receiver } from "@/lib/cron";
+import { receiver } from "@/shared/utils/cron";
 import {
   getConfigResponse,
   getDomainResponse,
   verifyDomain,
-} from "@/lib/domains";
-import prisma from "@/lib/prisma";
-import { log } from "@/lib/utils";
+} from "@/shared/utils/domains";
+import prisma from "@/platform/db";
+import { log } from "@/shared/utils/utils";
 
 import { handleDomainUpdates } from "./utils";
 

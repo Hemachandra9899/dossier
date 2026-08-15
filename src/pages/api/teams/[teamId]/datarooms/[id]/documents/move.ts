@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { withTeamApi } from "@/lib/api/auth/with-session-team";
-import prisma from "@/lib/prisma";
+import { withTeamApi } from "@/shared/utils/api/auth/with-session-team";
+import prisma from "@/platform/db";
 
 // PATCH /api/teams/:teamId/datarooms/:id/documents/move
 const patchHandler = withTeamApi(

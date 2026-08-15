@@ -3,15 +3,15 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import { assertDocumentAccess } from "@/lib/api/rbac/entitlements";
-import { isDataroomScopedRole } from "@/lib/api/rbac/permissions";
-import { TeamError, errorhandler } from "@/lib/errorHandler";
-import { getFeatureFlags } from "@/lib/featureFlags";
-import { deleteFile } from "@/lib/files/delete-file-server";
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
-import { CustomUser } from "@/lib/types";
-import { serializeFileSize } from "@/lib/utils";
+import { assertDocumentAccess } from "@/shared/utils/api/rbac/entitlements";
+import { isDataroomScopedRole } from "@/shared/utils/api/rbac/permissions";
+import { TeamError, errorhandler } from "@/shared/utils/errorHandler";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import { deleteFile } from "@/shared/utils/files/delete-file-server";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
+import { CustomUser } from "@/shared/utils/types";
+import { serializeFileSize } from "@/shared/utils/utils";
 
 export default async function handle(
   req: NextApiRequest,

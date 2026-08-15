@@ -2,12 +2,12 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { z } from "zod";
 
-import { TeamError, errorhandler } from "@/lib/errorHandler";
+import { TeamError, errorhandler } from "@/shared/utils/errorHandler";
 import {
   buildSignedAgreementAccessCookie,
   mintSignedAgreementAccessToken,
-} from "@/lib/signing/access-token";
-import { syncAgreementResponseWithSigningDocument } from "@/lib/signing/agreements";
+} from "@/shared/utils/signing/access-token";
+import { syncAgreementResponseWithSigningDocument } from "@/shared/utils/signing/agreements";
 
 // `syncAgreementResponseWithSigningDocument` schedules a background folder
 // move via `waitUntil`, which requires response streaming on Pages API.

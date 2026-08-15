@@ -3,15 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
-import { authOptions } from "@/lib/auth/auth-options";
-import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
-import { verifyPreviewSession } from "@/lib/auth/preview-auth";
-import { getFile } from "@/lib/files/get-file";
-import { signPageLinks } from "@/lib/files/sign-page-links";
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
-import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
+import { authOptions } from "@/shared/utils/auth/auth-options";
+import { verifyDataroomSession } from "@/shared/utils/auth/dataroom-auth";
+import { verifyPreviewSession } from "@/shared/utils/auth/preview-auth";
+import { getFile } from "@/shared/utils/files/get-file";
+import { signPageLinks } from "@/shared/utils/files/sign-page-links";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
+import { CustomUser } from "@/shared/utils/types";
+import { log } from "@/shared/utils/utils";
 
 const MAX_PAGES_PER_REQUEST = 15;
 const VIEW_MAX_AGE_MS = 23 * 60 * 60 * 1000; // 23 hours

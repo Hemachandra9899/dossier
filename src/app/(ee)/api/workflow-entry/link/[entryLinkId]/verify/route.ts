@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ipAddress, waitUntil } from "@vercel/functions";
 import { z } from "zod";
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
-import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
-import { generateOTP } from "@/lib/utils/generate-otp";
-import { validateEmail } from "@/lib/utils/validate-email";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
+import { sendOtpVerificationEmail } from "@/shared/utils/emails/send-email-otp-verification";
+import { generateOTP } from "@/shared/utils/utils/generate-otp";
+import { validateEmail } from "@/shared/utils/utils/validate-email";
 import { VerifyEmailRequestSchema } from "@/ee/features/workflows/lib/types";
 
 // POST /app/(ee)/api/workflow-entry/[entryLinkId]/verify - Send OTP

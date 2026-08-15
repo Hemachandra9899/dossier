@@ -7,13 +7,13 @@ import {
 } from "@/ee/features/ai/lib/trigger";
 import { waitUntil } from "@vercel/functions";
 
-import { withTeamApi } from "@/lib/api/auth/with-session-team";
-import { assertDocumentAccess } from "@/lib/api/rbac/entitlements";
-import { isDataroomScopedRole } from "@/lib/api/rbac/permissions";
-import { onDataroomDocumentsAttached } from "@/lib/dataroom/apply-default-permissions";
-import { errorhandler } from "@/lib/errorHandler";
-import { getFeatureFlags } from "@/lib/featureFlags";
-import prisma from "@/lib/prisma";
+import { withTeamApi } from "@/shared/utils/api/auth/with-session-team";
+import { assertDocumentAccess } from "@/shared/utils/api/rbac/entitlements";
+import { isDataroomScopedRole } from "@/shared/utils/api/rbac/permissions";
+import { onDataroomDocumentsAttached } from "@/shared/utils/dataroom/apply-default-permissions";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import prisma from "@/platform/db";
 
 export const config = {
   // in order to enable `waitUntil` function

@@ -2,31 +2,31 @@ import { useRouter } from "next/router";
 
 import { useRef, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { addDays, format } from "date-fns";
 import { BarChart3, FileTextIcon, LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
-import { useEntryRedirect } from "@/lib/hooks/use-last-visited";
-import { usePlan } from "@/lib/swr/use-billing";
-import { fetcher } from "@/lib/utils";
+import { useEntryRedirect } from "@/shared/utils/hooks/use-last-visited";
+import { usePlan } from "@/shared/utils/swr/use-billing";
+import { fetcher } from "@/shared/utils/utils";
 
-import { AnalyticsCard } from "@/components/analytics/analytics-card";
-import DashboardViewsChart from "@/components/analytics/dashboard-views-chart";
-import DocumentsTable from "@/components/analytics/documents-table";
-import LinksTable from "@/components/analytics/links-table";
+import { AnalyticsCard } from "@/shared/ui/analytics/analytics-card";
+import DashboardViewsChart from "@/shared/ui/analytics/dashboard-views-chart";
+import DocumentsTable from "@/shared/ui/analytics/documents-table";
+import LinksTable from "@/shared/ui/analytics/links-table";
 import {
   DASHBOARD_TIME_RANGES,
   DashboardTimeRange,
   TimeRangeSelect,
   isDashboardTimeRange,
-} from "@/components/analytics/time-range-select";
-import ViewsTable from "@/components/analytics/views-table";
-import VisitorsTable from "@/components/analytics/visitors-table";
-import AppLayout from "@/components/layouts/app";
-import { TabMenu } from "@/components/tab-menu";
-import LoadingSpinner from "@/components/ui/loading-spinner";
+} from "@/shared/ui/analytics/time-range-select";
+import ViewsTable from "@/shared/ui/analytics/views-table";
+import VisitorsTable from "@/shared/ui/analytics/visitors-table";
+import AppLayout from "@/shared/ui/layouts/app";
+import { TabMenu } from "@/shared/ui/tab-menu";
+import LoadingSpinner from "@/shared/ui/loading-spinner";
 
 interface OverviewData {
   counts: {

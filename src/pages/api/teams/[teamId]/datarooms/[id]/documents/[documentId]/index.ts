@@ -3,9 +3,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import { enforceDataroomMemberScope } from "@/lib/api/rbac/guard";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { enforceDataroomMemberScope } from "@/shared/utils/api/rbac/guard";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handle(
   req: NextApiRequest,

@@ -1,9 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
-import { verifyUnsubscribeToken } from "@/lib/utils/unsubscribe";
-import { ZViewerNotificationPreferencesSchema } from "@/lib/zod/schemas/notifications";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
+import { verifyUnsubscribeToken } from "@/shared/utils/utils/unsubscribe";
+import { ZViewerNotificationPreferencesSchema } from "@/shared/utils/zod/schemas/notifications";
 
 export default async function handle(
   req: NextApiRequest,

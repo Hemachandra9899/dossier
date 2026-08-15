@@ -1,9 +1,9 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { getDataroomSessionByLinkIdInPagesRouter } from "@/lib/auth/dataroom-auth";
-import { generateFreshPresignedUrl } from "@/lib/files/bulk-download-presign";
-import prisma from "@/lib/prisma";
-import { downloadJobStore } from "@/lib/redis-download-job-store";
+import { getDataroomSessionByLinkIdInPagesRouter } from "@/shared/utils/auth/dataroom-auth";
+import { generateFreshPresignedUrl } from "@/shared/utils/files/bulk-download-presign";
+import prisma from "@/platform/db";
+import { downloadJobStore } from "@/shared/utils/redis-download-job-store";
 
 export default async function handler(
   req: NextApiRequest,

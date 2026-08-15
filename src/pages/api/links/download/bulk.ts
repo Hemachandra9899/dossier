@@ -2,11 +2,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { ViewType } from "@prisma/client";
 
-import { getDataroomSessionByLinkIdInPagesRouter } from "@/lib/auth/dataroom-auth";
-import prisma from "@/lib/prisma";
-import { downloadJobStore } from "@/lib/redis-download-job-store";
-import { bulkDownloadTask } from "@/lib/trigger/bulk-download";
-import { getIpAddress } from "@/lib/utils/ip";
+import { getDataroomSessionByLinkIdInPagesRouter } from "@/shared/utils/auth/dataroom-auth";
+import prisma from "@/platform/db";
+import { downloadJobStore } from "@/shared/utils/redis-download-job-store";
+import { bulkDownloadTask } from "@/platform/queue/trigger/bulk-download";
+import { getIpAddress } from "@/shared/utils/utils/ip";
 
 export const config = {
   // Lightweight handler: validate access + create job + trigger task. The

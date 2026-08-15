@@ -2,17 +2,17 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { LinkType } from "@prisma/client";
 
-import { verifyDataroomSessionInPagesRouter } from "@/lib/auth/dataroom-auth";
-import { verifyLinkSessionInPagesRouter } from "@/lib/auth/link-session";
-import { getFile } from "@/lib/files/get-file";
-import { notifyDocumentDownload } from "@/lib/integrations/slack/events";
-import prisma from "@/lib/prisma";
+import { verifyDataroomSessionInPagesRouter } from "@/shared/utils/auth/dataroom-auth";
+import { verifyLinkSessionInPagesRouter } from "@/shared/utils/auth/link-session";
+import { getFile } from "@/shared/utils/files/get-file";
+import { notifyDocumentDownload } from "@/shared/utils/integrations/slack/events";
+import prisma from "@/platform/db";
 import {
   buildAttachmentDispositionForName,
   getFileNameWithPdfExtension,
-} from "@/lib/utils";
-import { ensureFileExtension } from "@/lib/utils/get-content-type";
-import { getIpAddress } from "@/lib/utils/ip";
+} from "@/shared/utils/utils";
+import { ensureFileExtension } from "@/shared/utils/utils/get-content-type";
+import { getIpAddress } from "@/shared/utils/utils/ip";
 
 // This function can run for a maximum of 300 seconds
 export const config = {

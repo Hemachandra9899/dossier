@@ -4,12 +4,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
 
-import { requireTeamMember } from "@/lib/api/require-team-member";
-import { errorhandler } from "@/lib/errorHandler";
-import { createRequest } from "@/modules/signing/application/create-request";
-import { createSigningContext } from "@/modules/signing/application/context";
-import { isDossierSigningEnabled } from "@/modules/signing/config";
-import { signatureRecipientsInputSchema } from "@/modules/signing/domain/recipient-validation";
+import { requireTeamMember } from "@/shared/utils/api/require-team-member";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import { createRequest } from "@/features/signing/application/create-request";
+import { createSigningContext } from "@/features/signing/application/context";
+import { isDossierSigningEnabled } from "@/features/signing/config";
+import { signatureRecipientsInputSchema } from "@/features/signing/domain/recipient-validation";
 
 const bodySchema = z.object({
   documentId: z.string().min(1),

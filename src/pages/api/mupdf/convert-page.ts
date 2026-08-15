@@ -5,9 +5,9 @@ import { get } from "@vercel/edge-config";
 import { waitUntil } from "@vercel/functions";
 import * as mupdf from "mupdf";
 
-import { putFileServer } from "@/lib/files/put-file-server";
-import prisma from "@/lib/prisma";
-import { log } from "@/lib/utils";
+import { putFileServer } from "@/shared/utils/files/put-file-server";
+import prisma from "@/platform/db";
+import { log } from "@/shared/utils/utils";
 
 // This function can run for a maximum of 120 seconds
 export const config = {

@@ -1,7 +1,7 @@
-import { verifyQstashSignature } from "@/lib/cron/verify-qstash";
-import { sendWelcomeEmail } from "@/lib/emails/send-welcome";
-import prisma from "@/lib/prisma";
-import { subscribe } from "@/lib/resend";
+import { verifyQstashSignature } from "@/shared/utils/cron/verify-qstash";
+import { sendWelcomeEmail } from "@/shared/utils/emails/send-welcome";
+import prisma from "@/platform/db";
+import { subscribe } from "@/shared/utils/resend";
 
 export const dynamic = "force-dynamic";
 

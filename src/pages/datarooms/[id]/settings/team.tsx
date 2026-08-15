@@ -1,7 +1,7 @@
-import { useDataroom } from "@/lib/swr/use-dataroom";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
 
-import DataroomTeamMembers from "@/components/datarooms/settings/dataroom-team-members";
-import AppLayout from "@/components/layouts/app";
+import DataroomTeamMembers from "@/shared/ui/datarooms/settings/dataroom-team-members";
+import AppLayout from "@/shared/ui/layouts/app";
 
 export default function DataroomTeamSettings() {
   const { dataroom } = useDataroom();

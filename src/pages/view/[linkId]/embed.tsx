@@ -2,14 +2,14 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
-import { useAnalytics } from "@/lib/analytics";
-import { useUrlPasscode } from "@/lib/hooks/use-url-passcode";
+import { useAnalytics } from "@/shared/utils/analytics";
+import { useUrlPasscode } from "@/shared/utils/hooks/use-url-passcode";
 
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import DataroomView from "@/components/view/dataroom/dataroom-view";
-import DocumentView from "@/components/view/document-view";
-import { ViewerI18nProvider } from "@/components/view/viewer-i18n-provider";
-import { ViewerNotFound } from "@/components/view/viewer-not-found";
+import LoadingSpinner from "@/shared/ui/loading-spinner";
+import DataroomView from "@/shared/ui/view/dataroom/dataroom-view";
+import DocumentView from "@/shared/ui/view/document-view";
+import { ViewerI18nProvider } from "@/shared/ui/view/viewer-i18n-provider";
+import { ViewerNotFound } from "@/shared/ui/view/viewer-not-found";
 
 import { ViewPageProps } from "./index";
 

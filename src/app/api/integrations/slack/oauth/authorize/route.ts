@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
-import { getSlackInstallationUrl } from "@/lib/integrations/slack/install";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { getSearchParams } from "@/lib/utils/get-search-params";
+import { getSlackInstallationUrl } from "@/shared/utils/integrations/slack/install";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { getSearchParams } from "@/shared/utils/utils/get-search-params";
 
 const oAuthAuthorizeSchema = z.object({
   teamId: z.string().cuid(),

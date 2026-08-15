@@ -4,13 +4,13 @@ import {
   UpdateWorkflowRequestSchema,
   formatZodError,
 } from "@/ee/features/workflows/lib/validation";
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import { customAlphabet } from "nanoid";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 // GET /app/(ee)/api/workflows/[workflowId]?teamId=xxx - Get single workflow with details
 export async function GET(

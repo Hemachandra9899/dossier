@@ -1,21 +1,21 @@
 import { useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
-import { useTeamSettings } from "@/lib/swr/use-team-settings";
-import { validateContent } from "@/lib/utils/sanitize-html";
-import AppLayout from "@/components/layouts/app";
-import DeleteTeam from "@/components/settings/delete-team";
-import GlobalBlockListForm from "@/components/settings/global-block-list-form";
-import IgnoredDomainsForm from "@/components/settings/ignored-domains-form";
-import { SettingsHeader } from "@/components/settings/settings-header";
-import { SurveySettings } from "@/components/settings/survey-settings";
-import { TimezoneSelector } from "@/components/settings/timezone-selector";
-import { Form } from "@/components/ui/form";
+import { useAnalytics } from "@/shared/utils/analytics";
+import { usePlan } from "@/shared/utils/swr/use-billing";
+import { useTeamSettings } from "@/shared/utils/swr/use-team-settings";
+import { validateContent } from "@/shared/utils/utils/sanitize-html";
+import AppLayout from "@/shared/ui/layouts/app";
+import DeleteTeam from "@/shared/ui/settings/delete-team";
+import GlobalBlockListForm from "@/shared/ui/settings/global-block-list-form";
+import IgnoredDomainsForm from "@/shared/ui/settings/ignored-domains-form";
+import { SettingsHeader } from "@/shared/ui/settings/settings-header";
+import { SurveySettings } from "@/shared/ui/settings/survey-settings";
+import { TimezoneSelector } from "@/shared/ui/settings/timezone-selector";
+import { Form } from "@/shared/ui/form";
 
 export default function General() {
   const analytics = useAnalytics();

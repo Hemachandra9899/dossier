@@ -11,23 +11,23 @@ import { toast } from "sonner";
 
 import {
   useNotificationPreferences,
-} from "@/lib/swr/use-notification-preferences";
+} from "@/shared/utils/swr/use-notification-preferences";
 import type {
   TeamNotificationScope,
   TeamNotificationType,
-} from "@/lib/zod/schemas/notifications";
+} from "@/shared/utils/zod/schemas/notifications";
 
-import AppLayout from "@/components/layouts/app";
-import { SettingsHeader } from "@/components/settings/settings-header";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SettingsHeader } from "@/shared/ui/settings/settings-header";
+import { Alert, AlertDescription } from "@/shared/ui/alert";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+} from "@/shared/ui/select";
+import { Switch } from "@/shared/ui/switch";
 
 const SCOPE_LABELS: Record<TeamNotificationScope, string> = {
   ALL: "All activity",

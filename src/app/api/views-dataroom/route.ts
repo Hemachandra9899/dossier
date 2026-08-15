@@ -5,52 +5,52 @@ import { ItemType, LinkAudienceType, LinkType } from "@prisma/client";
 import { ipAddress, waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth";
 
-import { hashToken } from "@/lib/api/auth/token";
-import { authOptions } from "@/lib/auth/auth-options";
+import { hashToken } from "@/shared/utils/api/auth/token";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import {
   DataroomSession,
   collectFingerprintHeaders,
   createDataroomSession,
   generateSessionFingerprint,
-} from "@/lib/auth/dataroom-auth";
-import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
-import { PreviewSession, verifyPreviewSession } from "@/lib/auth/preview-auth";
-import { isEmbeddableUrl } from "@/lib/edge-config/embeddable-domains";
-import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
-import { getFeatureFlags } from "@/lib/featureFlags";
-import { getAdvancedExcelFileUrl } from "@/lib/files/advanced-excel-url";
-import { getFile } from "@/lib/files/get-file";
-import { signPageLinks } from "@/lib/files/sign-page-links";
-import { newId } from "@/lib/id-helper";
+} from "@/shared/utils/auth/dataroom-auth";
+import { verifyDataroomSession } from "@/shared/utils/auth/dataroom-auth";
+import { PreviewSession, verifyPreviewSession } from "@/shared/utils/auth/preview-auth";
+import { isEmbeddableUrl } from "@/shared/utils/edge-config/embeddable-domains";
+import { sendOtpVerificationEmail } from "@/shared/utils/emails/send-email-otp-verification";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import { getAdvancedExcelFileUrl } from "@/shared/utils/files/advanced-excel-url";
+import { getFile } from "@/shared/utils/files/get-file";
+import { signPageLinks } from "@/shared/utils/files/sign-page-links";
+import { newId } from "@/shared/utils/id-helper";
 import {
   notifyDataroomAccess,
   notifyDocumentView,
-} from "@/lib/integrations/slack/events";
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
-import { parseSheet } from "@/lib/sheet";
+} from "@/shared/utils/integrations/slack/events";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
+import { parseSheet } from "@/shared/utils/sheet";
 import {
   getSignedAgreementAccessCookieName,
   parseSignedAgreementAccessToken,
-} from "@/lib/signing/access-token";
+} from "@/shared/utils/signing/access-token";
 import {
   ensureAgreementResponseForAccess,
   normalizeSignerEmail,
   normalizeSignerName,
-} from "@/lib/signing/agreements";
-import { recordLinkView } from "@/lib/tracking/record-link-view";
-import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
-import { checkPassword, decryptEncrpytedPassword, log } from "@/lib/utils";
+} from "@/shared/utils/signing/agreements";
+import { recordLinkView } from "@/shared/utils/tracking/record-link-view";
+import { CustomUser, WatermarkConfigSchema } from "@/shared/utils/types";
+import { checkPassword, decryptEncrpytedPassword, log } from "@/shared/utils/utils";
 import {
   extractEmailDomain,
   isEmailMatched,
   normalizeGroupDomain,
-} from "@/lib/utils/email-domain";
-import { generateOTP } from "@/lib/utils/generate-otp";
-import { LOCALHOST_IP } from "@/lib/utils/geo";
-import { checkGlobalBlockList } from "@/lib/utils/global-block-list";
-import { resolveHtmlContentForRender } from "@/lib/utils/html-document";
-import { validateEmail } from "@/lib/utils/validate-email";
+} from "@/shared/utils/utils/email-domain";
+import { generateOTP } from "@/shared/utils/utils/generate-otp";
+import { LOCALHOST_IP } from "@/shared/utils/utils/geo";
+import { checkGlobalBlockList } from "@/shared/utils/utils/global-block-list";
+import { resolveHtmlContentForRender } from "@/shared/utils/utils/html-document";
+import { validateEmail } from "@/shared/utils/utils/validate-email";
 
 export async function POST(request: NextRequest) {
   try {

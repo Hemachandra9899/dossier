@@ -5,12 +5,12 @@ import { getFilteredDataroomDocumentIds } from "@/ee/features/ai/lib/chat/get-fi
 import { sendMessage } from "@/ee/features/ai/lib/chat/send-message";
 import { validateChatAccess } from "@/ee/features/ai/lib/permissions/validate-chat-access";
 import { sendMessageSchema } from "@/ee/features/ai/schemas/chat";
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import { getServerSession } from "next-auth";
 
-import { getFeatureFlags } from "@/lib/featureFlags";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 /**
  * POST /api/ai/chat/[chatId]/messages

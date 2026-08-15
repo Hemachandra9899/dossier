@@ -1,19 +1,19 @@
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import { Team } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import z from "zod";
 
-import { installIntegration } from "@/lib/integrations/install";
-import { getSlackEnv } from "@/lib/integrations/slack/env";
-import { SlackCredential } from "@/lib/integrations/slack/types";
-import { encryptSlackToken } from "@/lib/integrations/slack/utils";
-import prisma from "@/lib/prisma";
-import { redis } from "@/lib/redis";
-import { CustomUser } from "@/lib/types";
-import { getSearchParams } from "@/lib/utils/get-search-params";
+import { installIntegration } from "@/shared/utils/integrations/install";
+import { getSlackEnv } from "@/shared/utils/integrations/slack/env";
+import { SlackCredential } from "@/shared/utils/integrations/slack/types";
+import { encryptSlackToken } from "@/shared/utils/integrations/slack/utils";
+import prisma from "@/platform/db";
+import { redis } from "@/shared/utils/redis";
+import { CustomUser } from "@/shared/utils/types";
+import { getSearchParams } from "@/shared/utils/utils/get-search-params";
 
 export const dynamic = "force-dynamic";
 

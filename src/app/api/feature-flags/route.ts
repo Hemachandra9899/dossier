@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getFeatureFlags } from "@/lib/featureFlags";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
 
 export const runtime = "edge";
 

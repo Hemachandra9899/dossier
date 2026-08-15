@@ -3,15 +3,15 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
 import {
   buildAgreementSigningExternalId,
   getSigningAgreementCreateData,
-} from "@/lib/signing/agreements";
-import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
-import { validateContent } from "@/lib/utils/sanitize-html";
+} from "@/shared/utils/signing/agreements";
+import { CustomUser } from "@/shared/utils/types";
+import { log } from "@/shared/utils/utils";
+import { validateContent } from "@/shared/utils/utils/sanitize-html";
 
 import { authOptions } from "../../../auth/[...nextauth]";
 

@@ -4,13 +4,13 @@ import {
   CreateWorkflowRequestSchema,
   formatZodError,
 } from "@/ee/features/workflows/lib/validation";
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
-import { getFeatureFlags } from "@/lib/featureFlags";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 // GET /app/(ee)/api/workflows?teamId=xxx - List all workflows for a team
 export async function GET(req: NextRequest) {

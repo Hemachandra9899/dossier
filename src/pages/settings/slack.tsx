@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import {
   CircleHelpIcon,
   Hash,
@@ -12,33 +12,33 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { useAnalytics } from "@/lib/analytics";
+import { useAnalytics } from "@/shared/utils/analytics";
 import {
   SlackChannelConfig,
   SlackIntegration,
-} from "@/lib/integrations/slack/types";
-import { useSlackChannels } from "@/lib/swr/use-slack-channels";
-import { useSlackIntegration } from "@/lib/swr/use-slack-integration";
+} from "@/shared/utils/integrations/slack/types";
+import { useSlackChannels } from "@/shared/utils/swr/use-slack-channels";
+import { useSlackIntegration } from "@/shared/utils/swr/use-slack-integration";
 
-import AppLayout from "@/components/layouts/app";
-import { SettingsHeader } from "@/components/settings/settings-header";
-import SlackSettingsSkeleton from "@/components/settings/slack-settings-skeleton";
-import { SlackIcon } from "@/components/shared/icons/slack-icon";
-import { CommonAlertDialog } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SettingsHeader } from "@/shared/ui/settings/settings-header";
+import SlackSettingsSkeleton from "@/shared/ui/settings/slack-settings-skeleton";
+import { SlackIcon } from "@/shared/ui/shared/icons/slack-icon";
+import { CommonAlertDialog } from "@/shared/ui/alert-dialog";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { MultiSelect } from "@/components/ui/multi-select-v2";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { BadgeTooltip } from "@/components/ui/tooltip";
+} from "@/shared/ui/card";
+import { Label } from "@/shared/ui/label";
+import { MultiSelect } from "@/shared/ui/multi-select-v2";
+import { Separator } from "@/shared/ui/separator";
+import { Switch } from "@/shared/ui/switch";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
 
 export default function SlackSettings() {
   const router = useRouter();

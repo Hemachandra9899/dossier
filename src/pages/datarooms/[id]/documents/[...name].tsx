@@ -2,29 +2,29 @@ import { useRouter } from "next/router";
 
 import { useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { ArrowUpDownIcon } from "lucide-react";
 
 import {
   useDataroom,
   useDataroomItems,
   useDataroomSearch,
-} from "@/lib/swr/use-dataroom";
+} from "@/shared/utils/swr/use-dataroom";
 
-import DownloadDataroomButton from "@/components/datarooms/actions/download-dataroom";
-import GenerateIndexButton from "@/components/datarooms/actions/generate-index-button";
-import RebuildIndexButton from "@/components/datarooms/actions/rebuild-index-button";
-import { BreadcrumbComponent } from "@/components/datarooms/dataroom-breadcrumb";
-import { DataroomItemsList } from "@/components/datarooms/dataroom-items-list";
-import { DataroomSearchResults } from "@/components/datarooms/dataroom-search-results";
-import { SidebarFolderTree } from "@/components/datarooms/folders";
-import { DataroomSortableList } from "@/components/datarooms/sortable/sortable-list";
-import { AddDocumentDropdown } from "@/components/documents/add-document-dropdown";
-import { LoadingDocuments } from "@/components/documents/loading-document";
-import AppLayout from "@/components/layouts/app";
-import { SearchBoxPersisted } from "@/components/search-box";
-import { Button } from "@/components/ui/button";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import DownloadDataroomButton from "@/shared/ui/datarooms/actions/download-dataroom";
+import GenerateIndexButton from "@/shared/ui/datarooms/actions/generate-index-button";
+import RebuildIndexButton from "@/shared/ui/datarooms/actions/rebuild-index-button";
+import { BreadcrumbComponent } from "@/shared/ui/datarooms/dataroom-breadcrumb";
+import { DataroomItemsList } from "@/shared/ui/datarooms/dataroom-items-list";
+import { DataroomSearchResults } from "@/shared/ui/datarooms/dataroom-search-results";
+import { SidebarFolderTree } from "@/shared/ui/datarooms/folders";
+import { DataroomSortableList } from "@/shared/ui/datarooms/sortable/sortable-list";
+import { AddDocumentDropdown } from "@/shared/ui/documents/add-document-dropdown";
+import { LoadingDocuments } from "@/shared/ui/documents/loading-document";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SearchBoxPersisted } from "@/shared/ui/search-box";
+import { Button } from "@/shared/ui/button";
+import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 
 export default function Documents() {
   const router = useRouter();

@@ -7,16 +7,16 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { createSigningContext } from "@/modules/signing/application/context";
-import { isDossierSigningRuntimeEnabled } from "@/modules/signing/config";
-import { createProviderEventDedupeKey } from "@/modules/signing/domain/signing-event";
-import { DOCUMENSO_SIGNING_EVENTS, mapDocumensoEventToStatus } from "@/modules/signing/provider/documenso/mapper";
+import { createSigningContext } from "@/features/signing/application/context";
+import { isDossierSigningRuntimeEnabled } from "@/features/signing/config";
+import { createProviderEventDedupeKey } from "@/features/signing/domain/signing-event";
+import { DOCUMENSO_SIGNING_EVENTS, mapDocumensoEventToStatus } from "@/features/signing/providers/documenso/mapper";
 import {
   DOCUMENSO_WEBHOOK_SECRET_HEADER,
   documensoWebhookPayloadSchema,
   verifyDocumensoWebhookSecret,
-} from "@/modules/signing/provider/documenso/webhook";
-import { processSigningProviderEventTask } from "@/lib/trigger/process-signing-provider-event";
+} from "@/features/signing/providers/documenso/webhook";
+import { processSigningProviderEventTask } from "@/platform/queue/trigger/process-signing-provider-event";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

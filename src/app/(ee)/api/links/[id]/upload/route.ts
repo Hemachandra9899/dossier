@@ -3,14 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { runs } from "@trigger.dev/sdk";
 import { waitUntil } from "@vercel/functions";
 
-import { processDocument } from "@/lib/api/documents/process-document";
-import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
-import { DocumentData } from "@/lib/documents/create-document";
-import prisma from "@/lib/prisma";
-import { sendDataroomChangeNotificationTask } from "@/lib/trigger/dataroom-change-notification";
-import { sendDataroomUploadNotificationTask } from "@/lib/trigger/dataroom-upload-notification";
-import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
-import { sanitizePlainText } from "@/lib/utils/sanitize-html";
+import { processDocument } from "@/shared/utils/api/documents/process-document";
+import { verifyDataroomSession } from "@/shared/utils/auth/dataroom-auth";
+import { DocumentData } from "@/shared/utils/documents/create-document";
+import prisma from "@/platform/db";
+import { sendDataroomChangeNotificationTask } from "@/platform/queue/trigger/dataroom-change-notification";
+import { sendDataroomUploadNotificationTask } from "@/platform/queue/trigger/dataroom-upload-notification";
+import { supportsAdvancedExcelMode } from "@/shared/utils/utils/get-content-type";
+import { sanitizePlainText } from "@/shared/utils/utils/sanitize-html";
 
 /**
  * GET /api/links/[id]/upload?dataroomId=xxx
@@ -443,7 +443,7 @@ export async function POST(
     if (taskUpdated && dossierFileId) {
       try {
         const { syncDossierFileStatus } = await import(
-          "@/modules/files/application/sync-file-status"
+          "@/features/files/application/sync-file-status"
         );
         await syncDossierFileStatus(dossierFileId);
       } catch (err) {
@@ -454,7 +454,7 @@ export async function POST(
     if (isTaskUpload && taskId && analysisId) {
       try {
         const { dossierDocumentAnalysisTask } = await import(
-          "@/lib/trigger/dossier-document-analysis"
+          "@/platform/queue/trigger/dossier-document-analysis"
         );
         waitUntil(
           dossierDocumentAnalysisTask.trigger(

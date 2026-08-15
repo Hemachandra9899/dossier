@@ -4,9 +4,9 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 import { parsePageId } from "notion-utils";
 
-import notion from "@/lib/notion";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import notion from "@/shared/utils/notion";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handle(
   req: NextApiRequest,

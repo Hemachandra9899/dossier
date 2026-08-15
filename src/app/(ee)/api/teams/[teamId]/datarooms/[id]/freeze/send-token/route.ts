@@ -3,12 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 import DataroomFreezeOtp from "@/ee/features/dataroom-freeze/emails/components/dataroom-freeze-otp";
 import { getServerSession } from "next-auth";
 
-import { authOptions } from "@/lib/auth/auth-options";
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
-import { sendEmail } from "@/lib/resend";
-import { CustomUser } from "@/lib/types";
-import { generateOTP } from "@/lib/utils/generate-otp";
+import { authOptions } from "@/shared/utils/auth/auth-options";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
+import { sendEmail } from "@/shared/utils/resend";
+import { CustomUser } from "@/shared/utils/types";
+import { generateOTP } from "@/shared/utils/utils/generate-otp";
 
 export async function POST(
   _request: NextRequest,

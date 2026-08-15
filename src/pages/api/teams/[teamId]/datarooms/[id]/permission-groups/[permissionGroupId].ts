@@ -6,7 +6,7 @@ import cuid from "cuid";
 import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
-import { revalidateLinksForPermissionGroup } from "@/lib/api/links/revalidate";
+import { revalidateLinksForPermissionGroup } from "@/shared/utils/api/links/revalidate";
 import {
   buildBulkUpsertPermissionsSql,
   buildDeletePermissionsNotInPayloadSql,
@@ -15,10 +15,10 @@ import {
   extractVisibleItemIds,
   type AncestorUpsertRow,
   type PermissionUpsertRow,
-} from "@/lib/dataroom/permissions-sql";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/dataroom/permissions-sql";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 // PUT can save thousands of permission rows in a single payload (think
 // "select all" on a large dataroom). With the bulk-SQL path below this is

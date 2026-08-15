@@ -2,15 +2,15 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import useViewers from "@/lib/swr/use-viewers";
+import { usePlan } from "@/shared/utils/swr/use-billing";
+import useViewers from "@/shared/utils/swr/use-viewers";
 
-import AppLayout from "@/components/layouts/app";
-import { SearchBoxPersisted } from "@/components/search-box";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ContactsTable } from "@/components/visitors/contacts-table";
-import { VisitorGroupsSection } from "@/components/visitors/visitor-groups-section";
-import { VisitorStatusFilter } from "@/components/visitors/visitor-status-filter";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SearchBoxPersisted } from "@/shared/ui/search-box";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { ContactsTable } from "@/shared/ui/visitors/contacts-table";
+import { VisitorGroupsSection } from "@/shared/ui/visitors/visitor-groups-section";
+import { VisitorStatusFilter } from "@/shared/ui/visitors/visitor-status-filter";
 
 export default function Visitors() {
   const router = useRouter();

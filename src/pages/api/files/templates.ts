@@ -2,8 +2,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import {
   requireTeamMembership,
   sendAuthorizationError,
-} from "@/modules/files/server/authorization";
-import { getDossierFileTemplates } from "@/modules/files/application/get-templates";
+} from "@/features/files/server/authorization";
+import { getDossierFileTemplates } from "@/features/files/application/get-templates";
 
 export default async function handler(
   req: NextApiRequest,

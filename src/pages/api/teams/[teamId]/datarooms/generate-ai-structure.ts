@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/modules/access/is-team-paused";
+import { isTeamPausedById } from "@/features/access/is-team-paused";
 import {
   getDataroomSystemPrompt,
   getDataroomUserPrompt,
@@ -10,8 +10,8 @@ import { generateObject } from "ai";
 import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 import { authOptions } from "../../../auth/[...nextauth]";
 

@@ -4,14 +4,14 @@ import { checkRateLimit, rateLimiters } from "@/ee/features/security";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
-import { trackAnalytics } from "@/lib/analytics";
+import { trackAnalytics } from "@/shared/utils/analytics";
 import {
   getConfigResponse,
   getDomainResponse,
   verifyDomain,
-} from "@/lib/domains";
-import prisma from "@/lib/prisma";
-import { CustomUser, DomainVerificationStatusProps } from "@/lib/types";
+} from "@/shared/utils/domains";
+import prisma from "@/platform/db";
+import { CustomUser, DomainVerificationStatusProps } from "@/shared/utils/types";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
 

@@ -10,7 +10,7 @@ import {
   recipientAccessCookieName,
   RECIPIENT_ACCESS_TOKEN_TTL_MS,
   verifyRecipientAccessToken,
-} from "@/modules/signing/domain/recipient-access-token";
+} from "@/features/signing/domain/recipient-access-token";
 
 const originalSecret = process.env.NEXT_PRIVATE_VERIFICATION_SECRET;
 

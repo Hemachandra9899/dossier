@@ -1,6 +1,6 @@
-import { withTeamApi } from "@/lib/api/auth/with-session-team";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
+import { withTeamApi } from "@/shared/utils/api/auth/with-session-team";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
 
 /**
  * Per-dataroom internal team membership (read + remove).

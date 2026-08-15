@@ -8,25 +8,25 @@ import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 import crypto from "crypto";
 
-import { cancelRequest } from "@/modules/signing/application/cancel-request";
-import { createEditorSession } from "@/modules/signing/application/create-editor-session";
-import { createRequest } from "@/modules/signing/application/create-request";
-import { createSigningSession } from "@/modules/signing/application/create-signing-session";
-import { createTemplate } from "@/modules/signing/application/create-template";
-import { exchangeRecipientAccessToken } from "@/modules/signing/application/exchange-recipient-access-token";
-import { getPublicRequest } from "@/modules/signing/application/get-public-request";
-import { getPublicSignedArtifact } from "@/modules/signing/application/get-public-signed-artifact";
-import { getRecipientAccessToken } from "@/modules/signing/application/get-recipient-access-token";
-import { getRequest } from "@/modules/signing/application/get-request";
-import { getSignedArtifact } from "@/modules/signing/application/get-signed-artifact";
-import { mirrorSignedArtifact } from "@/modules/signing/application/mirror-signed-artifact";
-import { processProviderEvent } from "@/modules/signing/application/process-provider-event";
+import { cancelRequest } from "@/features/signing/application/cancel-request";
+import { createEditorSession } from "@/features/signing/application/create-editor-session";
+import { createRequest } from "@/features/signing/application/create-request";
+import { createSigningSession } from "@/features/signing/application/create-signing-session";
+import { createTemplate } from "@/features/signing/application/create-template";
+import { exchangeRecipientAccessToken } from "@/features/signing/application/exchange-recipient-access-token";
+import { getPublicRequest } from "@/features/signing/application/get-public-request";
+import { getPublicSignedArtifact } from "@/features/signing/application/get-public-signed-artifact";
+import { getRecipientAccessToken } from "@/features/signing/application/get-recipient-access-token";
+import { getRequest } from "@/features/signing/application/get-request";
+import { getSignedArtifact } from "@/features/signing/application/get-signed-artifact";
+import { mirrorSignedArtifact } from "@/features/signing/application/mirror-signed-artifact";
+import { processProviderEvent } from "@/features/signing/application/process-provider-event";
 import {
   SigningNotFoundError,
   SigningProviderError,
   SigningStateError,
   SigningValidationError,
-} from "@/modules/signing/domain/signing-errors";
+} from "@/features/signing/domain/signing-errors";
 
 import {
   closeTestDatabase,
@@ -35,7 +35,7 @@ import {
   seedTeam,
   seedUser,
   testPrisma,
-} from "@/tests/helpers/test-db";
+} from "../../helpers/test-db";
 import {
   FakeArtifactStorage,
   FakeMirrorHandoff,
@@ -43,7 +43,7 @@ import {
   SIGNED_PDF_BYTES,
   buildTestSigningContext,
   stopSignedPdfServer,
-} from "@/tests/helpers/signing-fakes";
+} from "../../helpers/signing-fakes";
 async function setupTemplate() {
   const ctx = buildTestSigningContext({ runMirrorInline: true });
   const team = await seedTeam();

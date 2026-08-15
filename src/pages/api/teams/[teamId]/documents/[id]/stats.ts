@@ -4,18 +4,18 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { View } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
-import { assertDocumentAccess } from "@/lib/api/rbac/entitlements";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
+import { assertDocumentAccess } from "@/shared/utils/api/rbac/entitlements";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
 import {
   getTotalAvgPageDuration,
   getTotalDocumentDuration,
-} from "@/lib/tinybird";
+} from "@/shared/utils/tinybird";
 import {
   getVideoEventsByDocument,
   getViewCompletionStats,
-} from "@/lib/tinybird/pipes";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/tinybird/pipes";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handle(
   req: NextApiRequest,

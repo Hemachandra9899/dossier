@@ -1,19 +1,19 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/modules/access/is-team-paused";
+import { isTeamPausedById } from "@/features/access/is-team-paused";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
-import { hashToken } from "@/lib/api/auth/token";
-import { isDataroomScopedRole } from "@/lib/api/rbac/permissions";
-import { processDocument } from "@/lib/api/documents/process-document";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { log, serializeFileSize } from "@/lib/utils";
-import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
-import { documentUploadSchema } from "@/lib/zod/url-validation";
+import { hashToken } from "@/shared/utils/api/auth/token";
+import { isDataroomScopedRole } from "@/shared/utils/api/rbac/permissions";
+import { processDocument } from "@/shared/utils/api/documents/process-document";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { log, serializeFileSize } from "@/shared/utils/utils";
+import { supportsAdvancedExcelMode } from "@/shared/utils/utils/get-content-type";
+import { documentUploadSchema } from "@/shared/utils/zod/url-validation";
 
 export const config = {
   // in order to enable `waitUntil` function

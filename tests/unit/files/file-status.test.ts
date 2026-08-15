@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert";
 import { DossierFileStatus, SignatureRequestStatus } from "@prisma/client";
-import { deriveFileStatus } from "../../../modules/files/domain/file-status";
+import { deriveFileStatus } from "@/features/files/file-status";
 
 test("deriveFileStatus status derivation rules", async (t) => {
   await t.test("no requirements -> NEW", () => {

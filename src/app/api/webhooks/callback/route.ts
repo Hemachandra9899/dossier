@@ -1,14 +1,14 @@
 import { z } from "zod";
 
-import { verifyQstashSignature } from "@/lib/cron/verify-qstash";
-import prisma from "@/lib/prisma";
-import { recordWebhookEvent } from "@/lib/tinybird/publish";
-import { getSearchParams } from "@/lib/utils/get-search-params";
-import { WEBHOOK_TRIGGERS } from "@/lib/webhook/constants";
+import { verifyQstashSignature } from "@/shared/utils/cron/verify-qstash";
+import prisma from "@/platform/db";
+import { recordWebhookEvent } from "@/shared/utils/tinybird/publish";
+import { getSearchParams } from "@/shared/utils/utils/get-search-params";
+import { WEBHOOK_TRIGGERS } from "@/shared/utils/webhook/constants";
 import {
   webhookCallbackSchema,
   webhookPayloadSchema,
-} from "@/lib/zod/schemas/webhooks";
+} from "@/shared/utils/zod/schemas/webhooks";
 
 const searchParamsSchema = z.object({
   webhookId: z.string(),

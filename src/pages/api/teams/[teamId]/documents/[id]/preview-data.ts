@@ -2,15 +2,15 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
-import { enforceDocumentMemberScope } from "@/lib/api/rbac/guard";
-import { getFeatureFlags } from "@/lib/featureFlags";
-import { getAdvancedExcelFileUrl } from "@/lib/files/advanced-excel-url";
-import { getFile } from "@/lib/files/get-file";
-import { signPageLinks } from "@/lib/files/sign-page-links";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
-import { resolveHtmlContentForRender } from "@/lib/utils/html-document";
+import { enforceDocumentMemberScope } from "@/shared/utils/api/rbac/guard";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import { getAdvancedExcelFileUrl } from "@/shared/utils/files/advanced-excel-url";
+import { getFile } from "@/shared/utils/files/get-file";
+import { signPageLinks } from "@/shared/utils/files/sign-page-links";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { log } from "@/shared/utils/utils";
+import { resolveHtmlContentForRender } from "@/shared/utils/utils/html-document";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
 

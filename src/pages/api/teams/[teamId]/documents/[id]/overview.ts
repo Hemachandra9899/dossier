@@ -5,11 +5,11 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
-import { enforceDocumentMemberScope } from "@/lib/api/rbac/guard";
-import { getFeatureFlags } from "@/lib/featureFlags";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { serializeFileSize } from "@/lib/utils";
+import { enforceDocumentMemberScope } from "@/shared/utils/api/rbac/guard";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { serializeFileSize } from "@/shared/utils/utils";
 
 export default async function handle(
   req: NextApiRequest,

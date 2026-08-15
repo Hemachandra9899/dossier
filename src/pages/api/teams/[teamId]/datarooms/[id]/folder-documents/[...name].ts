@@ -3,10 +3,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { sortItemsByIndexAndName } from "@/lib/utils/sort-items-by-index-name";
-import { folderPathSchema } from "@/lib/zod/schemas/folders";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { sortItemsByIndexAndName } from "@/shared/utils/utils/sort-items-by-index-name";
+import { folderPathSchema } from "@/shared/utils/zod/schemas/folders";
 
 export default async function handle(
   req: NextApiRequest,

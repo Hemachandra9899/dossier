@@ -3,10 +3,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 import dns from "dns/promises";
 import { getServerSession } from "next-auth/next";
 
-import { validDomainRegex } from "@/lib/domains";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { validDomainRegex } from "@/shared/utils/domains";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
 

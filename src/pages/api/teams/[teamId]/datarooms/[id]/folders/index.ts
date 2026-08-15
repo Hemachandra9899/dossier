@@ -8,11 +8,11 @@ import {
 } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
-import { enforceDataroomMemberScope } from "@/lib/api/rbac/guard";
-import { resolveRootItemAccessFlags } from "@/lib/dataroom/root-item-access";
-import { resolveFreeFolderPath } from "@/lib/folders/bulk-create";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { enforceDataroomMemberScope } from "@/shared/utils/api/rbac/guard";
+import { resolveRootItemAccessFlags } from "@/shared/utils/dataroom/root-item-access";
+import { resolveFreeFolderPath } from "@/shared/utils/folders/bulk-create";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 async function applyFolderPermissions(
   dataroomId: string,

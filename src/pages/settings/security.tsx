@@ -2,15 +2,15 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { FolderSync, Info, Shield, ShieldCheckIcon } from "lucide-react";
 
-import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
-import { useIsAdmin } from "@/lib/hooks/use-is-admin";
-import { usePlan } from "@/lib/swr/use-billing";
+import { useFeatureFlags } from "@/shared/utils/hooks/use-feature-flags";
+import { useIsAdmin } from "@/shared/utils/hooks/use-is-admin";
+import { usePlan } from "@/shared/utils/swr/use-billing";
 
-import AppLayout from "@/components/layouts/app";
-import { SettingsHeader } from "@/components/settings/settings-header";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SettingsHeader } from "@/shared/ui/settings/settings-header";
 
 const SSO_ELIGIBLE_PLANS = ["datarooms-premium", "datarooms-premium+old", "datarooms-unlimited", "datarooms-unlimited+old"];
 

@@ -2,25 +2,25 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { Webhook } from "@prisma/client";
 import { ArrowLeft, Check, Copy, WebhookIcon } from "lucide-react";
 import { toast } from "sonner";
 import useSWR from "swr";
 import z from "zod";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import { cn, fetcher } from "@/lib/utils";
+import { usePlan } from "@/shared/utils/swr/use-billing";
+import { cn, fetcher } from "@/shared/utils/utils";
 
-import AppLayout from "@/components/layouts/app";
-import { SettingsHeader } from "@/components/settings/settings-header";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { WebhookEventList } from "@/components/webhooks/webhook-events";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SettingsHeader } from "@/shared/ui/settings/settings-header";
+import { Button } from "@/shared/ui/button";
+import { Card } from "@/shared/ui/card";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { WebhookEventList } from "@/shared/ui/webhooks/webhook-events";
 
 import { documentEvents, linkEvents, teamEvents } from "../new";
 

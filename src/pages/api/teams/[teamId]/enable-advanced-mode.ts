@@ -3,9 +3,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { Session } from "next-auth";
 import { getServerSession } from "next-auth/next";
 
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { supportsAdvancedExcelMode } from "@/lib/utils/get-content-type";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { supportsAdvancedExcelMode } from "@/shared/utils/utils/get-content-type";
 
 import { authOptions } from "../../auth/[...nextauth]";
 

@@ -2,7 +2,7 @@ import { useRouter } from "next/router";
 
 import { useMemo, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import {
   CircleHelpIcon,
   MoreHorizontalIcon,
@@ -15,26 +15,26 @@ import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import { useAnalytics } from "@/lib/analytics";
-import { usePlan } from "@/lib/swr/use-billing";
-import useDataroomsSimple from "@/lib/swr/use-datarooms-simple";
-import { useInvitations } from "@/lib/swr/use-invitations";
-import useLimits from "@/lib/swr/use-limits";
-import { useGetTeam } from "@/lib/swr/use-team";
-import { useTeams } from "@/lib/swr/use-teams";
-import { CustomUser, TeamRole } from "@/lib/types";
-import { cn, generateGravatarHash } from "@/lib/utils";
+import { useAnalytics } from "@/shared/utils/analytics";
+import { usePlan } from "@/shared/utils/swr/use-billing";
+import useDataroomsSimple from "@/shared/utils/swr/use-datarooms-simple";
+import { useInvitations } from "@/shared/utils/swr/use-invitations";
+import useLimits from "@/shared/utils/swr/use-limits";
+import { useGetTeam } from "@/shared/utils/swr/use-team";
+import { useTeams } from "@/shared/utils/swr/use-teams";
+import { CustomUser, TeamRole } from "@/shared/utils/types";
+import { cn, generateGravatarHash } from "@/shared/utils/utils";
 
-import AppLayout from "@/components/layouts/app";
-import { SettingsHeader } from "@/components/settings/settings-header";
-import { AddTeamMembers } from "@/components/teams/add-team-member-modal";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SettingsHeader } from "@/shared/ui/settings/settings-header";
+import { AddTeamMembers } from "@/shared/ui/teams/add-team-member-modal";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+} from "@/shared/ui/avatar";
+import { Button } from "@/shared/ui/button";
+import { Checkbox } from "@/shared/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -42,15 +42,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/shared/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+} from "@/shared/ui/dropdown-menu";
+import { Label } from "@/shared/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
 import {
   Table,
   TableBody,
@@ -58,8 +58,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { BadgeTooltip } from "@/components/ui/tooltip";
+} from "@/shared/ui/table";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
 
 const ROLE_LABELS: Record<TeamRole, string> = {
   ADMIN: "Admin",

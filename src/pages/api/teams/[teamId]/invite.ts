@@ -3,14 +3,14 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getLimits } from "@/ee/limits/server";
 import { getServerSession } from "next-auth";
 
-import { hashToken } from "@/lib/api/auth/token";
-import { sendTeammateInviteEmail } from "@/lib/emails/send-teammate-invite";
-import { errorhandler } from "@/lib/errorHandler";
-import { newId } from "@/lib/id-helper";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { generateChecksum } from "@/lib/utils/generate-checksum";
-import { generateJWT } from "@/lib/utils/generate-jwt";
+import { hashToken } from "@/shared/utils/api/auth/token";
+import { sendTeammateInviteEmail } from "@/shared/utils/emails/send-teammate-invite";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import { newId } from "@/shared/utils/id-helper";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { generateChecksum } from "@/shared/utils/utils/generate-checksum";
+import { generateJWT } from "@/shared/utils/utils/generate-jwt";
 
 import { authOptions } from "../../auth/[...nextauth]";
 

@@ -8,18 +8,18 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
 
-import { errorhandler } from "@/lib/errorHandler";
-import { ratelimit } from "@/lib/redis";
-import { getIpAddress } from "@/lib/utils/ip";
-import { createSigningContext } from "@/modules/signing/application/context";
-import { exchangeRecipientAccessToken } from "@/modules/signing/application/exchange-recipient-access-token";
-import { isDossierSigningRuntimeEnabled } from "@/modules/signing/config";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import { ratelimit } from "@/shared/utils/redis";
+import { getIpAddress } from "@/shared/utils/utils/ip";
+import { createSigningContext } from "@/features/signing/application/context";
+import { exchangeRecipientAccessToken } from "@/features/signing/application/exchange-recipient-access-token";
+import { isDossierSigningRuntimeEnabled } from "@/features/signing/config";
 import {
   buildRecipientAccessCookieHeader,
   computeRecipientAccessExpiry,
   mintRecipientAccessToken,
   RECIPIENT_ACCESS_COOKIE_TTL_MS,
-} from "@/modules/signing/domain/recipient-access-token";
+} from "@/features/signing/domain/recipient-access-token";
 
 const bodySchema = z.object({
   token: z.string().min(1, "A signing link token is required."),

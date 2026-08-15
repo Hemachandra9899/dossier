@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/modules/access/is-team-paused";
+import { isTeamPausedById } from "@/features/access/is-team-paused";
 import { getLimits } from "@/ee/limits/server";
 import {
   Dataroom,
@@ -9,9 +9,9 @@ import {
   DataroomFolder,
 } from "@prisma/client";
 
-import { withTeamApi } from "@/lib/api/auth/with-session-team";
-import { newId } from "@/lib/id-helper";
-import prisma from "@/lib/prisma";
+import { withTeamApi } from "@/shared/utils/api/auth/with-session-team";
+import { newId } from "@/shared/utils/id-helper";
+import prisma from "@/platform/db";
 
 interface DataroomWithContents extends Dataroom {
   documents: DataroomDocument[];

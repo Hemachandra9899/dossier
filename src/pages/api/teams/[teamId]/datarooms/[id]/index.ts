@@ -2,11 +2,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { DefaultPermissionStrategy, RootItemAccess } from "@prisma/client";
 
-import { withTeamApi } from "@/lib/api/auth/with-session-team";
-import { errorhandler } from "@/lib/errorHandler";
-import { getFeatureFlags } from "@/lib/featureFlags";
-import { isRequestListEnabled } from "@/lib/featureFlags/request-list";
-import prisma from "@/lib/prisma";
+import { withTeamApi } from "@/shared/utils/api/auth/with-session-team";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import { isRequestListEnabled } from "@/shared/utils/featureFlags/request-list";
+import prisma from "@/platform/db";
 
 // GET /api/teams/:teamId/datarooms/:id
 const getHandler = withTeamApi(

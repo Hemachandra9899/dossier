@@ -5,17 +5,17 @@ import { auth } from "@trigger.dev/sdk";
 import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
-import { authOptions } from "@/lib/auth/auth-options";
-import { TeamError, errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { isSigningAgreement } from "@/lib/signing/agreements";
+import { authOptions } from "@/shared/utils/auth/auth-options";
+import { TeamError, errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { isSigningAgreement } from "@/shared/utils/signing/agreements";
 import {
   MAX_SIGNING_TEMPLATE_PDF_BYTES,
   SIGNING_TEMPLATE_PDF_CONTENT_TYPE,
   getSigningTemplateTooLargeMessage,
-} from "@/lib/signing/template-upload";
-import { setupSigningTemplateTask } from "@/lib/trigger/setup-signing-template";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/signing/template-upload";
+import { setupSigningTemplateTask } from "@/platform/queue/trigger/setup-signing-template";
+import { CustomUser } from "@/shared/utils/types";
 
 export const config = {
   maxDuration: 60,

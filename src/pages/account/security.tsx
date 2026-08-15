@@ -9,11 +9,11 @@ import {
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { usePasskeys } from "@/lib/swr/use-passkeys";
+import { usePasskeys } from "@/shared/utils/swr/use-passkeys";
 
-import { AccountHeader } from "@/components/account/account-header";
-import AppLayout from "@/components/layouts/app";
-import Passkey from "@/components/shared/icons/passkey";
+import { AccountHeader } from "@/shared/ui/account/account-header";
+import AppLayout from "@/shared/ui/layouts/app";
+import Passkey from "@/shared/ui/shared/icons/passkey";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,8 +24,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+} from "@/shared/ui/alert-dialog";
+import { Button } from "@/shared/ui/button";
 
 const ProfilePage: NextPage = () => {
   const [isLoading, setIsLoading] = useState(false);

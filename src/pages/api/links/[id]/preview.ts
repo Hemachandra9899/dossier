@@ -2,8 +2,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
-import { createPreviewSession } from "@/lib/auth/preview-auth";
-import { CustomUser } from "@/lib/types";
+import { createPreviewSession } from "@/shared/utils/auth/preview-auth";
+import { CustomUser } from "@/shared/utils/types";
 
 import { authOptions } from "../../auth/[...nextauth]";
 

@@ -1,5 +1,5 @@
-import { GTMComponent } from "@/components/gtm-component";
-import { SignInScreen } from "@/modules/auth";
+import { GTMComponent } from "@/shared/ui/gtm-component";
+import { SignInScreen } from "@/features/auth";
 import { buildMetadata } from "@/shared/config/metadata";
 import { productConfig } from "@/shared/config/product";
 

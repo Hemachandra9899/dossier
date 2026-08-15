@@ -5,11 +5,11 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getServerSession } from "next-auth";
 import path from "node:path";
 
-import { ONE_HOUR, ONE_SECOND } from "@/lib/constants";
-import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
-import { buildContentDisposition, safeSlugify } from "@/lib/utils";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { ONE_HOUR, ONE_SECOND } from "@/shared/utils/constants";
+import { getTeamS3ClientAndConfig } from "@/shared/utils/files/aws-client";
+import { buildContentDisposition, safeSlugify } from "@/shared/utils/utils";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 import { authOptions } from "../../auth/[...nextauth]";
 

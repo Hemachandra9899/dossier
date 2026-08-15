@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 
 import { useEffect, useRef, useState } from "react";
 
-import { LogoCloud } from "@/components/shared/logo-cloud";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { LogoCloud } from "@/shared/ui/shared/logo-cloud";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
 
 export default function EmailVerificationClient() {
   const router = useRouter();

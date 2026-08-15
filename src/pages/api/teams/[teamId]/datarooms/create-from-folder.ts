@@ -5,9 +5,9 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { DataroomFolder, Document, Folder } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
-import { newId } from "@/lib/id-helper";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { newId } from "@/shared/utils/id-helper";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 // Define types
 interface FolderWithContents extends Folder {

@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createChat } from "@/ee/features/ai/lib/chat/create-chat";
 import { createChatSchema } from "@/ee/features/ai/schemas/chat";
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
-import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
-import { getFeatureFlags } from "@/lib/featureFlags";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { verifyDataroomSession } from "@/shared/utils/auth/dataroom-auth";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 /**
  * POST /api/ai/chat

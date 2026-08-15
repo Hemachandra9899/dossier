@@ -3,10 +3,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import { enforceDocumentMemberScope } from "@/lib/api/rbac/guard";
-import prisma from "@/lib/prisma";
-import { getVideoEventsByView } from "@/lib/tinybird/pipes";
-import { CustomUser } from "@/lib/types";
+import { enforceDocumentMemberScope } from "@/shared/utils/api/rbac/guard";
+import prisma from "@/platform/db";
+import { getVideoEventsByView } from "@/shared/utils/tinybird/pipes";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handler(
   req: NextApiRequest,

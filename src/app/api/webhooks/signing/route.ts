@@ -9,8 +9,8 @@ import {
   getAgreementResponseSignedState,
   syncAgreementResponseWithSigningDocument,
   verifySigningWebhookSecret,
-} from "@/lib/signing/agreements";
-import { mirrorSignedAgreementToStorage } from "@/lib/signing/mirror";
+} from "@/shared/utils/signing/agreements";
+import { mirrorSignedAgreementToStorage } from "@/shared/utils/signing/mirror";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

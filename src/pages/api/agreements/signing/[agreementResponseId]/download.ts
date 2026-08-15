@@ -3,23 +3,23 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { waitUntil } from "@vercel/functions";
 import { parse as parseCookieHeader } from "cookie";
 
-import { getDataroomSessionByLinkIdInPagesRouter } from "@/lib/auth/dataroom-auth";
-import { verifyLinkSessionInPagesRouter } from "@/lib/auth/link-session";
-import { TeamError, errorhandler } from "@/lib/errorHandler";
-import { getFile } from "@/lib/files/get-file";
-import prisma from "@/lib/prisma";
-import { getAgreementResponseSignedState } from "@/lib/signing/agreements";
-import { getEnvelopeSignedDownloadUrl } from "@/lib/signing/envelopes";
-import { mirrorSignedAgreementToStorage } from "@/lib/signing/mirror";
+import { getDataroomSessionByLinkIdInPagesRouter } from "@/shared/utils/auth/dataroom-auth";
+import { verifyLinkSessionInPagesRouter } from "@/shared/utils/auth/link-session";
+import { TeamError, errorhandler } from "@/shared/utils/errorHandler";
+import { getFile } from "@/shared/utils/files/get-file";
+import prisma from "@/platform/db";
+import { getAgreementResponseSignedState } from "@/shared/utils/signing/agreements";
+import { getEnvelopeSignedDownloadUrl } from "@/shared/utils/signing/envelopes";
+import { mirrorSignedAgreementToStorage } from "@/shared/utils/signing/mirror";
 import {
   getSignedAgreementAccessCookieName,
   verifySignedAgreementAccessToken,
-} from "@/lib/signing/access-token";
+} from "@/shared/utils/signing/access-token";
 import {
   SIGNED_DOWNLOAD_COOKIE_NAME,
   verifySignedAgreementDownloadToken,
-} from "@/lib/signing/download-token";
-import { buildContentDisposition } from "@/lib/utils";
+} from "@/shared/utils/signing/download-token";
+import { buildContentDisposition } from "@/shared/utils/utils";
 
 // `waitUntil` requires response streaming to be enabled on Pages API routes.
 export const config = {

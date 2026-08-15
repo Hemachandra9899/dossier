@@ -1,10 +1,10 @@
 import { CircleHelpIcon } from "lucide-react";
 
-import { useDataroom } from "@/lib/swr/use-dataroom";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
 
-import BulkDownloadSettings from "@/components/datarooms/settings/bulk-download-settings";
-import AppLayout from "@/components/layouts/app";
-import { BadgeTooltip } from "@/components/ui/tooltip";
+import BulkDownloadSettings from "@/shared/ui/datarooms/settings/bulk-download-settings";
+import AppLayout from "@/shared/ui/layouts/app";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
 
 export default function Downloads() {
   const { dataroom } = useDataroom();

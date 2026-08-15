@@ -2,20 +2,20 @@ import { useRouter } from "next/router";
 
 import Link from "next/link";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { EyeOffIcon } from "lucide-react";
 
-import useDocuments, { useHiddenDocuments, useRootFolders } from "@/lib/swr/use-documents";
-import { handleInvitationStatus } from "@/lib/utils";
+import useDocuments, { useHiddenDocuments, useRootFolders } from "@/shared/utils/swr/use-documents";
+import { handleInvitationStatus } from "@/shared/utils/utils";
 
-import { AddDocumentDropdown } from "@/components/documents/add-document-dropdown";
-import { DocumentsList } from "@/components/documents/documents-list";
-import SortButton from "@/components/documents/filters/sort-button";
-import { Pagination } from "@/components/documents/pagination";
-import AppLayout from "@/components/layouts/app";
-import { SearchBoxPersisted } from "@/components/search-box";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { AddDocumentDropdown } from "@/shared/ui/documents/add-document-dropdown";
+import { DocumentsList } from "@/shared/ui/documents/documents-list";
+import SortButton from "@/shared/ui/documents/filters/sort-button";
+import { Pagination } from "@/shared/ui/documents/pagination";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SearchBoxPersisted } from "@/shared/ui/search-box";
+import { Button } from "@/shared/ui/button";
+import { Separator } from "@/shared/ui/separator";
 
 export default function Documents() {
   const router = useRouter();

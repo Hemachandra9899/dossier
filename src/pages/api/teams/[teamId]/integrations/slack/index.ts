@@ -4,16 +4,16 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
-import { getSlackEnv } from "@/lib/integrations/slack/env";
+import { getSlackEnv } from "@/shared/utils/integrations/slack/env";
 import {
   SlackCredential,
   SlackCredentialPublic,
-} from "@/lib/integrations/slack/types";
-import { uninstallSlackIntegration } from "@/lib/integrations/slack/uninstall";
-import { slackChannelsCacheKey } from "@/lib/integrations/slack/utils";
-import prisma from "@/lib/prisma";
-import { redis } from "@/lib/redis";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/integrations/slack/types";
+import { uninstallSlackIntegration } from "@/shared/utils/integrations/slack/uninstall";
+import { slackChannelsCacheKey } from "@/shared/utils/integrations/slack/utils";
+import prisma from "@/platform/db";
+import { redis } from "@/shared/utils/redis";
+import { CustomUser } from "@/shared/utils/types";
 
 const channelConfigSchema = z.object({
   enabled: z.boolean(),

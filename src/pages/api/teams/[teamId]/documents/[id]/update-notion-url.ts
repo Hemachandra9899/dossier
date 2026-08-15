@@ -3,9 +3,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { notionUrlUpdateSchema } from "@/lib/zod/url-validation";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { notionUrlUpdateSchema } from "@/shared/utils/zod/url-validation";
 
 export default async function handle(
   req: NextApiRequest,

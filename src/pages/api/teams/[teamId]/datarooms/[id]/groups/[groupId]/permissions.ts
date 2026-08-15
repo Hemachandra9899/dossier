@@ -12,9 +12,9 @@ import {
   extractVisibleItemIds,
   type AncestorUpsertRow,
   type PermissionUpsertRow,
-} from "@/lib/dataroom/permissions-sql";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/dataroom/permissions-sql";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 // Saving thousands of permission rows in a single payload is a normal
 // operation here (think "select all" on a large dataroom). With the bulk-SQL

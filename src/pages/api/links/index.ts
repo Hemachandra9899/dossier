@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/modules/access/is-team-paused";
+import { isTeamPausedById } from "@/features/access/is-team-paused";
 import { LinkAudienceType, Tag } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
@@ -9,16 +9,16 @@ import {
   assertDocumentAccess,
   canAccessDataroom,
   getAllowedDataroomIds,
-} from "@/lib/api/rbac/entitlements";
-import { isDataroomScopedRole } from "@/lib/api/rbac/permissions";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
+} from "@/shared/utils/api/rbac/entitlements";
+import { isDataroomScopedRole } from "@/shared/utils/api/rbac/permissions";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser, WatermarkConfigSchema } from "@/shared/utils/types";
 import {
   decryptEncrpytedPassword,
   generateEncrpytedPassword,
-} from "@/lib/utils";
-import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
+} from "@/shared/utils/utils";
+import { sendLinkCreatedWebhook } from "@/shared/utils/webhook/triggers/link-created";
 
 import { authOptions } from "../auth/[...nextauth]";
 

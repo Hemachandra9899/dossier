@@ -2,10 +2,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { z } from "zod";
 
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
-import { verifyUnsubscribeToken } from "@/lib/utils/unsubscribe";
-import { ZViewerNotificationPreferencesSchema } from "@/lib/zod/schemas/notifications";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
+import { verifyUnsubscribeToken } from "@/shared/utils/utils/unsubscribe";
+import { ZViewerNotificationPreferencesSchema } from "@/shared/utils/zod/schemas/notifications";
 
 const UpdatePreferencesSchema = z.object({
   frequency: z.enum(["instant", "daily", "weekly", "disabled"]),

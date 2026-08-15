@@ -8,16 +8,16 @@ import { z } from "zod";
 import {
   revalidateLinkById,
   revalidateLinksForPermissionGroup,
-} from "@/lib/api/links/revalidate";
+} from "@/shared/utils/api/links/revalidate";
 import {
   buildFindAncestorFolderIdsSql,
   buildUpsertAncestorVisibilitySql,
   extractVisibleItemIds,
   type AncestorUpsertRow,
-} from "@/lib/dataroom/permissions-sql";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/dataroom/permissions-sql";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 import { authOptions } from "../../../../../auth/[...nextauth]";
 

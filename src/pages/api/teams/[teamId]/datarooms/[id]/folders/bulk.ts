@@ -5,17 +5,17 @@ import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
-import { enforceDataroomMemberScope } from "@/lib/api/rbac/guard";
+import { enforceDataroomMemberScope } from "@/shared/utils/api/rbac/guard";
 import {
   BulkFolderInput,
   BulkValidationError,
   MAX_BULK_FOLDERS_PER_REQUEST,
   bulkCreateDataroomFolders,
   getSafeBulkValidationMessage,
-} from "@/lib/folders/bulk-create";
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/folders/bulk-create";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
+import { CustomUser } from "@/shared/utils/types";
 
 const BulkSchema = z.object({
   /**

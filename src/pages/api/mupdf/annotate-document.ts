@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { getFileNameWithPdfExtension, log } from "@/lib/utils";
+import { getFileNameWithPdfExtension, log } from "@/shared/utils/utils";
 import {
   type ViewerData,
   type WatermarkConfig,
   buildWatermarkedPdf,
-} from "@/lib/utils/watermark-pdf";
+} from "@/shared/utils/utils/watermark-pdf";
 
 // This function can run for a maximum of 300 seconds
 export const config = {

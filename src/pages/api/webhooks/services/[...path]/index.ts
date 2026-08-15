@@ -1,39 +1,39 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/modules/access/is-team-paused";
+import { isTeamPausedById } from "@/features/access/is-team-paused";
 import { LinkPreset } from "@prisma/client";
 import { put } from "@vercel/blob";
 import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
 
-import { hashToken } from "@/lib/api/auth/token";
-import { onDataroomDocumentsAttached } from "@/lib/dataroom/apply-default-permissions";
+import { hashToken } from "@/shared/utils/api/auth/token";
+import { onDataroomDocumentsAttached } from "@/shared/utils/dataroom/apply-default-permissions";
 import {
   createDocument,
   createNewDocumentVersion,
-} from "@/lib/documents/create-document";
-import { putFileServer } from "@/lib/files/put-file-server";
-import { newId } from "@/lib/id-helper";
-import { extractTeamId, isValidWebhookId } from "@/lib/incoming-webhooks";
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
+} from "@/shared/utils/documents/create-document";
+import { putFileServer } from "@/shared/utils/files/put-file-server";
+import { newId } from "@/shared/utils/id-helper";
+import { extractTeamId, isValidWebhookId } from "@/shared/utils/incoming-webhooks";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
 import {
   convertDataUrlToBuffer,
   generateEncrpytedPassword,
   isDataUrl,
   safeSlugify,
   uploadImage,
-} from "@/lib/utils";
+} from "@/shared/utils/utils";
 import {
   getExtensionFromContentType,
   getSupportedContentType,
-} from "@/lib/utils/get-content-type";
+} from "@/shared/utils/utils/get-content-type";
 import {
   type PublicHttpsDownload,
   fetchPublicHttpsUrlToBuffer,
-} from "@/lib/utils/ssrf-protection";
-import { sendLinkCreatedWebhook } from "@/lib/webhook/triggers/link-created";
-import { webhookFileUrlSchema } from "@/lib/zod/url-validation";
+} from "@/shared/utils/utils/ssrf-protection";
+import { sendLinkCreatedWebhook } from "@/shared/utils/webhook/triggers/link-created";
+import { webhookFileUrlSchema } from "@/shared/utils/zod/url-validation";
 
 export const config = {
   // in order to enable `waitUntil` function

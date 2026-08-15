@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { format } from "date-fns";
 import {
   CircleHelpIcon,
@@ -12,25 +12,25 @@ import {
 } from "lucide-react";
 import useSWR from "swr";
 
-import { cn, fetcher, timeAgo } from "@/lib/utils";
+import { cn, fetcher, timeAgo } from "@/shared/utils/utils";
 
-import AppLayout from "@/components/layouts/app";
-import { SettingsHeader } from "@/components/settings/settings-header";
-import { useAddEditTokenModal } from "@/components/tokens/add-edit-token-modal";
-import { useDeleteTokenModal } from "@/components/tokens/delete-token-modal";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SettingsHeader } from "@/shared/ui/settings/settings-header";
+import { useAddEditTokenModal } from "@/shared/ui/tokens/add-edit-token-modal";
+import { useDeleteTokenModal } from "@/shared/ui/tokens/delete-token-modal";
 import {
   TOKEN_TYPE_LABELS,
   TokenSubjectType,
   scopesToPermissionLabel,
-} from "@/components/tokens/scopes";
-import { useTokenCreatedModal } from "@/components/tokens/token-created-modal";
-import { Button } from "@/components/ui/button";
+} from "@/shared/ui/tokens/scopes";
+import { useTokenCreatedModal } from "@/shared/ui/tokens/token-created-modal";
+import { Button } from "@/shared/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/shared/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -38,8 +38,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { BadgeTooltip } from "@/components/ui/tooltip";
+} from "@/shared/ui/table";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
 
 interface Token {
   id: string;

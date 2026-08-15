@@ -1,26 +1,26 @@
 import { useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { Domain } from "@prisma/client";
 import { CircleHelpIcon, GlobeIcon } from "lucide-react";
 import { mutate } from "swr";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import { useDomains } from "@/lib/swr/use-domains";
+import { usePlan } from "@/shared/utils/swr/use-billing";
+import { useDomains } from "@/shared/utils/swr/use-domains";
 
-import { AddDomainModal } from "@/components/domains/add-domain-modal";
-import DomainRow from "@/components/domains/domain-row";
-import AppLayout from "@/components/layouts/app";
-import { SettingsHeader } from "@/components/settings/settings-header";
-import { Button } from "@/components/ui/button";
+import { AddDomainModal } from "@/shared/ui/domains/add-domain-modal";
+import DomainRow from "@/shared/ui/domains/domain-row";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SettingsHeader } from "@/shared/ui/settings/settings-header";
+import { Button } from "@/shared/ui/button";
 import {
   Table,
   TableBody,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { BadgeTooltip } from "@/components/ui/tooltip";
+} from "@/shared/ui/table";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
 
 export default function Domains() {
   const { domains } = useDomains({ enabled: true });

@@ -5,10 +5,10 @@ import { getServerSession } from "next-auth/next";
 
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
-import { enforceDataroomMemberScope } from "@/lib/api/rbac/guard";
-import { generateFolderImportTemplate } from "@/lib/folders/import-template";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { enforceDataroomMemberScope } from "@/shared/utils/api/rbac/guard";
+import { generateFolderImportTemplate } from "@/shared/utils/folders/import-template";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 // GET /api/teams/:teamId/datarooms/:id/folders/import-template
 // Streams a blank .xlsx template describing the folder-import format.

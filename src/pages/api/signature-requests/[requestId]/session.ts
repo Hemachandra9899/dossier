@@ -9,17 +9,17 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { parse as parseCookieHeader } from "cookie";
 import { z } from "zod";
 
-import { errorhandler } from "@/lib/errorHandler";
-import { ratelimit } from "@/lib/redis";
-import { getIpAddress } from "@/lib/utils/ip";
-import { createSigningContext } from "@/modules/signing/application/context";
-import { createSigningSession } from "@/modules/signing/application/create-signing-session";
-import { isDossierSigningRuntimeEnabled } from "@/modules/signing/config";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import { ratelimit } from "@/shared/utils/redis";
+import { getIpAddress } from "@/shared/utils/utils/ip";
+import { createSigningContext } from "@/features/signing/application/context";
+import { createSigningSession } from "@/features/signing/application/create-signing-session";
+import { isDossierSigningRuntimeEnabled } from "@/features/signing/config";
 import {
   mintRequestSessionContinuityToken,
   verifyRequestSessionContinuityToken,
-} from "@/modules/signing/domain/continuity-token";
-import { readRecipientAccessFromCookies } from "@/modules/signing/domain/recipient-access-token";
+} from "@/features/signing/domain/continuity-token";
+import { readRecipientAccessFromCookies } from "@/features/signing/domain/recipient-access-token";
 
 const bodySchema = z.object({
   email: z

@@ -1,11 +1,11 @@
 import { CircleHelpIcon } from "lucide-react";
 
-import { useDataroom } from "@/lib/swr/use-dataroom";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
 
-import AppLayout from "@/components/layouts/app";
-import { TabMenu } from "@/components/tab-menu";
-import { BadgeTooltip } from "@/components/ui/tooltip";
-import DataroomVisitorsTable from "@/components/visitors/dataroom-visitors-table";
+import AppLayout from "@/shared/ui/layouts/app";
+import { TabMenu } from "@/shared/ui/tab-menu";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
+import DataroomVisitorsTable from "@/shared/ui/visitors/dataroom-visitors-table";
 
 export default function DataroomAuditLogPage() {
   const { dataroom } = useDataroom();

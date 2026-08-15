@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { handleBulkLinkImport } from "@/lib/api/links/bulk-import";
+import { handleBulkLinkImport } from "@/shared/utils/api/links/bulk-import";
 
 export const config = {
   supportsResponseStreaming: true,

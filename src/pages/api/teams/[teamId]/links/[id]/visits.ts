@@ -2,13 +2,13 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
-import { LIMITS } from "@/lib/constants";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { getDocumentWithTeamAndUser } from "@/lib/team/helper";
-import { getViewPageDuration } from "@/lib/tinybird";
-import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
+import { LIMITS } from "@/shared/utils/constants";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { getDocumentWithTeamAndUser } from "@/shared/utils/team/helper";
+import { getViewPageDuration } from "@/shared/utils/tinybird";
+import { CustomUser } from "@/shared/utils/types";
+import { log } from "@/shared/utils/utils";
 
 import { authOptions } from "../../../../auth/[...nextauth]";
 

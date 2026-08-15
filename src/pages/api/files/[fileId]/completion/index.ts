@@ -4,14 +4,14 @@ import {
   requireFileAccess,
   requireFileManageAccess,
   sendAuthorizationError,
-} from "@/modules/files/server/authorization";
-import { createCompletionRun } from "@/modules/completion/application/create-completion-run";
+} from "@/features/files/server/authorization";
+import { createCompletionRun } from "@/features/completion/application/create-completion-run";
 import {
   toCompletionRecordSummaryDTO,
   toCompletionRunDTO,
-} from "@/modules/completion/application/serialize";
-import { CompletionDomainError } from "@/modules/completion/domain/errors";
-import prisma from "@/lib/prisma";
+} from "@/features/completion/application/serialize";
+import { CompletionDomainError } from "@/features/completion/domain/errors";
+import prisma from "@/platform/db";
 
 export default async function handler(
   req: NextApiRequest,

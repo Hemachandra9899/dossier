@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { BannerEditor } from "@/ee/features/branding/components/banner-editor";
 import { BrandingLinkPreviewForm } from "@/ee/features/branding/components/branding-link-preview-form";
 import { BrandingPreviewChrome } from "@/ee/features/branding/components/branding-preview-chrome";
@@ -33,31 +33,31 @@ import {
   DEFAULT_LOCALE,
   type SupportedLocaleCode,
   asSupportedLocale,
-} from "@/lib/i18n/locales";
-import { usePlan } from "@/lib/swr/use-billing";
-import { useBrand, useDataroomBrand } from "@/lib/swr/use-brand";
-import { useDataroom } from "@/lib/swr/use-dataroom";
-import { cn, convertDataUrlToFile, uploadImage } from "@/lib/utils";
+} from "@/shared/utils/i18n/locales";
+import { usePlan } from "@/shared/utils/swr/use-billing";
+import { useBrand, useDataroomBrand } from "@/shared/utils/swr/use-brand";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
+import { cn, convertDataUrlToFile, uploadImage } from "@/shared/utils/utils";
 
-import AppLayout from "@/components/layouts/app";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { FadeScrollArea } from "@/components/ui/fade-scroll-area";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import AppLayout from "@/shared/ui/layouts/app";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent } from "@/shared/ui/card";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { FadeScrollArea } from "@/shared/ui/fade-scroll-area";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { BadgeTooltip } from "@/components/ui/tooltip";
+} from "@/shared/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
+import { Switch } from "@/shared/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { Textarea } from "@/shared/ui/textarea";
+import { BadgeTooltip } from "@/shared/ui/tooltip";
 
-import { DataroomBannerMedia } from "@/components/view/dataroom/dataroom-banner-media";
+import { DataroomBannerMedia } from "@/shared/ui/view/dataroom/dataroom-banner-media";
 
 const DEFAULT_BANNER_IMAGE = "/_static/papermark-banner.png";
 

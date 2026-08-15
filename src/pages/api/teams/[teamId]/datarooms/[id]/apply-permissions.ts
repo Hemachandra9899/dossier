@@ -5,11 +5,11 @@ import { DefaultPermissionStrategy } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth";
 
-import { revalidateLinksForDataroom } from "@/lib/api/links/revalidate";
-import { applyDataroomDocumentPermissionDefaults } from "@/lib/dataroom/apply-default-permissions";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { revalidateLinksForDataroom } from "@/shared/utils/api/links/revalidate";
+import { applyDataroomDocumentPermissionDefaults } from "@/shared/utils/dataroom/apply-default-permissions";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 export const config = {
   // in order to enable `waitUntil` function

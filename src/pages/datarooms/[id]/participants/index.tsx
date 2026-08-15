@@ -5,18 +5,18 @@ import { useEffect, useState } from "react";
 import { InviteViewersModal } from "@/ee/features/dataroom-invitations/components/invite-viewers-modal";
 import { CircleHelpIcon, SendIcon } from "lucide-react";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import { useDataroom } from "@/lib/swr/use-dataroom";
-import { useDataroomVisitors } from "@/lib/swr/use-dataroom-visitors";
+import { usePlan } from "@/shared/utils/swr/use-billing";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
+import { useDataroomVisitors } from "@/shared/utils/swr/use-dataroom-visitors";
 
-import DataroomTeamMembers from "@/components/datarooms/settings/dataroom-team-members";
-import AppLayout from "@/components/layouts/app";
-import { SearchBoxPersisted } from "@/components/search-box";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BadgeTooltip, ButtonTooltip } from "@/components/ui/tooltip";
-import { DataroomParticipantsTable } from "@/components/visitors/dataroom-participants-table";
-import { VisitorStatusFilter } from "@/components/visitors/visitor-status-filter";
+import DataroomTeamMembers from "@/shared/ui/datarooms/settings/dataroom-team-members";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SearchBoxPersisted } from "@/shared/ui/search-box";
+import { Button } from "@/shared/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { BadgeTooltip, ButtonTooltip } from "@/shared/ui/tooltip";
+import { DataroomParticipantsTable } from "@/shared/ui/visitors/dataroom-participants-table";
+import { VisitorStatusFilter } from "@/shared/ui/visitors/visitor-status-filter";
 
 export default function DataroomParticipantsPage() {
   const router = useRouter();

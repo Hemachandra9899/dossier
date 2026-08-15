@@ -5,25 +5,25 @@ import Link from "next/link";
 
 import { Suspense } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { ExternalLinkIcon } from "lucide-react";
 
-import { useSelfMembership } from "@/lib/hooks/use-self-membership";
-import { useDataroomDocumentOverview } from "@/lib/swr/use-dataroom-document";
-import { useDocumentLinks } from "@/lib/swr/use-document";
+import { useSelfMembership } from "@/shared/utils/hooks/use-self-membership";
+import { useDataroomDocumentOverview } from "@/shared/utils/swr/use-dataroom-document";
+import { useDocumentLinks } from "@/shared/utils/swr/use-document";
 
-import DocumentHeader from "@/components/documents/document-header";
-import { DocumentPreviewButton } from "@/components/documents/document-preview-button";
-import LinkDocumentIndicator from "@/components/documents/link-document-indicator";
-import NotionAccessibilityIndicator from "@/components/documents/notion-accessibility-indicator";
-import AppLayout from "@/components/layouts/app";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import LoadingSpinner from "@/components/ui/loading-spinner";
+import DocumentHeader from "@/shared/ui/documents/document-header";
+import { DocumentPreviewButton } from "@/shared/ui/documents/document-preview-button";
+import LinkDocumentIndicator from "@/shared/ui/documents/link-document-indicator";
+import NotionAccessibilityIndicator from "@/shared/ui/documents/notion-accessibility-indicator";
+import AppLayout from "@/shared/ui/layouts/app";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import LoadingSpinner from "@/shared/ui/loading-spinner";
 
 const StatsComponent = dynamic(
   () =>
-    import("@/components/documents/stats").then((mod) => ({
+    import("@/shared/ui/documents/stats").then((mod) => ({
       default: mod.StatsComponent,
     })),
   {
@@ -37,7 +37,7 @@ const StatsComponent = dynamic(
 );
 
 const VideoAnalytics = dynamic(
-  () => import("@/components/documents/video-analytics"),
+  () => import("@/shared/ui/documents/video-analytics"),
   {
     loading: () => (
       <div className="flex h-48 animate-pulse items-center justify-center rounded-lg bg-gray-100">
@@ -49,7 +49,7 @@ const VideoAnalytics = dynamic(
 );
 
 const VisitorsTable = dynamic(
-  () => import("@/components/visitors/visitors-table"),
+  () => import("@/shared/ui/visitors/visitors-table"),
   {
     loading: () => (
       <div className="flex h-64 animate-pulse items-center justify-center rounded-lg bg-gray-100">

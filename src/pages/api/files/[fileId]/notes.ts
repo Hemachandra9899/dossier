@@ -1,11 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
 
-import prisma from "@/lib/prisma";
+import prisma from "@/platform/db";
 import {
   requireFileAccess,
   sendAuthorizationError,
-} from "@/modules/files/server/authorization";
+} from "@/features/files/server/authorization";
 
 const Schema = z.object({
   body: z.string().trim().min(1).max(10000),

@@ -1,12 +1,12 @@
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import useSWR from "swr";
 
-import AppLayout from "@/components/layouts/app";
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import { Button } from "@/components/ui/button";
-import { FilesBoard } from "@/components/files/files-board";
-import { filesApi } from "@/modules/files/ui/files-api";
-import { CreateFileDialog } from "@/components/files/create-file-dialog";
+import AppLayout from "@/shared/ui/layouts/app";
+import LoadingSpinner from "@/shared/ui/loading-spinner";
+import { Button } from "@/shared/ui/button";
+import { FilesBoard } from "@/shared/ui/files/files-board";
+import { filesApi } from "@/features/files/ui/files-api";
+import { CreateFileDialog } from "@/shared/ui/files/create-file-dialog";
 
 export default function FilesPage() {
   const team = useTeam();

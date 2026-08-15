@@ -3,13 +3,13 @@ import { NextPage } from "next";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
-import { AccountHeader } from "@/components/account/account-header";
-import { UpdateMailSubscribe } from "@/components/account/update-subscription";
-import UploadAvatar from "@/components/account/upload-avatar";
-import AppLayout from "@/components/layouts/app";
-import { Form } from "@/components/ui/form";
+import { AccountHeader } from "@/shared/ui/account/account-header";
+import { UpdateMailSubscribe } from "@/shared/ui/account/update-subscription";
+import UploadAvatar from "@/shared/ui/account/upload-avatar";
+import AppLayout from "@/shared/ui/layouts/app";
+import { Form } from "@/shared/ui/form";
 
-import { validateEmail } from "@/lib/utils/validate-email";
+import { validateEmail } from "@/shared/utils/utils/validate-email";
 
 const ProfilePage: NextPage = () => {
   const { data: session, update } = useSession();

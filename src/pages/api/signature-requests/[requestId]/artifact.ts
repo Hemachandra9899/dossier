@@ -4,11 +4,11 @@
 
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { errorhandler } from "@/lib/errorHandler";
-import { createSigningContext } from "@/modules/signing/application/context";
-import { getPublicSignedArtifact } from "@/modules/signing/application/get-public-signed-artifact";
-import { isDossierSigningRuntimeEnabled } from "@/modules/signing/config";
-import { readRecipientAccessFromCookies } from "@/modules/signing/domain/recipient-access-token";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import { createSigningContext } from "@/features/signing/application/context";
+import { getPublicSignedArtifact } from "@/features/signing/application/get-public-signed-artifact";
+import { isDossierSigningRuntimeEnabled } from "@/features/signing/config";
+import { readRecipientAccessFromCookies } from "@/features/signing/domain/recipient-access-token";
 
 export default async function handle(
   req: NextApiRequest,

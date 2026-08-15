@@ -3,10 +3,10 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import { exportVisitsTask } from "@/lib/trigger/export-visits";
-import { jobStore } from "@/lib/redis-job-store";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { exportVisitsTask } from "@/platform/queue/trigger/export-visits";
+import { jobStore } from "@/shared/utils/redis-job-store";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handler(
   req: NextApiRequest,

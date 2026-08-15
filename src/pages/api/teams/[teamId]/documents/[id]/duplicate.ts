@@ -1,14 +1,14 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/modules/access/is-team-paused";
+import { isTeamPausedById } from "@/features/access/is-team-paused";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { DocumentVersion } from "@prisma/client";
 import { getServerSession } from "next-auth/next";
 
-import { errorhandler } from "@/lib/errorHandler";
-import { copyFileServer } from "@/lib/files/copy-file-server";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import { copyFileServer } from "@/shared/utils/files/copy-file-server";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handle(
   req: NextApiRequest,

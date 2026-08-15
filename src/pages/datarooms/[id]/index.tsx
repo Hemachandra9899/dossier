@@ -1,9 +1,9 @@
-import { useDataroom, useDataroomLinks } from "@/lib/swr/use-dataroom";
+import { useDataroom, useDataroomLinks } from "@/shared/utils/swr/use-dataroom";
 
-import StatsCard from "@/components/datarooms/stats-card";
-import AppLayout from "@/components/layouts/app";
-import LinksTable from "@/components/links/links-table";
-import DataroomVisitorsTable from "@/components/visitors/dataroom-visitors-table";
+import StatsCard from "@/shared/ui/datarooms/stats-card";
+import AppLayout from "@/shared/ui/layouts/app";
+import LinksTable from "@/shared/ui/links/links-table";
+import DataroomVisitorsTable from "@/shared/ui/visitors/dataroom-visitors-table";
 
 export default function DataroomPage() {
   const { dataroom } = useDataroom();

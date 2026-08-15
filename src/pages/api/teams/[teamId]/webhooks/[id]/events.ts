@@ -3,9 +3,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import prisma from "@/lib/prisma";
-import { getWebhookEvents } from "@/lib/tinybird/pipes";
-import { CustomUser } from "@/lib/types";
+import prisma from "@/platform/db";
+import { getWebhookEvents } from "@/shared/utils/tinybird/pipes";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handler(
   req: NextApiRequest,

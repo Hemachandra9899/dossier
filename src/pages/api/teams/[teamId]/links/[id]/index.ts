@@ -4,10 +4,10 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { customAlphabet } from "nanoid";
 import { getServerSession } from "next-auth/next";
 
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { log } from "@/shared/utils/utils";
 
 export default async function handle(
   req: NextApiRequest,

@@ -2,20 +2,18 @@ import type { AppProps } from "next/app";
 import { Inter } from "next/font/google";
 import Head from "next/head";
 
-import { TeamProvider } from "@/context/team-context";
-import { UploadProgressProvider } from "@/context/upload-progress-context";
+import { TeamProvider } from "@/features/workspace/providers/workspace-provider";
+import { UploadProgressProvider } from "@/features/files/upload/upload-progress-context";
 import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import { NuqsAdapter } from "nuqs/adapters/next/pages";
 
-import { EXCLUDED_PATHS } from "@/lib/constants";
-import { useTrackLastVisited } from "@/lib/hooks/use-last-visited";
+import { EXCLUDED_PATHS } from "@/shared/utils/constants";
+import { useTrackLastVisited } from "@/shared/utils/hooks/use-last-visited";
 
-import { PostHogGroupSync } from "@/components/providers/posthog-group-sync";
-import { PostHogCustomProvider } from "@/components/providers/posthog-provider";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/shared/providers/theme-provider";
+import { Toaster } from "@/shared/ui/sonner";
+import { TooltipProvider } from "@/shared/ui/tooltip";
 import { productConfig } from "@/shared/config/product";
 
 import "@/styles/globals.css";

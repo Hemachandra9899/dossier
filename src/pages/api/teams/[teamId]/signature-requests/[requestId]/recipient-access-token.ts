@@ -5,11 +5,11 @@
 
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { requireTeamMember } from "@/lib/api/require-team-member";
-import { errorhandler } from "@/lib/errorHandler";
-import { createSigningContext } from "@/modules/signing/application/context";
-import { getRecipientAccessToken } from "@/modules/signing/application/get-recipient-access-token";
-import { isDossierSigningEnabled } from "@/modules/signing/config";
+import { requireTeamMember } from "@/shared/utils/api/require-team-member";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import { createSigningContext } from "@/features/signing/application/context";
+import { getRecipientAccessToken } from "@/features/signing/application/get-recipient-access-token";
+import { isDossierSigningEnabled } from "@/features/signing/config";
 
 export default async function handle(
   req: NextApiRequest,

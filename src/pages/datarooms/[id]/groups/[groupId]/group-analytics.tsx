@@ -1,10 +1,10 @@
-import { GroupHeader } from "@/components/datarooms/groups/group-header";
-import { GroupNavigation } from "@/components/datarooms/groups/group-navigation";
-import AppLayout from "@/components/layouts/app";
-import DataroomVisitorsTable from "@/components/visitors/dataroom-visitors-table";
+import { GroupHeader } from "@/shared/ui/datarooms/groups/group-header";
+import { GroupNavigation } from "@/shared/ui/datarooms/groups/group-navigation";
+import AppLayout from "@/shared/ui/layouts/app";
+import DataroomVisitorsTable from "@/shared/ui/visitors/dataroom-visitors-table";
 
-import { useDataroom } from "@/lib/swr/use-dataroom";
-import { useDataroomGroup } from "@/lib/swr/use-dataroom-groups";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
+import { useDataroomGroup } from "@/shared/utils/swr/use-dataroom-groups";
 
 export default function DataroomGroupPage() {
   const { dataroom } = useDataroom();

@@ -1,16 +1,16 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/modules/access/is-team-paused";
+import { isTeamPausedById } from "@/features/access/is-team-paused";
 
-import { sendViewedDataroomEmail } from "@/lib/emails/send-viewed-dataroom";
-import { sendViewedDataroomPausedEmail } from "@/lib/emails/send-viewed-dataroom-paused";
-import { sendViewedDocumentEmail } from "@/lib/emails/send-viewed-document";
-import { sendViewedDocumentPausedEmail } from "@/lib/emails/send-viewed-document-paused";
-import { dispatchNotification } from "@/lib/notifications/dispatch";
-import type { NotificationRecipient } from "@/lib/notifications/resolve-recipients";
-import prisma from "@/lib/prisma";
-import { log } from "@/lib/utils";
-import type { TeamNotificationType } from "@/lib/zod/schemas/notifications";
+import { sendViewedDataroomEmail } from "@/shared/utils/emails/send-viewed-dataroom";
+import { sendViewedDataroomPausedEmail } from "@/shared/utils/emails/send-viewed-dataroom-paused";
+import { sendViewedDocumentEmail } from "@/shared/utils/emails/send-viewed-document";
+import { sendViewedDocumentPausedEmail } from "@/shared/utils/emails/send-viewed-document-paused";
+import { dispatchNotification } from "@/shared/utils/notifications/dispatch";
+import type { NotificationRecipient } from "@/shared/utils/notifications/resolve-recipients";
+import prisma from "@/platform/db";
+import { log } from "@/shared/utils/utils";
+import type { TeamNotificationType } from "@/shared/utils/zod/schemas/notifications";
 
 export const config = {
   maxDuration: 60,

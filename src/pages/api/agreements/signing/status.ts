@@ -3,19 +3,19 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { parse as parseCookieHeader } from "cookie";
 import { z } from "zod";
 
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
 import {
   getSignedAgreementAccessCookieName,
   parseSignedAgreementAccessToken,
-} from "@/lib/signing/access-token";
-import { getSignedAgreementResponseForViewer } from "@/lib/signing/agreements";
+} from "@/shared/utils/signing/access-token";
+import { getSignedAgreementResponseForViewer } from "@/shared/utils/signing/agreements";
 import {
   SIGNED_DOWNLOAD_COOKIE_NAME,
   verifySignedAgreementDownloadToken,
-} from "@/lib/signing/download-token";
-import { getIpAddress } from "@/lib/utils/ip";
+} from "@/shared/utils/signing/download-token";
+import { getIpAddress } from "@/shared/utils/utils/ip";
 
 const signingStatusQuerySchema = z.object({
   linkId: z.string().min(1, "Link ID is required."),

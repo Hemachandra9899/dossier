@@ -1,12 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import notion from "@/lib/notion";
+import notion from "@/shared/utils/notion";
 import {
   addSignedUrls,
   fetchMissingPageReferences,
   normalizeRecordMap,
-} from "@/lib/notion/utils";
-import { log } from "@/lib/utils";
+} from "@/shared/utils/notion/utils";
+import { log } from "@/shared/utils/utils";
 
 export default async function handle(
   req: NextApiRequest,

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { receiver } from "@/lib/cron";
-import { processDataroomDigest } from "@/lib/emails/process-dataroom-digest";
-import { log } from "@/lib/utils";
+import { receiver } from "@/shared/utils/cron";
+import { processDataroomDigest } from "@/shared/utils/emails/process-dataroom-digest";
+import { log } from "@/shared/utils/utils";
 
 // Runs weekly on Monday at 9 AM UTC (0 9 * * 1)
 export const maxDuration = 300;

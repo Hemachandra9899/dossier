@@ -6,13 +6,13 @@ import { getServerSession } from "next-auth";
 import {
   RestrictedTokenSubjectTypeSchema,
   parseRestrictedTokenSubjectType,
-} from "@/lib/api/auth/restricted-tokens";
-import { hashToken } from "@/lib/api/auth/token";
-import { getFeatureFlags } from "@/lib/featureFlags";
-import { newId } from "@/lib/id-helper";
-import { GRANULAR_SCOPES, PRESET_SCOPES } from "@/lib/oauth/scopes";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/api/auth/restricted-tokens";
+import { hashToken } from "@/shared/utils/api/auth/token";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import { newId } from "@/shared/utils/id-helper";
+import { GRANULAR_SCOPES, PRESET_SCOPES } from "@/shared/utils/oauth/scopes";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handle(
   req: NextApiRequest,

@@ -3,9 +3,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import { sendExportReadyEmail } from "@/lib/emails/send-export-ready-email";
-import { jobStore } from "@/lib/redis-job-store";
-import { CustomUser } from "@/lib/types";
+import { sendExportReadyEmail } from "@/shared/utils/emails/send-export-ready-email";
+import { jobStore } from "@/shared/utils/redis-job-store";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handler(
   req: NextApiRequest,

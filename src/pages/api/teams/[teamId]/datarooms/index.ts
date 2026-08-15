@@ -1,13 +1,13 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/modules/access/is-team-paused";
+import { isTeamPausedById } from "@/features/access/is-team-paused";
 import { getLimits } from "@/ee/limits/server";
 import { Prisma } from "@prisma/client";
 
-import { withTeamApi } from "@/lib/api/auth/with-session-team";
-import { isDataroomScopedRole } from "@/lib/api/rbac/permissions";
-import { newId } from "@/lib/id-helper";
-import prisma from "@/lib/prisma";
+import { withTeamApi } from "@/shared/utils/api/auth/with-session-team";
+import { isDataroomScopedRole } from "@/shared/utils/api/rbac/permissions";
+import { newId } from "@/shared/utils/id-helper";
+import prisma from "@/platform/db";
 
 export const config = {
   maxDuration: 180,

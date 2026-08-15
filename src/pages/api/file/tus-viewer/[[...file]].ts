@@ -6,15 +6,15 @@ import { CopyObjectCommand } from "@aws-sdk/client-s3";
 import { Server } from "@tus/server";
 import path from "node:path";
 
-import { verifyDataroomSessionInPagesRouter } from "@/lib/auth/dataroom-auth";
-import { getTeamS3ClientAndConfig } from "@/lib/files/aws-client";
-import { buildContentDisposition, safeSlugify } from "@/lib/utils";
-import { RedisLocker } from "@/lib/files/tus-redis-locker";
-import { MemoryLocker } from "@/lib/files/tus-memory-locker";
-import { newId } from "@/lib/id-helper";
-import prisma from "@/lib/prisma";
-import { lockerRedisClient } from "@/lib/redis";
-import { log } from "@/lib/utils";
+import { verifyDataroomSessionInPagesRouter } from "@/shared/utils/auth/dataroom-auth";
+import { getTeamS3ClientAndConfig } from "@/shared/utils/files/aws-client";
+import { buildContentDisposition, safeSlugify } from "@/shared/utils/utils";
+import { RedisLocker } from "@/shared/utils/files/tus-redis-locker";
+import { MemoryLocker } from "@/shared/utils/files/tus-memory-locker";
+import { newId } from "@/shared/utils/id-helper";
+import prisma from "@/platform/db";
+import { lockerRedisClient } from "@/shared/utils/redis";
+import { log } from "@/shared/utils/utils";
 
 export const config = {
   maxDuration: 60,

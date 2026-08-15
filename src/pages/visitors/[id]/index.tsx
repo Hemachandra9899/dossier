@@ -4,10 +4,10 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import useViewer from "@/lib/swr/use-viewer";
+import { usePlan } from "@/shared/utils/swr/use-billing";
+import useViewer from "@/shared/utils/swr/use-viewer";
 
-import AppLayout from "@/components/layouts/app";
+import AppLayout from "@/shared/ui/layouts/app";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,12 +15,12 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ContactsDocumentsTable } from "@/components/visitors/contacts-document-table";
-import { VisitorAccessCard } from "@/components/visitors/visitor-access-card";
-import { VisitorAvatar } from "@/components/visitors/visitor-avatar";
+} from "@/shared/ui/breadcrumb";
+import { Separator } from "@/shared/ui/separator";
+import { Skeleton } from "@/shared/ui/skeleton";
+import { ContactsDocumentsTable } from "@/shared/ui/visitors/contacts-document-table";
+import { VisitorAccessCard } from "@/shared/ui/visitors/visitor-access-card";
+import { VisitorAvatar } from "@/shared/ui/visitors/visitor-avatar";
 
 export default function VisitorDetailPage() {
   const router = useRouter();

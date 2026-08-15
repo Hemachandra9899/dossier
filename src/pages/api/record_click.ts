@@ -2,9 +2,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { z } from "zod";
 
-import { newId } from "@/lib/id-helper";
-import { recordClickEvent } from "@/lib/tinybird";
-import { log } from "@/lib/utils";
+import { newId } from "@/shared/utils/id-helper";
+import { recordClickEvent } from "@/shared/utils/tinybird";
+import { log } from "@/shared/utils/utils";
 
 const bodyValidation = z.object({
   timestamp: z.string(),

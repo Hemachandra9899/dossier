@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { generateTriggerPublicAccessToken } from "@/lib/utils/generate-trigger-auth-token";
+import { generateTriggerPublicAccessToken } from "@/shared/utils/utils/generate-trigger-auth-token";
 
 export default async function handle(
   req: NextApiRequest,

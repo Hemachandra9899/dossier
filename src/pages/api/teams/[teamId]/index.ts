@@ -3,15 +3,15 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { DocumentStorageType } from "@prisma/client";
 import { getServerSession } from "next-auth";
 
-import { deleteDomainRedirectUrl } from "@/lib/api/domains/redis";
-import { removeDomainFromVercelProject } from "@/lib/domains";
-import { errorhandler } from "@/lib/errorHandler";
-import { deleteFiles } from "@/lib/files/delete-team-files-server";
-import prisma from "@/lib/prisma";
-import { clearCachedBrandLogo } from "@/lib/redis/brand-logo-cache";
+import { deleteDomainRedirectUrl } from "@/shared/utils/api/domains/redis";
+import { removeDomainFromVercelProject } from "@/shared/utils/domains";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import { deleteFiles } from "@/shared/utils/files/delete-team-files-server";
+import prisma from "@/platform/db";
+import { clearCachedBrandLogo } from "@/shared/utils/redis/brand-logo-cache";
 
-import { CustomUser } from "@/lib/types";
-import { unsubscribe } from "@/lib/resend";
+import { CustomUser } from "@/shared/utils/types";
+import { unsubscribe } from "@/shared/utils/resend";
 
 import { authOptions } from "../../auth/[...nextauth]";
 

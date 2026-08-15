@@ -3,14 +3,14 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import { teamPlanIsDataroomPlusTier } from "@/modules/access/team-plan-custom-messaging";
-import { getFeatureFlags } from "@/lib/featureFlags";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { teamPlanIsDataroomPlusTier } from "@/features/access/team-plan-custom-messaging";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 import {
   calculateAndUpdateHierarchicalIndexes,
   clearHierarchicalIndexes,
-} from "@/lib/utils/calculate-hierarchical-indexes";
+} from "@/shared/utils/utils/calculate-hierarchical-indexes";
 
 export const config = {
   maxDuration: 300,

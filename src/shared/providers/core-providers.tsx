@@ -2,9 +2,9 @@
 
 import { SessionProvider } from "next-auth/react";
 
-import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/shared/ui/theme-provider";
+import { Toaster } from "@/shared/ui/sonner";
+import { TooltipProvider } from "@/shared/ui/tooltip";
 
 export function CoreProviders({ children }: { children: React.ReactNode }) {
   return (

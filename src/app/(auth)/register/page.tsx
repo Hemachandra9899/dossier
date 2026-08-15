@@ -1,4 +1,4 @@
-import { RegisterScreen } from "@/modules/auth";
+import { RegisterScreen } from "@/features/auth";
 import { buildMetadata } from "@/shared/config/metadata";
 import { productConfig } from "@/shared/config/product";
 

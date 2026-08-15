@@ -5,8 +5,8 @@ import NotFound from "@/pages/404";
 import { format } from "date-fns";
 import { ClockIcon, MailIcon } from "lucide-react";
 
-import prisma from "@/lib/prisma";
-import { verifyJWT } from "@/lib/utils/generate-jwt";
+import prisma from "@/platform/db";
+import { verifyJWT } from "@/shared/utils/utils/generate-jwt";
 
 import AcceptInvitationButton from "./AcceptInvitationButton";
 import InvitationStatusContent from "./InvitationStatusContent";

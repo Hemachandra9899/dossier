@@ -6,12 +6,12 @@ import {
   validateActions,
   validateConditions,
 } from "@/ee/features/workflows/lib/validation";
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 // PATCH /app/(ee)/api/workflows/[workflowId]/steps/[stepId]?teamId=xxx - Update step
 export async function PATCH(

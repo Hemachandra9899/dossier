@@ -13,13 +13,13 @@ import {
   collectFingerprintHeaders,
   createDataroomSession,
   generateSessionFingerprint,
-} from "@/lib/auth/dataroom-auth";
-import { createLinkSession } from "@/lib/auth/link-session";
-import { sendOtpVerificationEmail } from "@/lib/emails/send-email-otp-verification";
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
-import { generateOTP } from "@/lib/utils/generate-otp";
-import { LOCALHOST_IP } from "@/lib/utils/geo";
+} from "@/shared/utils/auth/dataroom-auth";
+import { createLinkSession } from "@/shared/utils/auth/link-session";
+import { sendOtpVerificationEmail } from "@/shared/utils/emails/send-email-otp-verification";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
+import { generateOTP } from "@/shared/utils/utils/generate-otp";
+import { LOCALHOST_IP } from "@/shared/utils/utils/geo";
 
 // POST /app/(ee)/api/workflow-entry/domains/[domain]/[slug]/[action]
 // where action is "verify" or "access"

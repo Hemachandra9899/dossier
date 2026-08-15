@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
-import { planProviderEventEffect } from "@/modules/signing/application/process-provider-event";
-import type { ProviderEventMapper } from "@/modules/signing/application/context";
-import { SigningStateError } from "@/modules/signing/domain/signing-errors";
+import { planProviderEventEffect } from "@/features/signing/application/process-provider-event";
+import type { ProviderEventMapper } from "@/features/signing/application/context";
+import { SigningStateError } from "@/features/signing/domain/signing-errors";
 
 const mapEventToStatus: ProviderEventMapper = (event) => {
   switch (event) {

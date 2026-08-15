@@ -4,14 +4,14 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser, tagColors } from "@/lib/types";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser, tagColors } from "@/shared/utils/types";
 
 import {
   COLORS_LIST,
   randomBadgeColor,
-} from "@/components/links/link-sheet/tags/tag-badge";
+} from "@/shared/ui/links/link-sheet/tags/tag-badge";
 
 export const searchParamsSchema = z.object({
   sortBy: z

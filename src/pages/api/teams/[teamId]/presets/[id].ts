@@ -5,11 +5,11 @@ import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 import { ZodError } from "zod";
 
-import { errorhandler } from "@/lib/errorHandler";
-import { newId } from "@/lib/id-helper";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { presetDataSchema } from "@/lib/zod/schemas/presets";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import { newId } from "@/shared/utils/id-helper";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { presetDataSchema } from "@/shared/utils/zod/schemas/presets";
 
 export const config = {
   api: {

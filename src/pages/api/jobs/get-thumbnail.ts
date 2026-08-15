@@ -2,9 +2,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth";
 
-import { getFileForDocumentPage } from "@/lib/documents/get-file-helper";
-import { ratelimit } from "@/lib/redis";
-import { CustomUser } from "@/lib/types";
+import { getFileForDocumentPage } from "@/shared/utils/documents/get-file-helper";
+import { ratelimit } from "@/shared/utils/redis";
+import { CustomUser } from "@/shared/utils/types";
 
 import { authOptions } from "../auth/[...nextauth]";
 

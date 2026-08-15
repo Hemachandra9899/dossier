@@ -3,9 +3,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
-import { updateWebhookSchema } from "@/lib/zod/schemas/webhooks";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
+import { updateWebhookSchema } from "@/shared/utils/zod/schemas/webhooks";
 
 export default async function handler(
   req: NextApiRequest,

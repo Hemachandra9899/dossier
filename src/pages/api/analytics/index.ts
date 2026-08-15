@@ -4,16 +4,16 @@ import { addDays } from "date-fns";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
-import { enforceDataroomMemberScope } from "@/lib/api/rbac/guard";
-import prisma from "@/lib/prisma";
+import { enforceDataroomMemberScope } from "@/shared/utils/api/rbac/guard";
+import prisma from "@/platform/db";
 import {
   getTotalDocumentDuration,
   getTotalLinkDuration,
   getTotalViewerDuration,
   getViewPageDuration,
-} from "@/lib/tinybird/pipes";
-import { CustomUser } from "@/lib/types";
-import { durationFormat } from "@/lib/utils";
+} from "@/shared/utils/tinybird/pipes";
+import { CustomUser } from "@/shared/utils/types";
+import { durationFormat } from "@/shared/utils/utils";
 
 import { authOptions } from "../auth/[...nextauth]";
 

@@ -1,15 +1,15 @@
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { toast } from "sonner";
 import { mutate } from "swr";
 
-import DeleteGroup from "@/components/datarooms/groups/delete-group";
-import { GroupHeader } from "@/components/datarooms/groups/group-header";
-import { GroupNavigation } from "@/components/datarooms/groups/group-navigation";
-import AppLayout from "@/components/layouts/app";
-import { Form } from "@/components/ui/form";
+import DeleteGroup from "@/shared/ui/datarooms/groups/delete-group";
+import { GroupHeader } from "@/shared/ui/datarooms/groups/group-header";
+import { GroupNavigation } from "@/shared/ui/datarooms/groups/group-navigation";
+import AppLayout from "@/shared/ui/layouts/app";
+import { Form } from "@/shared/ui/form";
 
-import { useDataroom } from "@/lib/swr/use-dataroom";
-import { useDataroomGroup } from "@/lib/swr/use-dataroom-groups";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
+import { useDataroomGroup } from "@/shared/utils/swr/use-dataroom-groups";
 
 export default function DataroomGroupPage() {
   const teamInfo = useTeam();

@@ -10,11 +10,11 @@ import {
   collectFingerprintHeaders,
   createDataroomSession,
   generateSessionFingerprint,
-} from "@/lib/auth/dataroom-auth";
-import { createLinkSession } from "@/lib/auth/link-session";
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
-import { LOCALHOST_IP } from "@/lib/utils/geo";
+} from "@/shared/utils/auth/dataroom-auth";
+import { createLinkSession } from "@/shared/utils/auth/link-session";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
+import { LOCALHOST_IP } from "@/shared/utils/utils/geo";
 
 // POST /app/(ee)/api/workflow-entry/[entryLinkId]/access - Verify OTP and execute workflow
 export async function POST(

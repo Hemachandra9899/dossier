@@ -3,14 +3,14 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
 
-import { enforceDataroomMemberScope } from "@/lib/api/rbac/guard";
-import { generateFreshPresignedUrl } from "@/lib/files/bulk-download-presign";
-import prisma from "@/lib/prisma";
+import { enforceDataroomMemberScope } from "@/shared/utils/api/rbac/guard";
+import { generateFreshPresignedUrl } from "@/shared/utils/files/bulk-download-presign";
+import prisma from "@/platform/db";
 import {
   type DownloadJob,
   downloadJobStore,
-} from "@/lib/redis-download-job-store";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/redis-download-job-store";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handler(
   req: NextApiRequest,

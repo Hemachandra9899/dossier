@@ -1,20 +1,20 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPaused } from "@/modules/access/is-team-paused";
+import { isTeamPaused } from "@/features/access/is-team-paused";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { Prisma, View } from "@prisma/client";
 import { JsonValue } from "@prisma/client/runtime/library";
 import { getServerSession } from "next-auth/next";
 
-import { enforceDocumentMemberScope } from "@/lib/api/rbac/guard";
-import { isDataroomScopedRole } from "@/lib/api/rbac/permissions";
-import { LIMITS } from "@/lib/constants";
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { getViewPageDuration } from "@/lib/tinybird";
-import { getVideoEventsByDocument } from "@/lib/tinybird/pipes";
-import { CustomUser } from "@/lib/types";
-import { log } from "@/lib/utils";
+import { enforceDocumentMemberScope } from "@/shared/utils/api/rbac/guard";
+import { isDataroomScopedRole } from "@/shared/utils/api/rbac/permissions";
+import { LIMITS } from "@/shared/utils/constants";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { getViewPageDuration } from "@/shared/utils/tinybird";
+import { getVideoEventsByDocument } from "@/shared/utils/tinybird/pipes";
+import { CustomUser } from "@/shared/utils/types";
+import { log } from "@/shared/utils/utils";
 
 type DocumentVersion = {
   versionNumber: number;

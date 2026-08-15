@@ -1,9 +1,9 @@
-import { deleteDomain } from "@/lib/api/domains";
-import { limiter } from "@/lib/cron";
-import { sendDeletedDomainEmail } from "@/lib/emails/send-deleted-domain";
-import { sendInvalidDomainEmail } from "@/lib/emails/send-invalid-domain";
-import prisma from "@/lib/prisma";
-import { log } from "@/lib/utils";
+import { deleteDomain } from "@/shared/utils/api/domains";
+import { limiter } from "@/shared/utils/cron";
+import { sendDeletedDomainEmail } from "@/shared/utils/emails/send-deleted-domain";
+import { sendInvalidDomainEmail } from "@/shared/utils/emails/send-invalid-domain";
+import prisma from "@/platform/db";
+import { log } from "@/shared/utils/utils";
 
 export const handleDomainUpdates = async ({
   domain,

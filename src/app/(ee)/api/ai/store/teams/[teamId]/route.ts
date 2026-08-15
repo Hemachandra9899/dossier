@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getVectorStoreInfo } from "@/ee/features/ai/lib/vector-stores/get-vector-store-info";
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import { getServerSession } from "next-auth";
 
-import { getFeatureFlags } from "@/lib/featureFlags";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 /**
  * GET /api/ai/store/teams/[teamId]

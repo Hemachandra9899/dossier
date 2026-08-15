@@ -1,11 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
-import prisma from "@/lib/prisma";
+import prisma from "@/platform/db";
 import {
   requireFileAccess,
   requireFileManageAccess,
   sendAuthorizationError,
-} from "@/modules/files/server/authorization";
+} from "@/features/files/server/authorization";
 import { VerificationStatus } from "@prisma/client";
 
 const DismissIssueSchema = z

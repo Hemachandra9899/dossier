@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { validateChatAccess } from "@/ee/features/ai/lib/permissions/validate-chat-access";
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 import { getServerSession } from "next-auth";
 
-import { getFeatureFlags } from "@/lib/featureFlags";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 /**
  * GET /api/ai/chat/[chatId]

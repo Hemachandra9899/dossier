@@ -3,8 +3,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import { listUserPasskeys, removeUserPasskey } from "@/lib/api/auth/passkey";
-import { errorhandler } from "@/lib/errorHandler";
+import { listUserPasskeys, removeUserPasskey } from "@/shared/utils/api/auth/passkey";
+import { errorhandler } from "@/shared/utils/errorHandler";
 
 export default async function handler(
   req: NextApiRequest,

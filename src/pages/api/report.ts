@@ -3,8 +3,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
 
-import prisma from "@/lib/prisma";
-import { redis } from "@/lib/redis";
+import prisma from "@/platform/db";
+import { redis } from "@/shared/utils/redis";
 
 const bodyValidation = z.object({
   linkId: z.string(),

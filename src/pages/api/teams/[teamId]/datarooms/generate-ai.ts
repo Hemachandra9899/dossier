@@ -1,15 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { isTeamPausedById } from "@/modules/access/is-team-paused";
+import { isTeamPausedById } from "@/features/access/is-team-paused";
 import { FolderTemplate } from "@/ee/features/templates/constants/dataroom-templates";
 import { getLimits } from "@/ee/limits/server";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
-import { newId } from "@/lib/id-helper";
-import { safeSlugify } from "@/lib/utils";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { newId } from "@/shared/utils/id-helper";
+import { safeSlugify } from "@/shared/utils/utils";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handle(
   req: NextApiRequest,

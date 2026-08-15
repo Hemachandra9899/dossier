@@ -4,7 +4,7 @@ import {
   fuzzyMatchNames,
   fuzzyMatchAddresses,
   evaluateVerificationChecks,
-} from "../../../lib/verification/evaluate-checks";
+} from "@/features/verification/verification.rules";
 
 test("Verification Rules Engine", async (t) => {
   await t.test("Fuzzy Name Matching", () => {

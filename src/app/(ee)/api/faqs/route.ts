@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { z } from "zod";
 
-import { verifyDataroomSession } from "@/lib/auth/dataroom-auth";
-import prisma from "@/lib/prisma";
+import { verifyDataroomSession } from "@/shared/utils/auth/dataroom-auth";
+import prisma from "@/platform/db";
 
 // Validation schema for query parameters
 const visitorFAQParamsSchema = z.object({

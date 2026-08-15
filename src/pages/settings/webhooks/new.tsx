@@ -4,22 +4,22 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { newId } from "@/lib/id-helper";
-import { usePlan } from "@/lib/swr/use-billing";
+import { newId } from "@/shared/utils/id-helper";
+import { usePlan } from "@/shared/utils/swr/use-billing";
 
-import AppLayout from "@/components/layouts/app";
-import { SettingsHeader } from "@/components/settings/settings-header";
-import Copy from "@/components/shared/icons/copy";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SettingsHeader } from "@/shared/ui/settings/settings-header";
+import Copy from "@/shared/ui/shared/icons/copy";
+import { Button } from "@/shared/ui/button";
+import { Card, CardContent } from "@/shared/ui/card";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
 
 
 interface WebhookEvent {

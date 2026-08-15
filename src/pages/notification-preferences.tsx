@@ -16,11 +16,11 @@ import { motion } from "motion/react";
 
 import PapermarkLogo from "@/public/_static/papermark-logo.svg";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/ui/button";
 
-import prisma from "@/lib/prisma";
-import { verifyUnsubscribeToken } from "@/lib/utils/unsubscribe";
-import { ZViewerNotificationPreferencesSchema } from "@/lib/zod/schemas/notifications";
+import prisma from "@/platform/db";
+import { verifyUnsubscribeToken } from "@/shared/utils/utils/unsubscribe";
+import { ZViewerNotificationPreferencesSchema } from "@/shared/utils/zod/schemas/notifications";
 
 type FrequencyOption = "instant" | "daily" | "weekly" | "disabled";
 

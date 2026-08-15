@@ -4,13 +4,13 @@ import { LinkAudienceType } from "@prisma/client";
 import { customAlphabet } from "nanoid";
 import { getServerSession } from "next-auth/next";
 
-import { enforceLinkMemberScope } from "@/lib/api/rbac/guard";
-import prisma from "@/lib/prisma";
-import { CustomUser, WatermarkConfigSchema } from "@/lib/types";
+import { enforceLinkMemberScope } from "@/shared/utils/api/rbac/guard";
+import prisma from "@/platform/db";
+import { CustomUser, WatermarkConfigSchema } from "@/shared/utils/types";
 import {
   decryptEncrpytedPassword,
   generateEncrpytedPassword,
-} from "@/lib/utils";
+} from "@/shared/utils/utils";
 
 import { DomainObject } from "..";
 import { authOptions } from "../../auth/[...nextauth]";

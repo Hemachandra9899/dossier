@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { receiver } from "@/lib/cron";
-import { log } from "@/lib/utils";
-import { processEmailQueue } from "@/lib/year-in-review/send-emails";
+import { receiver } from "@/shared/utils/cron";
+import { log } from "@/shared/utils/utils";
+import { processEmailQueue } from "@/shared/utils/year-in-review/send-emails";
 
 // Runs every hour (0 * * * *)
 export const maxDuration = 300; // 5 minutes in seconds

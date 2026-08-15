@@ -2,17 +2,17 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth/next";
 
-import { authOptions } from "@/lib/auth/auth-options";
-import { TeamError, errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
+import { authOptions } from "@/shared/utils/auth/auth-options";
+import { TeamError, errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
 import {
   deleteSigningTemplateDirectLink,
   ensureSigningTemplateViewerRecipient,
   getSigningEmbedConfig,
   isSigningAgreement,
-} from "@/lib/signing/agreements";
-import { getSigningClient } from "@/lib/signing/client";
-import { CustomUser } from "@/lib/types";
+} from "@/shared/utils/signing/agreements";
+import { getSigningClient } from "@/shared/utils/signing/client";
+import { CustomUser } from "@/shared/utils/types";
 
 export default async function handle(
   req: NextApiRequest,

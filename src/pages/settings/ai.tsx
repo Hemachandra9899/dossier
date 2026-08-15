@@ -2,22 +2,22 @@ import { useRouter } from "next/router";
 
 import { useEffect, useState } from "react";
 
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import { ExternalLink, Shield, Sparkles } from "lucide-react";
 
-import PapermarkSparkle from "@/components/shared/icons/papermark-sparkle";
+import PapermarkSparkle from "@/shared/ui/shared/icons/papermark-sparkle";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
-import { useFeatureFlags } from "@/lib/hooks/use-feature-flags";
-import { useGetTeam } from "@/lib/swr/use-team";
-import { CustomUser } from "@/lib/types";
-import { fetcher } from "@/lib/utils";
+import { useFeatureFlags } from "@/shared/utils/hooks/use-feature-flags";
+import { useGetTeam } from "@/shared/utils/swr/use-team";
+import { CustomUser } from "@/shared/utils/types";
+import { fetcher } from "@/shared/utils/utils";
 
-import AppLayout from "@/components/layouts/app";
-import { SettingsHeader } from "@/components/settings/settings-header";
-import { Badge } from "@/components/ui/badge";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SettingsHeader } from "@/shared/ui/settings/settings-header";
+import { Badge } from "@/shared/ui/badge";
 import {
   Card,
   CardContent,
@@ -25,10 +25,10 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import { Switch } from "@/components/ui/switch";
+} from "@/shared/ui/card";
+import { Label } from "@/shared/ui/label";
+import LoadingSpinner from "@/shared/ui/loading-spinner";
+import { Switch } from "@/shared/ui/switch";
 
 interface AISettings {
   agentsEnabled: boolean;

@@ -2,9 +2,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { getServerSession } from "next-auth";
 
-import { errorhandler } from "@/lib/errorHandler";
-import { resend, subscribe, unsubscribe } from "@/lib/resend";
-import { CustomUser } from "@/lib/types";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import { resend, subscribe, unsubscribe } from "@/shared/utils/resend";
+import { CustomUser } from "@/shared/utils/types";
 
 import { authOptions } from "../auth/[...nextauth]";
 

@@ -3,17 +3,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { getTeamStorageConfigById } from "@/ee/features/storage/config";
 import { getServerSession } from "next-auth";
 
-import { authOptions } from "@/lib/auth/auth-options";
+import { authOptions } from "@/shared/utils/auth/auth-options";
 
 import {
   buildFolderNameMap,
   buildFolderPathsFromHierarchy,
-} from "@/lib/dataroom/build-folder-hierarchy";
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
+} from "@/shared/utils/dataroom/build-folder-hierarchy";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
 import { dataroomFreezeArchiveTask } from "@/ee/features/dataroom-freeze/lib/trigger/dataroom-freeze-archive";
-import { CustomUser } from "@/lib/types";
-import { generateTriggerPublicAccessToken } from "@/lib/utils/generate-trigger-auth-token";
+import { CustomUser } from "@/shared/utils/types";
+import { generateTriggerPublicAccessToken } from "@/shared/utils/utils/generate-trigger-auth-token";
 
 export const maxDuration = 60;
 

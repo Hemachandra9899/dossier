@@ -3,30 +3,30 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { parse as parseCookieHeader } from "cookie";
 import { z } from "zod";
 
-import { TeamError, errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { ratelimit } from "@/lib/redis";
+import { TeamError, errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { ratelimit } from "@/shared/utils/redis";
 import {
   buildSignedAgreementAccessCookie,
   getSignedAgreementAccessCookieName,
   mintSignedAgreementAccessToken,
   parseSignedAgreementAccessToken,
   verifySignedAgreementAccessToken,
-} from "@/lib/signing/access-token";
+} from "@/shared/utils/signing/access-token";
 import {
   buildAgreementResponseSigningExternalId,
   getAgreementResponseSignedState,
   getAgreementSigningToken,
   getSigningEmbedConfig,
   isSigningAgreement,
-} from "@/lib/signing/agreements";
+} from "@/shared/utils/signing/agreements";
 import {
   SIGNED_DOWNLOAD_COOKIE_NAME,
   buildSignedAgreementDownloadCookie,
   mintSignedAgreementDownloadToken,
   verifySignedAgreementDownloadToken,
-} from "@/lib/signing/download-token";
-import { getIpAddress } from "@/lib/utils/ip";
+} from "@/shared/utils/signing/download-token";
+import { getIpAddress } from "@/shared/utils/utils/ip";
 
 const optionalEmailSchema = z.preprocess((value) => {
   if (typeof value !== "string") {

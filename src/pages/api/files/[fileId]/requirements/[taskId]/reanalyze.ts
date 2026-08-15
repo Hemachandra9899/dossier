@@ -1,9 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import prisma from "@/lib/prisma";
+import prisma from "@/platform/db";
 import {
   requireFileAccess,
   sendAuthorizationError,
-} from "@/modules/files/server/authorization";
+} from "@/features/files/server/authorization";
 
 export default async function handler(
   req: NextApiRequest,
@@ -66,7 +66,7 @@ export default async function handler(
     });
 
     const { dossierDocumentAnalysisTask } = await import(
-      "@/lib/trigger/dossier-document-analysis"
+      "@/platform/queue/trigger/dossier-document-analysis"
     );
 
     const run = await dossierDocumentAnalysisTask.trigger(

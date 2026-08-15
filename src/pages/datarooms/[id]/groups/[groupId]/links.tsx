@@ -1,13 +1,13 @@
-import { useDataroom } from "@/lib/swr/use-dataroom";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
 import {
   useDataroomGroup,
   useDataroomGroupLinks,
-} from "@/lib/swr/use-dataroom-groups";
+} from "@/shared/utils/swr/use-dataroom-groups";
 
-import { GroupHeader } from "@/components/datarooms/groups/group-header";
-import { GroupNavigation } from "@/components/datarooms/groups/group-navigation";
-import AppLayout from "@/components/layouts/app";
-import LinksTable from "@/components/links/links-table";
+import { GroupHeader } from "@/shared/ui/datarooms/groups/group-header";
+import { GroupNavigation } from "@/shared/ui/datarooms/groups/group-navigation";
+import AppLayout from "@/shared/ui/layouts/app";
+import LinksTable from "@/shared/ui/links/links-table";
 
 export default function DataroomGroupLinksPage() {
   const { dataroom } = useDataroom();

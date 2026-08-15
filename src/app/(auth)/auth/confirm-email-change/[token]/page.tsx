@@ -4,13 +4,13 @@ import NotFound from "@/pages/404";
 import { VerificationToken } from "@prisma/client";
 import { waitUntil } from "@vercel/functions";
 
-import { hashToken } from "@/lib/api/auth/token";
-import prisma from "@/lib/prisma";
-import { redis } from "@/lib/redis";
-import { sendEmail, subscribe, unsubscribe } from "@/lib/resend";
-import { CustomUser } from "@/lib/types";
+import { hashToken } from "@/shared/utils/api/auth/token";
+import prisma from "@/platform/db";
+import { redis } from "@/shared/utils/redis";
+import { sendEmail, subscribe, unsubscribe } from "@/shared/utils/resend";
+import { CustomUser } from "@/shared/utils/types";
 
-import EmailUpdated from "@/components/emails/email-updated";
+import EmailUpdated from "@/shared/ui/emails/email-updated";
 import { buildMetadata } from "@/shared/config/metadata";
 
 import ConfirmEmailChangePageClient from "./page-client";

@@ -5,18 +5,18 @@ import { useEffect, useMemo, useState } from "react";
 import { PlusIcon } from "lucide-react";
 import { useQueryState } from "nuqs";
 
-import { useSelfMembership } from "@/lib/hooks/use-self-membership";
-import useDatarooms from "@/lib/swr/use-datarooms";
-import { useTags } from "@/lib/swr/use-tags";
+import { useSelfMembership } from "@/shared/utils/hooks/use-self-membership";
+import useDatarooms from "@/shared/utils/swr/use-datarooms";
+import { useTags } from "@/shared/utils/swr/use-tags";
 
-import { AddDataroomModal } from "@/components/datarooms/add-dataroom-modal";
-import DataroomCard from "@/components/datarooms/dataroom-card";
-import { EmptyDataroom } from "@/components/datarooms/empty-dataroom";
-import AppLayout from "@/components/layouts/app";
-import { SearchBoxPersisted } from "@/components/search-box";
-import { Button } from "@/components/ui/button";
-import { MultiSelect } from "@/components/ui/multi-select-v2";
-import { Separator } from "@/components/ui/separator";
+import { AddDataroomModal } from "@/shared/ui/datarooms/add-dataroom-modal";
+import DataroomCard from "@/shared/ui/datarooms/dataroom-card";
+import { EmptyDataroom } from "@/shared/ui/datarooms/empty-dataroom";
+import AppLayout from "@/shared/ui/layouts/app";
+import { SearchBoxPersisted } from "@/shared/ui/search-box";
+import { Button } from "@/shared/ui/button";
+import { MultiSelect } from "@/shared/ui/multi-select-v2";
+import { Separator } from "@/shared/ui/separator";
 
 export default function DataroomsPage() {
   const { datarooms, totalCount } = useDatarooms();

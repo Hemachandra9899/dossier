@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import prisma from "@/lib/prisma";
+import prisma from "@/platform/db";
 
 export default async function handle(
   req: NextApiRequest,

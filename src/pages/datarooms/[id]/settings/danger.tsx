@@ -1,11 +1,11 @@
-import { useTeam } from "@/context/team-context";
+import { useTeam } from "@/features/workspace/providers/workspace-provider";
 import FreezeSettings from "@/ee/features/dataroom-freeze/components/freeze-settings";
 
-import { usePlan } from "@/lib/swr/use-billing";
-import { useDataroom } from "@/lib/swr/use-dataroom";
+import { usePlan } from "@/shared/utils/swr/use-billing";
+import { useDataroom } from "@/shared/utils/swr/use-dataroom";
 
-import DeleteDataroom from "@/components/datarooms/settings/delete-dataroom";
-import AppLayout from "@/components/layouts/app";
+import DeleteDataroom from "@/shared/ui/datarooms/settings/delete-dataroom";
+import AppLayout from "@/shared/ui/layouts/app";
 
 export default function DangerZone() {
   const { dataroom } = useDataroom();

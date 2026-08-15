@@ -3,9 +3,9 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth";
 
-import { errorhandler } from "@/lib/errorHandler";
-import prisma from "@/lib/prisma";
-import { CustomUser } from "@/lib/types";
+import { errorhandler } from "@/shared/utils/errorHandler";
+import prisma from "@/platform/db";
+import { CustomUser } from "@/shared/utils/types";
 import {
   DEFAULT_ADMIN_PREFERENCES,
   DEFAULT_MEMBER_PREFERENCES,
@@ -14,7 +14,7 @@ import {
   type TeamNotificationFrequency,
   type TeamNotificationScope,
   type TeamNotificationType,
-} from "@/lib/zod/schemas/notifications";
+} from "@/shared/utils/zod/schemas/notifications";
 
 type PreferenceEntry = {
   frequency: TeamNotificationFrequency;

@@ -1,3 +1,3 @@
-import { FileDetail } from "@/features/dossier/files";
+import { FileDetail } from "@/features/files";
 
 export default FileDetail;

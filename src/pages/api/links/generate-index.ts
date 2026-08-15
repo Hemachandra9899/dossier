@@ -2,11 +2,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 import { ItemType } from "@prisma/client";
 
-import { generateDataroomIndex } from "@/lib/dataroom/index-generator";
-import { getFeatureFlags } from "@/lib/featureFlags";
-import prisma from "@/lib/prisma";
-import { LinkWithDataroom } from "@/lib/types";
-import { IndexFileFormat } from "@/lib/types/index-file";
+import { generateDataroomIndex } from "@/shared/utils/dataroom/index-generator";
+import { getFeatureFlags } from "@/shared/utils/featureFlags";
+import prisma from "@/platform/db";
+import { LinkWithDataroom } from "@/shared/utils/types";
+import { IndexFileFormat } from "@/shared/utils/types/index-file";
 
 export default async function handle(
   req: NextApiRequest,
