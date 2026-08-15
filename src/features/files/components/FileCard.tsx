@@ -8,11 +8,13 @@ export function FileCard({
   onMove,
   teamId,
   isDragging,
+  key,
 }: {
   file: any;
   onMove: any;
   teamId: string;
   isDragging?: boolean;
+  key?: string;
 }) {
   const statusIndex = FILE_STATUSES.indexOf(file.status as any);
   const statusLabel =

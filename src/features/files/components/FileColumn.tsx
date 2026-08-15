@@ -3,7 +3,6 @@
 import React, { useMemo } from "react";
 
 import { FILE_STATUSES, FILE_STATUS_LABEL, groupFilesByStatus } from "../file-status";
-import { FileCard } from "./FileCard";
 
 export function FileColumn({
   status,
@@ -17,8 +16,8 @@ export function FileColumn({
   teamId: string;
 }) {
   const columnFiles = useMemo(
-    () => groupFilesByStatus(files ?? [])[status] ?? [],
-    [files, status],
+    () => groupFilesByStatus(files ?? []),
+    [files],
   );
 
   return (
@@ -32,14 +31,14 @@ export function FileColumn({
         </h3>
       </div>
 
-      {columnFiles.length > 0 && (
+      {columnFiles.map((file) => (
         <FileCard
-          key={columnFiles[0].id}
-          file={columnFiles[0]}
+          key={file.id}
+          file={file}
           onMove={onMove}
           teamId={teamId}
         />
-      )}
+      ))}
 
       {columnFiles.length === 0 && (
         <p className="text-xs text-muted-foreground mt-4">
