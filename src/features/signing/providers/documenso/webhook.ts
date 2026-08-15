@@ -13,6 +13,7 @@ export const documensoWebhookPayloadSchema = z.object({
   event: z.string(),
   payload: z.object({
     id: z.number().int().positive(),
+    envelopeId: z.number().int().positive().nullable().optional(),
     externalId: z.string().nullable().optional(),
   }),
 });

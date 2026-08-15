@@ -2,6 +2,7 @@ import { computeRecipientAccessExpiry, mintRecipientAccessToken } from "../domai
 import type { SigningContext } from "./context";
 import SignatureInvitation from "@/shared/ui/emails/signature-invitation";
 import SignatureCompletion from "@/shared/ui/emails/signature-completion";
+import { getPublicAppUrl } from "@/infrastructure/config/public-url";
 
 export interface DeliverRequestInput {
   requestId: string;
@@ -47,7 +48,7 @@ export async function deliverSignatureRequest(
     expiresAt: tokenExpiry,
   });
 
-  const signingUrl = `${process.env.NEXT_PUBLIC_MARKETING_URL ?? "http://localhost:3000"}/signing/${request.id}?token=${encodeURIComponent(token)}`;
+  const signingUrl = `${getPublicAppUrl()}/signing/${request.id}?token=${encodeURIComponent(token)}`;
 
   const documentName = (await ctx.requests.findDocumentName(request.documentId))?.name ?? "Document";
 
@@ -116,7 +117,7 @@ export async function deliverCompletionEmail(
   const documentName = doc?.name ?? "Document";
 
   // Create completion URL (viewer link to download signed doc)
-  const downloadUrl = `${process.env.NEXT_PUBLIC_MARKETING_URL ?? "http://localhost:3000"}/signing/${request.id}`;
+  const downloadUrl = `${getPublicAppUrl()}/signing/${request.id}`;
 
   const deliverEmail = ctx.deliverEmail;
 

@@ -6,13 +6,12 @@
 //
 // 1. Validate recipients (at least one, emails normalized, no duplicates).
 // 2. Verify the document is signable and has no active request already.
-// 3. Create the SignatureTemplate locally (PREPARING) with a deterministic
-//    external id, upload it to the provider, move it to READY.
-// 4. Create the SignatureRequest as DRAFT + recipients.
-// 5. Replace the provider template's placeholder recipient with the request's
-//    real recipients (so the editor assigns fields per recipient) and persist
-//    providerEnvelopeId + per-recipient providerRecipientIds.
-// 6. On provider failure: keep the local rows and move them to FAILED.
+// 3. Create the SignatureRequest as DRAFT + recipients (no template row; the
+//    envelope flow owns one DOCUMENT envelope per request).
+// 4. Create ONE provider envelope with the request's real recipients and
+//    persist providerEnvelopeId + per-recipient providerRecipientIds so the
+//    editor assigns fields per recipient.
+// 5. On provider failure: keep the local rows and move them to FAILED.
 
 import type { SigningContext } from "./context";
 import type { RequestDTO } from "./dto";
@@ -62,20 +61,11 @@ export async function createDraft(
     throw new SigningValidationError("expiresAt must be a valid date.");
   }
 
-  // Local template row first (PREPARING) so a provider failure never loses the
-  // draft. One template per draft; the request hangs off it.
-  const template = await ctx.templates.createWithExternalId({
-    teamId: input.actor.teamId,
-    documentId: document.id,
-    name: document.name,
-  });
-
-  // Local request + recipients next (DRAFT). No provider call happens between
-  // the two creates so a provider failure keeps a consistent local record.
+  // Local request + recipients first (DRAFT). No provider call happens during
+  // the create so a provider failure keeps a consistent local record.
   const request = await ctx.requests.createWithRecipients({
     teamId: input.actor.teamId,
     documentId: document.id,
-    templateId: template.id,
     expiresAt,
     recipients,
     dossierFileId: input.dossierFileId,
@@ -88,26 +78,14 @@ export async function createDraft(
       storageType: document.storageType,
     });
 
-    const providerTemplate = await ctx.provider.createTemplate({
-      title: template.name,
-      externalId: template.providerExternalId,
-      fileName: `${template.name}.pdf`,
+    // ONE DOCUMENT envelope for the whole request; all signers are recipients
+    // on it. `distributionMethod: "NONE"` guarantees Documenso never emails —
+    // Dossier owns every invitation.
+    const created = await ctx.provider.createEnvelope({
+      title: document.name,
+      externalId: request.providerExternalId,
+      fileName: `${document.name}.pdf`,
       file,
-    });
-
-    await ctx.templates.update(template.id, {
-      status: "READY",
-      providerTemplateId: providerTemplate.templateId,
-      providerEnvelopeId: providerTemplate.envelopeId,
-    });
-
-    await ctx.requests.updateProviderIds(request.id, {
-      providerEnvelopeId: providerTemplate.envelopeId,
-    });
-
-    const synced = await ctx.provider.syncRecipientsToEnvelope({
-      providerTemplateId: providerTemplate.templateId,
-      providerEnvelopeId: providerTemplate.envelopeId,
       recipients: recipients.map((recipient) => ({
         email: recipient.email,
         name: recipient.name,
@@ -115,8 +93,14 @@ export async function createDraft(
       })),
     });
 
+    await ctx.requests.updateProviderIds(request.id, {
+      providerEnvelopeId: created.providerEnvelopeId,
+    });
+
     for (const recipient of request.recipients) {
-      const match = synced.find((item) => item.email === recipient.email);
+      const match = created.recipients.find(
+        (item) => item.email === recipient.email,
+      );
       if (!match) {
         throw new SigningProviderError(
           `The signing provider did not return a recipient id for ${recipient.email}.`,
@@ -138,12 +122,12 @@ export async function createDraft(
       teamId: draft.teamId,
       requestId: draft.id,
       documentId: draft.documentId,
+      envelopeId: created.providerEnvelopeId,
       recipientCount: draft.recipients.length,
     });
 
     return { request: toRequestDTO(draft) };
   } catch (error) {
-    await ctx.templates.update(template.id, { status: "FAILED" });
     await ctx.requests.updateStatus(request.id, "FAILED");
 
     ctx.logger.error(

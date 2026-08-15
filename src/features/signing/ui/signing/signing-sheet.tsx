@@ -14,8 +14,8 @@ import {
 
 import type { SigningSessionDTO } from "@/features/signing/api/signing-api";
 
-const EmbedDirectTemplate = dynamic(
-  () => import("@documenso/embed-react").then((mod) => mod.EmbedDirectTemplate),
+const EmbedSignDocument = dynamic(
+  () => import("@documenso/embed-react").then((mod) => mod.EmbedSignDocument),
   { ssr: false },
 );
 
@@ -107,15 +107,14 @@ export function SigningSheet({
         <div className="h-[calc(100%-96px)] px-4 pb-4 pt-2 sm:px-6">
           {session ? (
             <div className="h-full overflow-hidden rounded-lg border">
-              <EmbedDirectTemplate
+              <EmbedSignDocument
                 className="h-full w-full"
                 host={session.host}
                 token={session.token}
-                externalId={session.externalId}
                 darkModeDisabled
                 cssVars={signingCssVars}
                 css={SIGNING_EMBED_CSS}
-                onDocumentCompleted={onCompleted}
+                onDocumentCompleted={() => onCompleted()}
                 onDocumentError={onError}
               />
             </div>

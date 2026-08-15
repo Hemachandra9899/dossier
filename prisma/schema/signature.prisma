@@ -69,7 +69,9 @@ model SignatureRequest {
   id         String  @id @default(cuid())
   teamId     String
   documentId String
-  templateId String
+  // The envelope flow (SIGN.2) creates one DOCUMENT envelope per request and
+  // owns no template row; the legacy template flow still sets this.
+  templateId String?
   linkId     String?
 
   provider           SignatureProvider @default(DOCUMENSO)
@@ -92,7 +94,7 @@ model SignatureRequest {
 
   team        Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
   document    Document          @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  template    SignatureTemplate @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  template    SignatureTemplate? @relation(fields: [templateId], references: [id], onDelete: Restrict)
   link        Link?             @relation(fields: [linkId], references: [id], onDelete: SetNull)
   dossierFile DossierFile?      @relation(fields: [dossierFileId], references: [id], onDelete: SetNull)
 

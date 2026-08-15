@@ -50,15 +50,17 @@ export function planProviderEventEffect(input: {
 
 export async function processProviderEvent(
   ctx: SigningContext,
-  input: { providerDocumentId?: string; externalId?: string; event: string },
+  input: { envelopeId?: string; externalId?: string; event: string },
 ): Promise<RequestDTO> {
-  const docId = input.providerDocumentId || input.externalId;
-  const request = docId
-    ? await ctx.requests.findByProviderDocumentIdWithRecipients(docId)
+  // The webhook payload carries the envelope externalId (request.providerExternalId).
+  // Fall back to envelopeId if externalId not present.
+  const lookupKey = input.externalId || input.envelopeId;
+  const request = lookupKey
+    ? await ctx.requests.findByProviderExternalIdWithRecipients(lookupKey)
     : null;
   if (!request) {
     throw new SigningNotFoundError(
-      `No signature request matches provider document "${docId}"`,
+      `No signature request matches provider externalId "${lookupKey}"`,
     );
   }
 

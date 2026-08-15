@@ -9,59 +9,6 @@ import { safeSlugify } from "@/shared/utils/utils";
 
 const MAX_SIGNED_PDF_BYTES = 50 * 1024 * 1024;
 
-const fetchSignedPdf = async (url: string): Promise<Buffer> => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30_000);
-
-  let response: Response;
-  try {
-    response = await fetch(url, { signal: controller.signal });
-  } finally {
-    clearTimeout(timeoutId);
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to fetch signed PDF from the provider (status ${response.status})`,
-    );
-  }
-
-  const advertisedLength = response.headers.get("content-length");
-  if (advertisedLength) {
-    const advertised = Number.parseInt(advertisedLength, 10);
-    if (Number.isFinite(advertised) && advertised > MAX_SIGNED_PDF_BYTES) {
-      throw new Error("Signed PDF exceeds mirror cap");
-    }
-  }
-
-  if (!response.body) {
-    const fallback = await response.arrayBuffer();
-    if (fallback.byteLength > MAX_SIGNED_PDF_BYTES) {
-      throw new Error("Signed PDF exceeds mirror cap");
-    }
-    return Buffer.from(fallback);
-  }
-
-  const reader = response.body.getReader();
-  const chunks: Buffer[] = [];
-  let total = 0;
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (!value) continue;
-
-    total += value.byteLength;
-    if (total > MAX_SIGNED_PDF_BYTES) {
-      await reader.cancel().catch(() => {});
-      throw new Error("Signed PDF exceeds mirror cap");
-    }
-    chunks.push(Buffer.from(value));
-  }
-
-  return Buffer.concat(chunks, total);
-};
-
 const isUniqueConstraintViolation = (error: unknown): boolean =>
   typeof error === "object" &&
   error !== null &&
@@ -89,33 +36,35 @@ export async function mirrorSignedArtifact(
     return { mirrored: false, reason: "missing-envelope" };
   }
 
-  const artifact = await ctx.provider.getSignedArtifact({
+  // Provider returns raw bytes + mimeType; no extra HTTP hop needed.
+  const { bytes, mimeType } = await ctx.provider.getSignedArtifact({
     providerEnvelopeId: request.providerEnvelopeId,
     providerDocumentId: request.providerDocumentId,
   });
 
-  const body = await fetchSignedPdf(artifact.downloadUrl);
-  const sha256 = crypto.createHash("sha256").update(body).digest("hex");
+  if (bytes.byteLength > MAX_SIGNED_PDF_BYTES) {
+    return { mirrored: false, reason: "exceeds-size-limit" };
+  }
+
+  const sha256 = crypto.createHash("sha256").update(bytes).digest("hex");
 
   const safeName = safeSlugify(request.document.name).slice(0, 60) || "signed";
   const fileName = `${safeName}_signed.pdf`;
 
-  const uploadRes = await ctx.storage.upload({
-    teamId: request.teamId,
-    requestId: request.id,
-    fileName,
-    body,
-  });
-  const storageKey = typeof uploadRes === "string" ? uploadRes : uploadRes.storageKey;
+  const storageKey = await ctx.storage.putSignedPdf(
+    request.teamId,
+    request.id,
+    bytes,
+  );
 
   try {
     await ctx.requests.createArtifact({
       signatureRequestId: request.id,
       storageKey,
       fileName,
-      mimeType: "application/pdf",
+      mimeType,
       sha256,
-      sizeBytes: BigInt(body.byteLength),
+      sizeBytes: BigInt(bytes.byteLength),
     });
   } catch (error) {
     // Immutable write collision: another run already mirrored the file.
@@ -129,19 +78,21 @@ export async function mirrorSignedArtifact(
     requestId: request.id,
     teamId: request.teamId,
     storageKey,
-    sizeBytes: body.byteLength,
+    sizeBytes: bytes.byteLength,
   });
 
   if (request.dossierFileId) {
     try {
-      const { syncDossierFileStatus } = await import(
-        "@/features/files"
-      );
+      const { syncDossierFileStatus } = await import("@/features/files");
       await syncDossierFileStatus(request.dossierFileId, {
         dedupeKey: `signature-completed:${request.id}`,
       });
     } catch (err) {
-      ctx.logger.error("signing.sync_dossier_file_status_failed", { requestId: request.id }, err);
+      ctx.logger.error(
+        "signing.sync_dossier_file_status_failed",
+        { requestId: request.id },
+        err,
+      );
     }
   }
 

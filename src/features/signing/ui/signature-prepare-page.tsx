@@ -45,7 +45,6 @@ export function SignaturePreparePage({
     envelopeId: string;
     externalId: string;
   } | null>(null);
-  const [editorReady, setEditorReady] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
 
   const editorSessionMutation = useMutation(
@@ -141,7 +140,7 @@ export function SignaturePreparePage({
             </Button>
           ) : (
             <Button
-              disabled={!editorReady || sendMutation.isPending}
+              disabled={!editorSession || sendMutation.isPending}
               onClick={() => void handleSend()}
             >
               <SendIcon className="mr-2 h-4 w-4" />
@@ -164,7 +163,6 @@ export function SignaturePreparePage({
             presignToken={editorSession.presignToken}
             envelopeId={editorSession.envelopeId}
             externalId={editorSession.externalId}
-            onReady={() => setEditorReady(true)}
           />
         ) : (
           <div className="flex h-full min-h-[400px] items-center justify-center rounded-lg border bg-background">

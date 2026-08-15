@@ -24,7 +24,7 @@ export class SignatureRequestRepository {
   async createWithRecipients(input: {
     teamId: string;
     documentId: string;
-    templateId: string;
+    templateId?: string | null;
     linkId?: string;
     dossierFileId?: string | null;
     expiresAt?: Date | null;
@@ -135,6 +135,30 @@ export class SignatureRequestRepository {
     }
 
     return request;
+  }
+
+  // Returns null instead of throwing; used by mirror/artifact jobs.
+  async findByIdForMirror(id: string) {
+    return prisma.signatureRequest.findUnique({
+      where: { id },
+      include: REQUEST_DETAIL_INCLUDE,
+    });
+  }
+
+  // Team-scoped find without throwing; used by artifact getter.
+  async findByTeamAndId(teamId: string, id: string) {
+    return prisma.signatureRequest.findFirst({
+      where: { id, teamId },
+      include: REQUEST_DETAIL_INCLUDE,
+    });
+  }
+
+  // Lookup by provider externalId + include recipients for webhook processing.
+  async findByProviderExternalIdWithRecipients(externalId: string) {
+    return prisma.signatureRequest.findUnique({
+      where: { providerExternalId: externalId },
+      include: REQUEST_DETAIL_INCLUDE,
+    });
   }
 
   async updateStatus(id: string, status: any, extra: any = {}) {

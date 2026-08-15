@@ -1,17 +1,17 @@
 // SendRequest: validates the request's fields against the provider envelope and
-// dispatches invitations. This is the sender's final step:
+// distributes the ONE envelope exactly once. This is the sender's final step:
 //
-// 1. Load the request + recipients + template; the request must be
-//    DRAFT / PREPARING / READY and initialized with the provider.
+// 1. Load the request + recipients; the request must be DRAFT / PREPARING / READY
+//    and have a providerEnvelopeId.
 // 2. Server-side field validation (never trust the client): every signer must
 //    have at least one assigned field AND at least one SIGNATURE / FREE_SIGNATURE
 //    field on the provider envelope. Failures throw SigningSendError (409).
 // 3. Move the request to READY (from DRAFT or PREPARING) — READY still exposes
 //    no signing link.
-// 4. Mint one per-visitor signing document per recipient via the provider and
-//    persist the per-recipient providerDocumentId.
-// 5. Deliver the Dossier invitations (recipient token + email); the first
-//    delivery moves the request READY -> SENT.
+// 4. Distribute the envelope once via the provider (distributionMethod: "NONE"
+//    keeps Documenso from emailing; Dossier owns every invitation).
+// 5. Deliver the Dossier invitations; the first delivery moves the request
+//    READY -> SENT.
 
 import type { SigningContext } from "./context";
 import type { RequestDTO } from "./dto";
@@ -52,20 +52,9 @@ export async function sendRequest(
     );
   }
 
-  const template = await ctx.templates.findById(request.templateId);
-  if (
-    !template ||
-    template.status !== "READY" ||
-    !template.providerTemplateId
-  ) {
-    throw new SigningStateError(
-      "Request has not been initialized with the signing provider.",
-    );
-  }
-
   if (!request.providerEnvelopeId) {
     throw new SigningStateError(
-      "Request has no provider envelope to validate fields against.",
+      "Request has not been initialized with the signing provider.",
     );
   }
 
@@ -153,32 +142,13 @@ export async function sendRequest(
     await ctx.requests.updateStatus(request.id, "READY");
   }
 
-  // --- Mint per-recipient signing documents. ---
-  const sent = await ctx.provider.sendEnvelope({
-    providerTemplateId: template.providerTemplateId,
-    recipients: signers.map((recipient) => ({
-      providerRecipientId: recipient.providerRecipientId,
-      email: recipient.email,
-      name: recipient.name,
-      externalId: `${request.providerExternalId}:${recipient.id}`,
-    })),
+  // --- Distribute the ONE envelope exactly once. ---
+  // `distributionMethod: "NONE"` keeps Documenso from emailing; Dossier
+  // delivers its own invitations. The application layer's state machine
+  // guarantees this runs exactly once (READY -> SENT transition).
+  await ctx.provider.distributeEnvelope({
+    providerEnvelopeId: request.providerEnvelopeId,
   });
-
-  const byProviderRecipientId = new Map(
-    sent.map((item) => [item.providerRecipientId, item]),
-  );
-
-  for (const recipient of signers) {
-    const match = byProviderRecipientId.get(recipient.providerRecipientId);
-    if (!match) {
-      throw new SigningProviderError(
-        `The signing provider did not return a document for ${recipient.email}.`,
-      );
-    }
-    await ctx.requests.updateRecipientProviderIds(recipient.id, {
-      providerDocumentId: match.providerDocumentId,
-    });
-  }
 
   // --- Deliver invitations; first delivery flips READY -> SENT. ---
   for (const recipient of signers) {

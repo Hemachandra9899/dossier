@@ -55,10 +55,12 @@ export async function POST(req: NextRequest) {
 
     const {
       event,
-      payload: { id: documentId, externalId },
+      payload: { id: documentId, envelopeId, externalId },
     } = parseResult.data;
 
     // Only inbox events that map onto Dossier request state.
+    // externalId (our request.providerExternalId) is the stable key; envelopeId
+    // helps deduplicate when externalId is missing.
     if (!DOCUMENSO_SIGNING_EVENTS.has(event) || !externalId) {
       return NextResponse.json({ ok: true });
     }
@@ -68,7 +70,7 @@ export async function POST(req: NextRequest) {
     const dedupeKey = createProviderEventDedupeKey({
       event,
       externalId,
-      documentId,
+      documentId: envelopeId ?? documentId,
     });
 
     const { created, id } = await ctx.events.insertIfAbsent({
@@ -76,7 +78,7 @@ export async function POST(req: NextRequest) {
       dedupeKey,
       eventType: event,
       externalId,
-      providerDocumentId: documentId,
+      providerDocumentId: envelopeId ?? documentId,
       payload: parseResult.data,
     });
 

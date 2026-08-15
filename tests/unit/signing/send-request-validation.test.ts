@@ -138,23 +138,25 @@ class FakeRequests {
 
 class FakeProvider {
   fields: Array<{ recipientId: number | string; type: string }>;
-  sent: unknown = null;
+  distributed: unknown = null;
 
   constructor(fields: Array<{ recipientId: number | string; type: string }>) {
     this.fields = fields;
   }
 
   async getEnvelope() {
-    return { type: "TEMPLATE", status: "DRAFT", recipients: [], fields: this.fields };
+    return { type: "DOCUMENT", status: "DRAFT", recipients: [], fields: this.fields };
   }
 
-  async sendEnvelope(input: { recipients: Array<{ providerRecipientId: string }> }) {
-    this.sent = input;
-    return input.recipients.map((recipient) => ({
-      providerRecipientId: recipient.providerRecipientId,
-      providerDocumentId: 1,
-      token: `token_${recipient.providerRecipientId}`,
-    }));
+  async distributeEnvelope() {
+    this.distributed = true;
+    return {
+      providerEnvelopeId: "envelope-1",
+      recipients: [
+        { providerRecipientId: 1, email: "alice@example.com", name: "Alice", signingStatus: "NOT_SIGNED", sendStatus: "SENT", readStatus: "NOT_OPENED" },
+        { providerRecipientId: 2, email: "bob@example.com", name: null, signingStatus: "NOT_SIGNED", sendStatus: "SENT", readStatus: "NOT_OPENED" },
+      ],
+    };
   }
 }
 
@@ -237,22 +239,6 @@ describe("sendRequest validation", () => {
       { status: "READY" },
       { status: "SENT" },
     ]);
-    assert.deepEqual(provider.sent, {
-      providerTemplateId: "provider-template-1",
-      recipients: [
-        {
-          providerRecipientId: "1",
-          email: "alice@example.com",
-          name: "Alice",
-          externalId: "ext-1:recipient-1",
-        },
-        {
-          providerRecipientId: "2",
-          email: "bob@example.com",
-          name: null,
-          externalId: "ext-1:recipient-2",
-        },
-      ],
-    });
+    assert.ok(provider.distributed);
   });
 });

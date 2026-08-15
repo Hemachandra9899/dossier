@@ -1,15 +1,18 @@
 // In-memory fakes for the signing ports, so integration tests never touch a
-// real signing provider, S3, Trigger.dev or legacy file storage. The signed
-// PDF is served from a tiny local HTTP server so the mirror use-case's real
-// fetch() works unchanged.
-
-import http from "http";
+// real signing provider, S3, Trigger.dev or legacy file storage.
 
 import type { SigningContext } from "@/features/signing/application/context";
 import { createSigningContext } from "@/features/signing/application/context";
 import type {
+  CreateEnvelopeInput,
+  CreateProviderSigningDocumentInput,
+  CreateProviderTemplateInput,
   ProviderEditorSession,
   ProviderEnvelope,
+  ProviderEnvelopeCreated,
+  ProviderEnvelopeDistributed,
+  ProviderEnvelopeItem,
+  ProviderEnvelopeRecipient,
   ProviderSigningDocument,
   ProviderSigningSession,
   ProviderSignedArtifact,
@@ -28,48 +31,17 @@ const silentLogger: SigningContext["logger"] = {
   error: () => {},
 };
 
-export const SIGNED_PDF_BYTES = Buffer.from("%PDF-1.4 fake signed document");
+export const SIGNED_PDF_BYTES = new Uint8Array([
+  37, 80, 68, 70, 45, 49, 46, 52, 32, 102, 97, 107, 101, 32, 115, 105, 103, 110, 101, 100, 32, 100, 111, 99,
+  117, 109, 101, 110, 116,
+]);
 
-let server: http.Server | null = null;
-let serverUrl: string | null = null;
 let providerCounter = 0;
 
 /** Module-level counter so provider ids are globally unique across test runs. */
 function nextProviderCounter(): number {
   providerCounter += 1;
   return providerCounter;
-}
-
-function startSignedPdfServer(): Promise<string> {
-  if (serverUrl) return Promise.resolve(serverUrl);
-  return new Promise((resolve, reject) => {
-    const httpServer = http.createServer((_req, res) => {
-      res.writeHead(200, {
-        "Content-Type": "application/pdf",
-        "Content-Length": String(SIGNED_PDF_BYTES.byteLength),
-      });
-      res.end(SIGNED_PDF_BYTES);
-    });
-    httpServer.once("error", reject);
-    httpServer.listen(0, "127.0.0.1", () => {
-      const address = httpServer.address();
-      if (!address || typeof address === "string") {
-        reject(new Error("failed to bind signed PDF server"));
-        return;
-      }
-      server = httpServer;
-      serverUrl = `http://127.0.0.1:${address.port}/signed.pdf`;
-      resolve(serverUrl);
-    });
-  });
-}
-
-export async function stopSignedPdfServer(): Promise<void> {
-  if (!server) return;
-  const current = server;
-  server = null;
-  serverUrl = null;
-  await new Promise<void>((resolve) => current.close(() => resolve()));
 }
 
 export class FakeSigningProvider implements SigningProvider {
@@ -81,8 +53,25 @@ export class FakeSigningProvider implements SigningProvider {
   failCreateSigningDocument = false;
   failGetSignedArtifact = false;
 
-  envelopeRecipients: Array<{ id: number; email: string; name: string }> = [];
-  envelopeFields: Array<{ recipientId: number | string; type: string }> = [];
+  // For envelope flow
+  envelopeId = `fake_envelope_${nextProviderCounter()}`;
+  envelopeRecipients: Array<{
+    providerRecipientId: number;
+    email: string;
+    name: string;
+    signingStatus: string;
+    sendStatus: string;
+    readStatus: string;
+  }> = [];
+  envelopeFields: Array<{
+    recipientId: number;
+    type: string;
+    envelopeItemId: string;
+  }> = [];
+  envelopeItems: ProviderEnvelopeItem[] = [
+    { id: "fake_item_1", order: 1, title: "Document" },
+  ];
+  distributed = false;
   sentEnvelopes: Array<{
     providerTemplateId: string;
     recipients: Array<{
@@ -93,12 +82,110 @@ export class FakeSigningProvider implements SigningProvider {
     }>;
   }> = [];
 
-  async createTemplate(input: {
-    externalId: string;
-    title: string;
-    fileName: string;
-    file: Uint8Array;
-  }): Promise<ProviderTemplate> {
+  // --- Envelope flow (primary) ---
+
+  async createEnvelope(
+    input: CreateEnvelopeInput,
+  ): Promise<ProviderEnvelopeCreated> {
+    this.envelopeId = `fake_envelope_${nextProviderCounter()}`;
+    this.envelopeRecipients = input.recipients.map((r, index) => ({
+      providerRecipientId: index + 1,
+      email: r.email,
+      name: r.name ?? "",
+      signingStatus: "NOT_SIGNED",
+      sendStatus: "NOT_SENT",
+      readStatus: "NOT_OPENED",
+    }));
+    this.envelopeFields = [];
+    this.envelopeItems = [{ id: "fake_item_1", order: 1, title: input.fileName }];
+    this.distributed = false;
+
+    return {
+      providerEnvelopeId: this.envelopeId,
+      recipients: input.recipients.map((_, index) => ({
+        email: input.recipients[index].email,
+        providerRecipientId: index + 1,
+      })),
+    };
+  }
+
+  async createEditorSessionForEnvelope(): Promise<ProviderEditorSession> {
+    return {
+      host: "https://sign.fake.test",
+      presignToken: "fake_presign_token",
+      envelopeId: this.envelopeId,
+      externalId: "fake_external_editor",
+    };
+  }
+
+  async getEnvelope(envelopeId: string): Promise<ProviderEnvelope> {
+    return {
+      provider: "DOCUMENSO",
+      envelopeId,
+      type: "DOCUMENT",
+      status: this.distributed ? "PENDING" : "DRAFT",
+      recipients: this.envelopeRecipients.map((r) => ({
+        providerRecipientId: r.providerRecipientId,
+        email: r.email,
+        name: r.name,
+        signingStatus: r.signingStatus,
+        sendStatus: r.sendStatus,
+        readStatus: r.readStatus,
+      })),
+      fields: this.envelopeFields,
+      envelopeItems: this.envelopeItems,
+    };
+  }
+
+  async distributeEnvelope(): Promise<ProviderEnvelopeDistributed> {
+    this.distributed = true;
+    // Update recipient statuses
+    this.envelopeRecipients = this.envelopeRecipients.map((r) => ({
+      ...r,
+      sendStatus: "SENT",
+    }));
+    return {
+      providerEnvelopeId: this.envelopeId,
+      recipients: this.envelopeRecipients.map((r) => ({
+        providerRecipientId: r.providerRecipientId,
+        email: r.email,
+        name: r.name,
+        signingStatus: r.signingStatus,
+        sendStatus: r.sendStatus,
+        readStatus: r.readStatus,
+        signingUrl: `https://sign.fake.test/sign/${r.providerRecipientId}`,
+        token: `fake_token_${r.providerRecipientId}`,
+      })),
+    };
+  }
+
+  async getRecipientSigningSession(): Promise<ProviderSigningSession> {
+    return {
+      host: "https://sign.fake.test",
+      token: "fake_session_token",
+      externalId: "fake_external_session",
+    };
+  }
+
+  async getSignedArtifact(): Promise<ProviderSignedArtifact> {
+    if (this.failGetSignedArtifact) {
+      throw new Error("fake provider: getSignedArtifact failed");
+    }
+    return {
+      bytes: SIGNED_PDF_BYTES,
+      mimeType: "application/pdf",
+    };
+  }
+
+  async cancelRequest(input: { providerEnvelopeId: string }): Promise<void> {
+    this.cancelRequestCalls.push(input.providerEnvelopeId);
+  }
+
+  // --- Template flow (legacy) ---
+
+  async createTemplate(
+    input: CreateProviderTemplateInput,
+  ): Promise<ProviderTemplate> {
     this.createTemplateCalls += 1;
     if (this.failCreateTemplate) {
       throw new Error("fake provider: createTemplate failed");
@@ -120,11 +207,9 @@ export class FakeSigningProvider implements SigningProvider {
     };
   }
 
-  async createSigningDocument(input: {
-    providerTemplateId: string;
-    externalId: string;
-    recipients: Array<{ name: string | null; email: string; signingOrder: number }>;
-  }): Promise<ProviderSigningDocument> {
+  async createSigningDocument(
+    input: CreateProviderSigningDocumentInput,
+  ): Promise<ProviderSigningDocument> {
     this.createSigningDocumentCalls += 1;
     if (this.failCreateSigningDocument) {
       throw new Error("fake provider: createSigningDocument failed");
@@ -150,27 +235,16 @@ export class FakeSigningProvider implements SigningProvider {
     };
   }
 
-  async getSignedArtifact(): Promise<ProviderSignedArtifact> {
-    if (this.failGetSignedArtifact) {
-      throw new Error("fake provider: getSignedArtifact failed");
-    }
-    return {
-      downloadUrl: await startSignedPdfServer(),
-      mimeType: "application/pdf",
-    };
-  }
-
-  async cancelRequest(input: { providerEnvelopeId: string }): Promise<void> {
-    this.cancelRequestCalls.push(input.providerEnvelopeId);
-  }
-
   async syncRecipientsToEnvelope(
     input: SyncEnvelopeRecipientsInput,
   ): Promise<Array<{ email: string; providerRecipientId: string }>> {
     this.envelopeRecipients = input.recipients.map((r, index) => ({
-      id: index + 1,
+      providerRecipientId: index + 1,
       email: r.email,
       name: r.name ?? "",
+      signingStatus: "NOT_SIGNED",
+      sendStatus: "NOT_SENT",
+      readStatus: "NOT_OPENED",
     }));
     return input.recipients.map((r, index) => ({
       email: r.email,
@@ -178,16 +252,9 @@ export class FakeSigningProvider implements SigningProvider {
     }));
   }
 
-  async getEnvelope(): Promise<ProviderEnvelope> {
-    return {
-      type: "TEMPLATE",
-      status: "DRAFT",
-      recipients: this.envelopeRecipients,
-      fields: this.envelopeFields,
-    };
-  }
-
-  async sendEnvelope(input: SendEnvelopeInput): Promise<SentEnvelopeRecipient[]> {
+  async sendEnvelope(
+    input: SendEnvelopeInput,
+  ): Promise<SentEnvelopeRecipient[]> {
     this.sentEnvelopes.push(input);
     return input.recipients.map((recipient, index) => ({
       providerRecipientId: recipient.providerRecipientId,

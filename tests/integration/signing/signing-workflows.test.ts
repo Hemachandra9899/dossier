@@ -42,7 +42,6 @@ import {
   FakeSigningProvider,
   SIGNED_PDF_BYTES,
   buildTestSigningContext,
-  stopSignedPdfServer,
 } from "../../helpers/signing-fakes";
 async function setupTemplate() {
   const ctx = buildTestSigningContext({ runMirrorInline: true });
@@ -92,7 +91,6 @@ describe("signing workflows (integration)", () => {
   });
 
   after(async () => {
-    await stopSignedPdfServer();
     await closeTestDatabase();
   });
 

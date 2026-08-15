@@ -1,10 +1,9 @@
 // CreateRequestEditorSession: returns the embed session a sender opens on the
-// full-page prepare screen for a signature request. Resolves the request's
-// template and mints a fresh Documenso presign token. Opening the editor moves
-// the request out of DRAFT into PREPARING (fields are being configured).
+// full-page prepare screen for a signature request. Mints a fresh Documenso
+// presign token for the request's envelope. Opening the editor moves the
+// request out of DRAFT into PREPARING (fields are being configured).
 
 import type { SigningContext } from "./context";
-import type { ProviderTemplate } from "../providers/signing-provider";
 import { assertCanTransitionTo } from "../domain/state-machine";
 import { SigningStateError } from "../domain/signing-errors";
 
@@ -14,7 +13,6 @@ export interface CreateRequestEditorSessionInput {
 }
 
 export interface EditorSessionDTO {
-  templateId: string;
   provider: "DOCUMENSO";
   host: string;
   presignToken: string;
@@ -39,17 +37,9 @@ export async function createRequestEditorSession(
     );
   }
 
-  const template = await ctx.templates.findById(request.templateId);
-
-  if (!template || template.status !== "READY") {
+  if (!request.providerEnvelopeId) {
     throw new SigningStateError(
-      `Template is not ready for field authoring (status: ${template.status ?? "missing"}).`,
-    );
-  }
-
-  if (!template.providerTemplateId || !template.providerEnvelopeId) {
-    throw new SigningStateError(
-      "Template has not been initialized with the signing provider.",
+      "Request has not been initialized with the signing provider.",
     );
   }
 
@@ -58,17 +48,12 @@ export async function createRequestEditorSession(
     await ctx.requests.updateStatus(request.id, "PREPARING");
   }
 
-  const providerTemplate: ProviderTemplate = {
-    provider: "DOCUMENSO",
-    templateId: template.providerTemplateId,
-    envelopeId: template.providerEnvelopeId,
-    externalId: template.providerExternalId,
-  };
-
-  const session = await ctx.provider.createEditorSession(providerTemplate);
+  const session = await ctx.provider.createEditorSessionForEnvelope({
+    providerEnvelopeId: request.providerEnvelopeId,
+    externalId: request.providerExternalId,
+  });
 
   return {
-    templateId: template.id,
     provider: "DOCUMENSO",
     host: session.host,
     presignToken: session.presignToken,
