@@ -164,6 +164,9 @@ export function PreviewPagesViewer({
   }
 
   const hasFileUrl = !!currentPageData.file;
+  const isPdf =
+    documentData.fileType === "pdf" ||
+    !!currentPageData.file?.toLowerCase().includes(".pdf");
 
   return (
     <div className="relative h-full w-full overflow-hidden">
@@ -221,32 +224,44 @@ export function PreviewPagesViewer({
           )}
 
           {hasFileUrl && (
-            <img
-              src={currentPageData.file!}
-              alt={`Page ${currentPage}`}
-              className={cn(
-                "max-h-[calc(100vh-120px)] max-w-full object-contain transition-opacity duration-200",
-                imageLoaded ? "opacity-100" : "opacity-0",
-              )}
-              onLoad={handleImageLoad}
-              onError={() => {
-                setImageLoaded(false);
-                setImageCache((prev) => ({ ...prev, [currentPage]: false }));
+            isPdf ? (
+              <iframe
+                src={`${currentPageData.file!}#toolbar=0&navpanes=0`}
+                title={documentName || "PDF Document"}
+                className={cn(
+                  "h-[calc(100vh-140px)] w-[85vw] max-w-5xl rounded-lg border-0 bg-white transition-opacity duration-200 shadow-2xl",
+                  imageLoaded ? "opacity-100" : "opacity-0",
+                )}
+                onLoad={handleImageLoad}
+              />
+            ) : (
+              <img
+                src={currentPageData.file!}
+                alt={`Page ${currentPage}`}
+                className={cn(
+                  "max-h-[calc(100vh-120px)] max-w-full object-contain transition-opacity duration-200",
+                  imageLoaded ? "opacity-100" : "opacity-0",
+                )}
+                onLoad={handleImageLoad}
+                onError={() => {
+                  setImageLoaded(false);
+                  setImageCache((prev) => ({ ...prev, [currentPage]: false }));
 
-                const idx = currentPage - 1;
-                const current = pagesRef.current;
-                if (idx >= 0 && idx < current.length && current[idx]) {
-                  const updated = [...current];
-                  updated[idx] = { ...updated[idx], file: "" };
-                  pagesRef.current = updated;
-                  setPages(updated);
-                }
-                pendingRef.current.delete(currentPage);
-                ensurePagesLoaded(currentPage);
-              }}
-              draggable={false}
-              onContextMenu={(e) => e.preventDefault()}
-            />
+                  const idx = currentPage - 1;
+                  const current = pagesRef.current;
+                  if (idx >= 0 && idx < current.length && current[idx]) {
+                    const updated = [...current];
+                    updated[idx] = { ...updated[idx], file: "" };
+                    pagesRef.current = updated;
+                    setPages(updated);
+                  }
+                  pendingRef.current.delete(currentPage);
+                  ensurePagesLoaded(currentPage);
+                }}
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
+              />
+            )
           )}
         </div>
       </div>

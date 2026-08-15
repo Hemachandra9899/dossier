@@ -308,7 +308,8 @@ export default async function handler(
 
     (req as TusAuthenticatedRequest).papermarkUserId = userId;
 
-    return await tusServer.handle(req, res);
+    await tusServer.handle(req, res);
+    return;
   } catch (error) {
     const e = error as
       | (Error & { cause?: unknown; code?: unknown; $metadata?: unknown })

@@ -322,5 +322,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
   setCorsHeaders(req, res);
 
   // No session check - authentication is handled via viewer metadata
-  return tusServer.handle(req, res);
+  await tusServer.handle(req, res);
+  return;
 }

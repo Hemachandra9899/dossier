@@ -11,6 +11,10 @@ type SlackEnv = z.infer<typeof envSchema>;
 
 let env: SlackEnv | undefined;
 
+export const hasSlackEnv = () => {
+  return envSchema.safeParse(process.env).success;
+};
+
 export const getSlackEnv = () => {
   if (env) {
     return env;

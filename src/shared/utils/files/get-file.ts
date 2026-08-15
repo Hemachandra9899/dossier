@@ -1,6 +1,7 @@
 import { DocumentStorageType } from "@prisma/client";
 import { getDownloadUrl } from "@vercel/blob";
 import { match } from "ts-pattern";
+import { s3Storage } from "@/infrastructure/storage";
 
 export type GetFileOptions = {
   type: DocumentStorageType;
@@ -88,28 +89,19 @@ const getFileFromS3 = async (
   expiresIn?: number,
   responseContentDisposition?: string,
 ) => {
-  if (process.env.NODE_ENV === "test" || process.env.TEST_DATABASE_URL) {
-    return `https://example.com/mock-signed-url/${key}`;
+  if (key.startsWith("http://") || key.startsWith("https://")) {
+    return key;
   }
 
-  const isServer =
-    typeof window === "undefined" && !!process.env.INTERNAL_API_KEY;
+  const isServer = typeof window === "undefined";
 
   if (isServer) {
-    return fetchPresignedUrl(
-      `${process.env.NEXT_PUBLIC_BASE_URL}/api/file/s3/get-presigned-get-url`,
-      {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.INTERNAL_API_KEY}`,
-      },
-      key,
-      expiresIn,
-      responseContentDisposition,
-    );
+    // Generate signed URL directly from Oracle Object Storage / S3
+    const expiresInSeconds = expiresIn ? Math.floor(expiresIn / 1000) : 3600;
+    return s3Storage.getSignedUrl(key, expiresInSeconds);
   } else {
-    const host = typeof window === "undefined" ? (process.env.NEXT_PUBLIC_APP_URL || "") : "";
     return fetchPresignedUrl(
-      `${host}/api/file/s3/get-presigned-get-url-proxy`,
+      `/api/file/s3/get-presigned-get-url-proxy`,
       {
         "Content-Type": "application/json",
       },

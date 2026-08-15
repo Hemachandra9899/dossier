@@ -123,12 +123,33 @@ export function SignatureEditor({
   }, [onReady]);
 
   useEffect(() => {
+    if (presignToken.startsWith("local_")) {
+      const timer = window.setTimeout(() => {
+        hasFiredReadyRef.current = true;
+        onReadyRef.current?.();
+      }, 500);
+      return () => window.clearTimeout(timer);
+    }
+
     const timer = window.setTimeout(() => {
       canHandleEnvelopeUpdatedRef.current = true;
     }, INITIAL_EMBED_EVENT_GUARD_MS);
 
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [presignToken]);
+
+  if (presignToken.startsWith("local_")) {
+    return (
+      <div className="flex h-full min-h-[500px] w-full flex-col items-center justify-center gap-4 rounded-lg border bg-background p-8 text-center">
+        <div className="max-w-md space-y-2">
+          <h3 className="text-lg font-semibold">Document Signature Ready</h3>
+          <p className="text-sm text-muted-foreground">
+            Document has been prepared for signature. Click below to continue to the review step and send the signing request to your recipients.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full min-h-[600px] w-full overflow-hidden rounded-lg border bg-background">

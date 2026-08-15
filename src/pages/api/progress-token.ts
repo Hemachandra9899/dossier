@@ -17,12 +17,14 @@ export default async function handle(
   }
 
   try {
+    if (!process.env.TRIGGER_SECRET_KEY) {
+      return res.status(200).json({ publicAccessToken: null });
+    }
     const publicAccessToken = await generateTriggerPublicAccessToken(
       `version:${documentVersionId}`,
     );
     return res.status(200).json({ publicAccessToken });
   } catch (error) {
-    console.error("Error generating token:", error);
-    return res.status(500).json({ error: "Failed to generate token" });
+    return res.status(200).json({ publicAccessToken: null });
   }
 }

@@ -7,6 +7,9 @@ export const nanoid = customAlphabet(
   7,
 );
 
+export const generateRandomSlug = (length = 7) => nanoid(length);
+export const cuid = () => `c${nanoid(24).toLowerCase()}`;
+
 export function getExtension(url: string) {
   // @ts-ignore
   return url.split(/[#?]/)[0].split(".").pop().trim();

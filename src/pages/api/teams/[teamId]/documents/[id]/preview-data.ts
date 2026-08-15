@@ -118,7 +118,6 @@ export default async function handle(
 
     const INITIAL_PAGES_TO_LOAD = 10;
 
-    // Handle different file types
     if (primaryVersion.hasPages && primaryVersion.pages.length > 0) {
       // Documents with pages (PDFs, docs, slides)
       // Only sign URLs for the first batch of pages to avoid timeouts on large documents.
@@ -139,6 +138,26 @@ export default async function handle(
           };
         }),
       );
+    } else if (
+      primaryVersion.type === "pdf" ||
+      primaryVersion.file?.endsWith(".pdf") ||
+      primaryVersion.hasPages
+    ) {
+      // PDF documents: generate direct presigned download/view URL from Object Storage
+      const fileUrl = await getFile({
+        data: primaryVersion.file,
+        type: primaryVersion.storageType,
+      });
+      returnData.file = fileUrl;
+      returnData.numPages = primaryVersion.numPages || 1;
+      returnData.pages = [
+        {
+          pageNumber: 1,
+          file: fileUrl,
+          pageLinks: [],
+          embeddedLinks: [],
+        },
+      ];
     } else if (primaryVersion.type === "image") {
       // Single image files
       returnData.file = await getFile({

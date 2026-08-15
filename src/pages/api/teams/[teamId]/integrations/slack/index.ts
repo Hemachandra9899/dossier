@@ -4,7 +4,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 
-import { getSlackEnv } from "@/shared/utils/integrations/slack/env";
+import { getSlackEnv, hasSlackEnv } from "@/shared/utils/integrations/slack/env";
 import {
   SlackCredential,
   SlackCredentialPublic,
@@ -70,6 +70,9 @@ async function handleGet(
   res: NextApiResponse,
   teamId: string,
 ) {
+  if (!hasSlackEnv()) {
+    return res.status(200).json(null);
+  }
   const env = getSlackEnv();
 
   try {

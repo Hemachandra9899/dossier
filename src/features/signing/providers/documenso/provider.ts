@@ -32,6 +32,15 @@ class DocumensoSigningProvider implements SigningProvider {
   async createTemplate(
     input: CreateProviderTemplateInput,
   ): Promise<ProviderTemplate> {
+    if (!process.env.SIGNING_API_KEY) {
+      return {
+        provider: "DOCUMENSO",
+        templateId: `local_tpl_${Date.now()}`,
+        envelopeId: `local_env_${Date.now()}`,
+        externalId: input.externalId,
+      };
+    }
+
     const template = await createSigningTemplateEnvelope({
       title: input.title,
       externalId: input.externalId,
@@ -52,6 +61,15 @@ class DocumensoSigningProvider implements SigningProvider {
   async createEditorSession(
     template: ProviderTemplate,
   ): Promise<ProviderEditorSession> {
+    if (!process.env.SIGNING_API_KEY) {
+      return {
+        host: getDocumensoHost(),
+        presignToken: `local_presign_${Date.now()}`,
+        envelopeId: template.envelopeId,
+        externalId: template.externalId,
+      };
+    }
+
     const presignToken =
       await getDocumensoClient().embedding.embeddingPresignCreateEmbeddingPresignToken(
         {
@@ -70,6 +88,18 @@ class DocumensoSigningProvider implements SigningProvider {
   async createSigningDocument(
     input: CreateProviderSigningDocumentInput,
   ): Promise<ProviderSigningDocument> {
+    if (!process.env.SIGNING_API_KEY) {
+      const now = Date.now();
+      return {
+        providerEnvelopeId: `local_env_${now}`,
+        providerDocumentId: 1,
+        recipients: input.recipients.map((r, i) => ({
+          providerRecipientId: `local_rec_${now}_${i + 1}`,
+          providerDocumentId: i + 1,
+        })),
+      };
+    }
+
     const documents = [];
     let primary: { envelopeId: string; documentId: number } | null = null;
 
@@ -118,6 +148,14 @@ class DocumensoSigningProvider implements SigningProvider {
       name?: string | null;
     };
   }): Promise<ProviderSigningSession> {
+    if (!process.env.SIGNING_API_KEY) {
+      return {
+        host: getDocumensoHost(),
+        token: `local_sign_token_${Date.now()}`,
+        externalId: input.externalId,
+      };
+    }
+
     // Re-open path: reuse the recipient's existing per-visitor document token
     // so re-visits don't spawn duplicate documents.
     if (input.providerDocumentId) {

@@ -32,6 +32,19 @@ export class MultiRegionS3Store extends S3Store {
       accessKeyId: euConfig.accessKeyId ? "***set***" : "MISSING",
     });
 
+    const isForcePathStyle = (endpoint?: string) => {
+      if (!endpoint) return false;
+      return (
+        endpoint.includes(".compat.objectstorage.") ||
+        endpoint.includes("oraclecloud.com") ||
+        endpoint.includes("localhost") ||
+        endpoint.includes("127.0.0.1") ||
+        endpoint.includes("minio") ||
+        endpoint.includes("local") ||
+        endpoint.includes("r2.cloudflarestorage.com")
+      );
+    };
+
     // Create S3 client config for super() call (omit endpoint if empty/undefined)
     const superS3Config: any = {
       bucket: euConfig.bucket,
@@ -40,10 +53,11 @@ export class MultiRegionS3Store extends S3Store {
         accessKeyId: euConfig.accessKeyId,
         secretAccessKey: euConfig.secretAccessKey,
       },
+      requestChecksumCalculation: "WHEN_REQUIRED",
     };
     if (euConfig.endpoint) {
       superS3Config.endpoint = euConfig.endpoint;
-      superS3Config.forcePathStyle = euConfig.endpoint.includes("localhost") || euConfig.endpoint.includes("127.0.0.1") || euConfig.endpoint.includes("minio") || euConfig.endpoint.includes("local");
+      superS3Config.forcePathStyle = isForcePathStyle(euConfig.endpoint);
     }
 
     super({
@@ -62,10 +76,11 @@ export class MultiRegionS3Store extends S3Store {
         accessKeyId: euConfig.accessKeyId,
         secretAccessKey: euConfig.secretAccessKey,
       },
+      requestChecksumCalculation: "WHEN_REQUIRED",
     };
     if (euConfig.endpoint) {
       euS3Config.endpoint = euConfig.endpoint;
-      euS3Config.forcePathStyle = euConfig.endpoint.includes("localhost") || euConfig.endpoint.includes("127.0.0.1") || euConfig.endpoint.includes("minio") || euConfig.endpoint.includes("local");
+      euS3Config.forcePathStyle = isForcePathStyle(euConfig.endpoint);
     }
 
     this.euClient = new S3(euS3Config);
@@ -82,10 +97,11 @@ export class MultiRegionS3Store extends S3Store {
           accessKeyId: this.usConfig.accessKeyId,
           secretAccessKey: this.usConfig.secretAccessKey,
         },
+        requestChecksumCalculation: "WHEN_REQUIRED",
       };
       if (this.usConfig.endpoint) {
         usS3Config.endpoint = this.usConfig.endpoint;
-        usS3Config.forcePathStyle = this.usConfig.endpoint.includes("localhost") || this.usConfig.endpoint.includes("127.0.0.1") || this.usConfig.endpoint.includes("minio") || this.usConfig.endpoint.includes("local");
+        usS3Config.forcePathStyle = isForcePathStyle(this.usConfig.endpoint);
       }
 
       this.usClient = new S3(usS3Config);
