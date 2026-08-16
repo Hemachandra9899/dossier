@@ -2,7 +2,7 @@ import crypto from "crypto";
 
 import { z } from "zod";
 
-export const SignatureProviderNameSchema = z.enum(["DOCUMENSO"]);
+export const SignatureProviderNameSchema = z.enum(["DOCUMENSO", "NATIVE"]);
 export type SignatureProviderName = z.infer<
   typeof SignatureProviderNameSchema
 >;

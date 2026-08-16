@@ -185,12 +185,14 @@ const putFileStreamInS3Server = async ({
   const folderPrefix = subfolder ? `${safeSlugify(subfolder)}/` : "";
   const key = `${teamId}/${docId}/${folderPrefix}${slugifiedName}`;
 
+  const filePath = file.path;
+
   const upload = new Upload({
     client,
     params: {
       Bucket: config.bucket,
       Key: key,
-      Body: createReadStream(file.path),
+      Body: createReadStream(filePath),
       ContentType: file.type,
       ContentDisposition: buildContentDisposition(
         originalFileName,

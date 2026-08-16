@@ -10,6 +10,20 @@
 
 enum SignatureProvider {
   DOCUMENSO
+  NATIVE
+}
+
+enum SignatureFieldType {
+  SIGNATURE
+  INITIALS
+  NAME
+  EMAIL
+  DATE
+  TEXT
+  NUMBER
+  CHECKBOX
+  RADIO
+  DROPDOWN
 }
 
 enum SignatureTemplateStatus {
@@ -79,6 +93,12 @@ model SignatureRequest {
   providerEnvelopeId String?
   providerDocumentId Int?
 
+  // Native signing pins the exact document version being signed. A request
+  // must never silently change source document underneath the signer when a
+  // newer version is uploaded after the request is created.
+  documentVersionId String?
+  sourceSha256      String?
+
   status SignatureRequestStatus @default(DRAFT)
 
   sentAt      DateTime?
@@ -99,6 +119,7 @@ model SignatureRequest {
   dossierFile DossierFile?      @relation(fields: [dossierFileId], references: [id], onDelete: SetNull)
 
   recipients SignatureRecipient[]
+  fields     SignatureField[]
   artifact   SignatureArtifact?
   deliveries SignatureDelivery[]
   activities SignatureActivity[]
@@ -106,6 +127,7 @@ model SignatureRequest {
   @@unique([provider, providerEnvelopeId])
   @@index([teamId, status, createdAt(sort: Desc)])
   @@index([documentId, createdAt(sort: Desc)])
+  @@index([documentVersionId])
   @@index([linkId])
   @@index([dossierFileId])
 }
@@ -126,11 +148,51 @@ model SignatureRecipient {
   updatedAt           DateTime                 @updatedAt
 
   signatureRequest SignatureRequest    @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
+  fields           SignatureField[]
   deliveries       SignatureDelivery[]
   activities       SignatureActivity[]
 
   @@index([signatureRequestId, status])
   @@index([email])
+}
+
+// Field placement + recipient responses for native signing. Coordinates are
+// normalized 0..1 relative to the PDF page so a signature stays in the same
+// location regardless of viewer size, zoom or device.
+model SignatureField {
+  id                 String             @id @default(cuid())
+  signatureRequestId String
+  recipientId        String
+
+  type SignatureFieldType
+
+  pageNumber Int
+
+  // normalized 0 -> 1 coordinates
+  x         Float
+  y         Float
+  width     Float
+  height    Float
+
+  required Boolean @default(true)
+
+  label       String?
+  placeholder String?
+  options     Json?
+
+  // recipient response
+  value               Json?
+  signatureStorageKey String?
+  completedAt         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  signatureRequest SignatureRequest    @relation(fields: [signatureRequestId], references: [id], onDelete: Cascade)
+  recipient        SignatureRecipient @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([signatureRequestId, pageNumber])
+  @@index([recipientId])
 }
 
 // Final signed artifact mirrored into Dossier-owned storage. IMMUTABLE: never
