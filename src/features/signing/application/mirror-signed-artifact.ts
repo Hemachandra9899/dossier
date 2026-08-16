@@ -26,12 +26,19 @@ export async function mirrorSignedArtifact(
   const request = await ctx.requests.findByIdForMirror(input.requestId);
   if (!request) return { mirrored: false, reason: "request-not-found" };
 
-  const existing = await ctx.requests.findArtifactByRequestId(input.requestId);
+  const existing = await ctx.artifacts.findByRequestId(input.requestId);
   if (existing) return { mirrored: false, reason: "already-mirrored" };
 
   if (request.status !== "COMPLETED") {
     return { mirrored: false, reason: "not-completed" };
   }
+
+  // NATIVE requests produce the artifact in the finalizer at completion time;
+  // the mirror job is a no-op (the artifact is already Dossier-owned storage).
+  if (request.provider === "NATIVE") {
+    return { mirrored: false, reason: "native-finalized-inline" };
+  }
+
   if (!request.providerEnvelopeId) {
     return { mirrored: false, reason: "missing-envelope" };
   }
@@ -58,7 +65,7 @@ export async function mirrorSignedArtifact(
   );
 
   try {
-    await ctx.requests.createArtifact({
+    await ctx.artifacts.create({
       signatureRequestId: request.id,
       storageKey,
       fileName,

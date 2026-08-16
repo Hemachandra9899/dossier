@@ -6,17 +6,23 @@
 //
 // 1. Validate recipients (at least one, emails normalized, no duplicates).
 // 2. Verify the document is signable and has no active request already.
-// 3. Create the SignatureRequest as DRAFT + recipients (no template row; the
-//    envelope flow owns one DOCUMENT envelope per request).
-// 4. Create ONE provider envelope with the request's real recipients and
-//    persist providerEnvelopeId + per-recipient providerRecipientIds so the
-//    editor assigns fields per recipient.
+// 3. Pin the exact document version being signed + hash the source bytes so a
+//    newer upload never silently changes the PDF the signer sees.
+// 4. Create the SignatureRequest (DRAFT) + recipients.
+//    - NATIVE: the request owns its whole lifecycle; no external envelope is
+//      created. Fields are authored directly against the pinned source PDF.
+//    - DOCUMENSO: additionally create ONE provider envelope and persist the
+//      provider envelope/recipient ids so the Documenso editor can assign
+//      fields per recipient.
 // 5. On provider failure: keep the local rows and move them to FAILED.
+
+import { createHash } from "node:crypto";
 
 import type { SigningContext } from "./context";
 import type { RequestDTO } from "./dto";
 import { toRequestDTO } from "./dto";
 import { validateAndNormalizeRecipients } from "../domain/recipient-validation";
+import { getActiveSigningProvider } from "../config";
 import {
   SigningProviderError,
   SigningStateError,
@@ -61,23 +67,51 @@ export async function createDraft(
     throw new SigningValidationError("expiresAt must be a valid date.");
   }
 
-  // Local request + recipients first (DRAFT). No provider call happens during
-  // the create so a provider failure keeps a consistent local record.
+  const engine = getActiveSigningProvider();
+  const provider = engine === "DOCUMENSO" ? "DOCUMENSO" : "NATIVE";
+
+  const file = await ctx.getDocumentFileBytes({
+    file: document.file,
+    storageType: document.storageType,
+  });
+
+  // Hash the exact source bytes being signed. Stored against the request so the
+  // finalizer can prove the finalized PDF was built from this source and
+  // nothing silently swapped underneath the signer.
+  const sourceSha256 = createHash("sha256").update(file).digest("hex");
+
   const request = await ctx.requests.createWithRecipients({
     teamId: input.actor.teamId,
     documentId: document.id,
+    documentVersionId: document.versionId,
+    sourceSha256,
+    provider,
     expiresAt,
     recipients,
     dossierFileId: input.dossierFileId,
     status: "DRAFT",
   });
 
-  try {
-    const file = await ctx.getDocumentFileBytes({
-      file: document.file,
-      storageType: document.storageType,
+  await ctx.activities.create({
+    signatureRequestId: request.id,
+    type: "REQUEST_CREATED",
+  });
+
+  if (engine === "NATIVE") {
+    const draft = await ctx.requests.findById(request.id);
+
+    ctx.logger.info("signing.draft_created", {
+      teamId: draft.teamId,
+      requestId: draft.id,
+      documentId: draft.documentId,
+      engine: "NATIVE",
+      recipientCount: draft.recipients.length,
     });
 
+    return { request: toRequestDTO(draft) };
+  }
+
+  try {
     // ONE DOCUMENT envelope for the whole request; all signers are recipients
     // on it. `distributionMethod: "NONE"` guarantees Documenso never emails —
     // Dossier owns every invitation.
@@ -106,15 +140,10 @@ export async function createDraft(
           `The signing provider did not return a recipient id for ${recipient.email}.`,
         );
       }
-      await ctx.requests.updateRecipientProviderIds(recipient.id, {
+      await ctx.recipients.updateProviderIds(recipient.id, {
         providerRecipientId: match.providerRecipientId,
       });
     }
-
-    await ctx.requests.createActivity({
-      signatureRequestId: request.id,
-      type: "REQUEST_CREATED",
-    });
 
     const draft = await ctx.requests.findById(request.id);
 
@@ -123,6 +152,7 @@ export async function createDraft(
       requestId: draft.id,
       documentId: draft.documentId,
       envelopeId: created.providerEnvelopeId,
+      engine: "DOCUMENSO",
       recipientCount: draft.recipients.length,
     });
 

@@ -1,8 +1,9 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, SignatureProvider } from "@prisma/client";
 import prisma from "@/platform/db";
 import { cuid } from "@/shared/utils/utils";
 import { buildRequestExternalId } from "../domain/external-id";
 import { SigningNotFoundError } from "../domain/signing-errors";
+import type { SignatureRequestStatus } from "../domain/signature-request";
 
 // Every place that loads a request for a DTO or a use-case needs the full
 // relation set. `document`/`template`/`artifact` back the request itself;
@@ -20,10 +21,16 @@ export type SignatureRequestWithRecipients = Awaited<
   ReturnType<SignatureRequestRepository["findByIdWithRecipients"]>
 >;
 
+// Request-scoped persistence. Recipient/delivery/activity/artifact mutations
+// live in their own repositories (signature-recipient.repository.ts, etc.);
+// this class owns the SignatureRequest row itself.
 export class SignatureRequestRepository {
   async createWithRecipients(input: {
     teamId: string;
     documentId: string;
+    documentVersionId?: string | null;
+    sourceSha256?: string | null;
+    provider?: SignatureProvider;
     templateId?: string | null;
     linkId?: string;
     dossierFileId?: string | null;
@@ -47,6 +54,9 @@ export class SignatureRequestRepository {
         id,
         teamId: input.teamId,
         documentId: input.documentId,
+        documentVersionId: input.documentVersionId,
+        sourceSha256: input.sourceSha256,
+        provider: input.provider ?? "NATIVE",
         templateId: input.templateId,
         linkId: input.linkId,
         dossierFileId: input.dossierFileId,
@@ -161,12 +171,24 @@ export class SignatureRequestRepository {
     });
   }
 
-  async updateStatus(id: string, status: any, extra: any = {}) {
+  async updateStatus(
+    id: string,
+    status: SignatureRequestStatus,
+    extra: {
+      sentAt?: Date;
+      viewedAt?: Date;
+      completedAt?: Date;
+      cancelledAt?: Date;
+    } = {},
+  ) {
     return prisma.signatureRequest.update({
       where: { id },
       data: {
         status,
-        ...extra,
+        sentAt: extra.sentAt,
+        viewedAt: extra.viewedAt,
+        completedAt: extra.completedAt,
+        cancelledAt: extra.cancelledAt,
       },
       include: REQUEST_DETAIL_INCLUDE,
     });
@@ -179,47 +201,10 @@ export class SignatureRequestRepository {
     });
   }
 
-  async updateRecipientProviderIds(
-    recipientId: string,
-    data: { providerRecipientId?: string | number; providerDocumentId?: number },
-  ) {
-    return prisma.signatureRecipient.update({
-      where: { id: recipientId },
-      data: {
-        providerRecipientId:
-          data.providerRecipientId != null
-            ? String(data.providerRecipientId)
-            : undefined,
-        providerDocumentId: data.providerDocumentId,
-      },
-    });
-  }
-
-  async updateRecipientStatus(recipientId: string, status: any, extra: any = {}) {
-    return prisma.signatureRecipient.update({
-      where: { id: recipientId },
-      data: {
-        status,
-        ...extra,
-      },
-    });
-  }
-
-  async updateDeliveryStatus(
-    deliveryId: string,
-    data: {
-      status?: any;
-      failedReason?: string;
-      lastAttemptAt?: Date;
-    },
-  ) {
-    return prisma.signatureDelivery.update({
-      where: { id: deliveryId },
-      data: {
-        status: data.status,
-        failedReason: data.failedReason,
-        lastAttemptAt: data.lastAttemptAt,
-      },
+  async updateSourceHash(id: string, sourceSha256: string) {
+    return prisma.signatureRequest.update({
+      where: { id },
+      data: { sourceSha256 },
     });
   }
 
@@ -234,66 +219,6 @@ export class SignatureRequestRepository {
     return prisma.document.findUnique({
       where: { id: documentId },
       select: { name: true },
-    });
-  }
-
-  async createActivity(data: {
-    signatureRequestId: string;
-    recipientId?: string;
-    type: any;
-    metadata?: any;
-  }) {
-    return prisma.signatureActivity.create({
-      data: {
-        signatureRequestId: data.signatureRequestId,
-        recipientId: data.recipientId,
-        type: data.type,
-        metadata: data.metadata,
-      },
-    });
-  }
-
-  async createDelivery(data: {
-    signatureRequestId: string;
-    recipientId?: string;
-    type: any;
-    status?: any;
-    failedReason?: string;
-  }) {
-    return prisma.signatureDelivery.create({
-      data: {
-        signatureRequestId: data.signatureRequestId,
-        recipientId: data.recipientId,
-        type: data.type,
-        status: data.status || "PENDING",
-        failedReason: data.failedReason,
-      },
-    });
-  }
-
-  async findArtifactByRequestId(requestId: string) {
-    return prisma.signatureArtifact.findUnique({
-      where: { signatureRequestId: requestId },
-    });
-  }
-
-  async createArtifact(data: {
-    signatureRequestId: string;
-    storageKey: string;
-    fileName: string;
-    mimeType?: string;
-    sha256: string;
-    sizeBytes: bigint;
-  }) {
-    return prisma.signatureArtifact.create({
-      data: {
-        signatureRequestId: data.signatureRequestId,
-        storageKey: data.storageKey,
-        fileName: data.fileName,
-        mimeType: data.mimeType || "application/pdf",
-        sha256: data.sha256,
-        sizeBytes: data.sizeBytes,
-      },
     });
   }
 }

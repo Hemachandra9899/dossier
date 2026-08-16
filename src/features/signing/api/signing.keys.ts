@@ -28,5 +28,7 @@ export const signingKeys = {
       [...signingKeys.public.all(), "request", requestId] as const,
     artifact: (requestId: string) =>
       [...signingKeys.public.all(), "artifact", requestId] as const,
+    fields: (requestId: string) =>
+      [...signingKeys.public.all(), "fields", requestId] as const,
   },
 } as const;

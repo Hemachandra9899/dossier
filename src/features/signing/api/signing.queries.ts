@@ -100,3 +100,20 @@ export function publicSignedArtifactQuery(
     },
   });
 }
+
+export function publicRecipientFieldsQuery(
+  requestId: string,
+  enabled: boolean,
+) {
+  return queryOptions({
+    queryKey: signingKeys.public.fields(requestId),
+    queryFn: () => signingApi.getPublicFields({ requestId }),
+    enabled,
+    refetchInterval: (query) => {
+      const status = query.state.data?.fields?.some((f) => !f.complete)
+        ? SIGNATURE_REQUEST_ACTIVE_POLL_INTERVAL_MS
+        : false;
+      return status;
+    },
+  });
+}

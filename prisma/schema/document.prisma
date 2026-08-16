@@ -70,6 +70,8 @@ model DocumentVersion {
   createdAt         DateTime               @default(now())
   updatedAt         DateTime               @updatedAt
 
+  signatureRequests SignatureRequest[] // Native signing pins the exact version being signed
+
   @@unique([versionNumber, documentId])
   @@index([documentId])
   @@index([documentId, isPrimary]) // Performance optimization for primary version queries

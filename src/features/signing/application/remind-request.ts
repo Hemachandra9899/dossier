@@ -38,7 +38,7 @@ export async function remindRequest(
   const senderEmail = "system@dossier.com";
 
   // 1. Record PENDING delivery
-  const delivery = await ctx.requests.createDelivery({
+  const delivery = await ctx.deliveries.create({
     signatureRequestId: request.id,
     recipientId: recipient.id,
     type: "REMINDER",
@@ -85,7 +85,7 @@ export async function remindRequest(
       data: { status: "SENT", lastAttemptAt: new Date() },
     });
 
-    await ctx.requests.createActivity({
+    await ctx.activities.create({
       signatureRequestId: request.id,
       recipientId: recipient.id,
       type: "REMINDER_SENT",

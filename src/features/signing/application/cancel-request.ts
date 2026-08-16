@@ -51,7 +51,7 @@ export async function cancelRequest(
     cancelledAt: new Date(),
   });
 
-  await ctx.requests.createActivity({
+  await ctx.activities.create({
     signatureRequestId: updated.id,
     type: "REQUEST_CANCELLED",
   });

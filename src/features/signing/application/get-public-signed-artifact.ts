@@ -51,7 +51,7 @@ export async function getPublicSignedArtifact(
     );
   }
 
-  const artifact = await ctx.requests.findArtifactByRequestId(input.requestId);
+  const artifact = await ctx.artifacts.findByRequestId(input.requestId);
   if (!artifact) {
     return { status: "pending" };
   }

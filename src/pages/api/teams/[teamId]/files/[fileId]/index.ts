@@ -18,10 +18,14 @@ export default async function handler(
   const fileId = String(req.query.fileId || "");
 
   try {
-    await requireFileAccess(req, res, fileId);
+    const { file: access } = await requireFileAccess(req, res, fileId);
+
+    if (access.teamId !== teamId) {
+      return res.status(404).json({ error: "File not found" });
+    }
 
     const file = await prisma.dossierFile.findUnique({
-      where: { id: fileId, teamId },
+      where: { id: fileId },
 
       select: {
         id: true,
@@ -54,7 +58,7 @@ export default async function handler(
       return res.status(404).json({ error: "File not found" });
     }
 
-    return res.status(200).json({ file });
+    return res.status(200).json(file);
   } catch (error) {
     if (sendAuthorizationError(res, error)) return;
     console.error(error);

@@ -101,4 +101,33 @@ export class SignatureFieldRepository {
     }
     return field;
   }
+
+  /**
+   * Saves a recipient's response on a single field (text value or a drawn /
+   * uploaded signature image). Sets `completedAt` when the response counts as
+   * complete per the field domain. Only valid for SENT/VIEWED/SIGNING/
+   * PARTIALLY_SIGNED requests — the caller enforces request status. Returns
+   * the updated field.
+   */
+  async updateResponse(input: {
+    fieldId: string;
+    value?: unknown;
+    signatureStorageKey?: string | null;
+    completedAt?: Date | null;
+  }) {
+    const data: Prisma.SignatureFieldUpdateInput = {};
+    if (input.value !== undefined) {
+      data.value = input.value as Prisma.InputJsonValue;
+    }
+    if (input.signatureStorageKey !== undefined) {
+      data.signatureStorageKey = input.signatureStorageKey;
+    }
+    if (input.completedAt !== undefined) {
+      data.completedAt = input.completedAt;
+    }
+    return prisma.signatureField.update({
+      where: { id: input.fieldId },
+      data,
+    });
+  }
 }

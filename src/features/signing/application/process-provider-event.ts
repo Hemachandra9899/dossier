@@ -127,7 +127,7 @@ export async function processProviderEvent(
                   : nextRecipientStatus === "VIEWED"
                     ? { viewedAt: new Date() }
                     : {};
-              await ctx.requests.updateRecipientStatus(localRecipient.id, nextRecipientStatus, extra);
+              await ctx.recipients.updateStatus(localRecipient.id, nextRecipientStatus, extra);
 
               // Log recipient timeline activity
               let activityType: any = null;
@@ -149,7 +149,7 @@ export async function processProviderEvent(
                   },
                 });
                 if (!exists) {
-                  await ctx.requests.createActivity({
+                  await ctx.activities.create({
                     signatureRequestId: request.id,
                     recipientId: localRecipient.id,
                     type: activityType,
@@ -199,7 +199,7 @@ export async function processProviderEvent(
       },
     });
     if (!exists) {
-      await ctx.requests.createActivity({
+      await ctx.activities.create({
         signatureRequestId: request.id,
         type: reqActivityType,
       });

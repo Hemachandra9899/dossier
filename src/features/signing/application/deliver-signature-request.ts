@@ -30,7 +30,7 @@ export async function deliverSignatureRequest(
   const senderEmail = "system@dossier.com";
 
   // 1. Record PENDING delivery
-  const delivery = await ctx.requests.createDelivery({
+  const delivery = await ctx.deliveries.create({
     signatureRequestId: request.id,
     recipientId: recipient.id,
     type: "INVITATION",
@@ -69,12 +69,12 @@ export async function deliverSignatureRequest(
     });
 
     // 4. Update delivery to SENT & update recipient/request status if needed
-    await ctx.requests.updateDeliveryStatus(delivery.id, {
+    await ctx.deliveries.updateStatus(delivery.id, {
       status: "SENT",
       lastAttemptAt: new Date(),
     });
 
-    await ctx.requests.createActivity({
+    await ctx.activities.create({
       signatureRequestId: request.id,
       recipientId: recipient.id,
       type: "INVITATION_SENT",
@@ -86,13 +86,13 @@ export async function deliverSignatureRequest(
     }
   } catch (error: any) {
     // 5. Update delivery to FAILED and log activity
-    await ctx.requests.updateDeliveryStatus(delivery.id, {
+    await ctx.deliveries.updateStatus(delivery.id, {
       status: "FAILED",
       failedReason: error?.message ?? String(error),
       lastAttemptAt: new Date(),
     });
 
-    await ctx.requests.createActivity({
+    await ctx.activities.create({
       signatureRequestId: request.id,
       recipientId: recipient.id,
       type: "INVITATION_FAILED",
@@ -130,7 +130,7 @@ export async function deliverCompletionEmail(
   for (const email of emails) {
     try {
       const recipient = request.recipients.find((r: any) => r.email === email);
-      const delivery = await ctx.requests.createDelivery({
+      const delivery = await ctx.deliveries.create({
         signatureRequestId: request.id,
         recipientId: recipient?.id,
         type: "COMPLETION",
@@ -147,7 +147,7 @@ export async function deliverCompletionEmail(
         system: true,
       });
 
-      await ctx.requests.updateDeliveryStatus(delivery.id, {
+      await ctx.deliveries.updateStatus(delivery.id, {
         status: "SENT",
         lastAttemptAt: new Date(),
       });
@@ -157,7 +157,7 @@ export async function deliverCompletionEmail(
   }
 
   // Log activity
-  await ctx.requests.createActivity({
+  await ctx.activities.create({
     signatureRequestId: request.id,
     type: "REQUEST_COMPLETED",
   });

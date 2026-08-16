@@ -6,7 +6,7 @@
 // providers/documenso may touch the raw Documenso REST API.
 
 import { SigningProviderError } from "../../domain/signing-errors";
-import { getSigningConfig } from "../../config/signing-config";
+import { requireDocumensoConfig } from "../../config/signing-config";
 
 const MAX_DOWNLOAD_BYTES = 50 * 1024 * 1024;
 
@@ -18,7 +18,7 @@ const MAX_DOWNLOAD_BYTES = 50 * 1024 * 1024;
 export async function downloadEnvelopeItemSignedPdf(
   envelopeItemId: string,
 ): Promise<{ bytes: Uint8Array; mimeType: string }> {
-  const config = getSigningConfig();
+  const config = requireDocumensoConfig();
 
   const url = new URL(
     `/envelope/item/${encodeURIComponent(envelopeItemId)}/download`,
