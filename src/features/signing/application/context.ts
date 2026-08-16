@@ -2,6 +2,7 @@ import { DocumentStorageType } from "@prisma/client";
 
 import { DocumentRepository } from "../server/document.repository";
 import { ProviderEventRepository } from "../server/provider-event.repository";
+import { SignatureFieldRepository } from "../server/signature-field.repository";
 import { SignatureRequestRepository } from "../server/signature-request.repository";
 import { SignatureTemplateRepository } from "../server/signature-template.repository";
 import { documensoSigningProvider } from "../providers/documenso/provider";
@@ -11,7 +12,6 @@ import { s3Storage } from "@/infrastructure/storage";
 import { signedArtifactStorage, SignedArtifactStorage } from "@/infrastructure/storage/signed-artifact-storage";
 import { getFile } from "@/shared/utils/files/get-file";
 import { sendEmail } from "@/shared/utils/resend";
-
 export type ProviderEventMapper = (event: string) => any;
 
 export type EmailDeliverer = (input: {
@@ -30,11 +30,13 @@ export interface SigningContext {
   documents: DocumentRepository;
   events: ProviderEventRepository;
   templates: SignatureTemplateRepository;
+  fields: SignatureFieldRepository;
   provider: SigningProvider;
   mapEventToStatus: ProviderEventMapper;
   storage: SignedArtifactStorage;
   artifactMirror: ArtifactMirrorQueue;
   getDocumentFileBytes: (input: { file: string; storageType: any }) => Promise<Buffer>;
+  getSourceUrl: (input: { file: string; storageType: any }) => Promise<string>;
   deliverEmail: EmailDeliverer;
   logger: {
     info: (...args: any[]) => void;
@@ -48,6 +50,7 @@ export function createSigningContext(overrides?: Partial<SigningContext>): Signi
   const documents = overrides?.documents ?? new DocumentRepository();
   const events = overrides?.events ?? new ProviderEventRepository();
   const templates = overrides?.templates ?? new SignatureTemplateRepository();
+  const fields = overrides?.fields ?? new SignatureFieldRepository();
   const provider = overrides?.provider ?? documensoSigningProvider;
   const mapEventToStatus = overrides?.mapEventToStatus ?? mapDocumensoEventToStatus;
   const storage = overrides?.storage ?? signedArtifactStorage;
@@ -90,6 +93,15 @@ export function createSigningContext(overrides?: Partial<SigningContext>): Signi
       return buffer;
     });
 
+  const getSourceUrl =
+    overrides?.getSourceUrl ??
+    (async (input: { file: string; storageType: any }) =>
+      getFile({
+        type: input.storageType,
+        data: input.file,
+        expiresIn: 60 * 60 * 1000,
+      }));
+
   const logger = overrides?.logger ?? {
     info: (msg: string, ...args: any[]) => console.log(`[SIGNING:INFO] ${msg}`, ...args),
     warn: (msg: string, ...args: any[]) => console.warn(`[SIGNING:WARN] ${msg}`, ...args),
@@ -101,11 +113,13 @@ export function createSigningContext(overrides?: Partial<SigningContext>): Signi
     documents,
     events,
     templates,
+    fields,
     provider,
     mapEventToStatus,
     storage,
     artifactMirror,
     getDocumentFileBytes,
+    getSourceUrl,
     deliverEmail: sendEmail,
     logger,
   };
