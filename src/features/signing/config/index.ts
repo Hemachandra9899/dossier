@@ -6,4 +6,4 @@ export function isDossierSigningRuntimeEnabled(): boolean {
   );
 }
 
-export const isDossierSigningEnabled = isDossierSigningRuntimeEnabled;
+export const isDossierSigningEnabled = isDossierSigningRuntimeEnabled();

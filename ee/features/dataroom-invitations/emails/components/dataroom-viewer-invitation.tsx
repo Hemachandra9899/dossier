@@ -13,7 +13,7 @@ import {
   Text,
 } from "@react-email/components";
 
-import { Footer } from "../../../../../components/emails/shared/footer";
+import { Footer } from "@/shared/ui/emails/shared/footer";
 
 export default function DataroomViewerInvitation({
   dataroomName = "Example Data Room",

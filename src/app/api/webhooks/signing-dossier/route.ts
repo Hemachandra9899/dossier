@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { createSigningContext } from "@/features/signing/application/context";
-import { isDossierSigningRuntimeEnabled } from "@/features/signing/config";
+import { isDossierSigningEnabled } from "@/features/signing/config";
 import { createProviderEventDedupeKey } from "@/features/signing/domain/signing-event";
 import { DOCUMENSO_SIGNING_EVENTS, mapDocumensoEventToStatus } from "@/features/signing/providers/documenso/mapper";
 import {
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   // Runtime kill switch: when signing is disabled at runtime, provider events
   // are acknowledged but never inboxed. The legacy Agreement webhook is
   // unaffected.
-  if (!isDossierSigningRuntimeEnabled) {
+  if (!isDossierSigningEnabled) {
     return NextResponse.json({ ok: true });
   }
 

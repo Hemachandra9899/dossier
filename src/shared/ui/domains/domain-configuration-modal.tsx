@@ -1,6 +1,6 @@
 import React from "react";
 import { AddDomainModal } from "./add-domain-modal";
-import { LinkType } from "@/shared/utils/types";
+import { LinkType } from "@prisma/client";
 
 export function DomainConfigurationModal({
   isOpen,

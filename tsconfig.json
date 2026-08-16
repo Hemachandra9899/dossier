@@ -29,10 +29,21 @@
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "ee/**/*.ts",
+    "ee/**/*.tsx",
     ".next/types/**/*.ts",
     "trigger.config.ts"
   ],
-  "exclude": ["node_modules", "scripts"]
+  "exclude": [
+    "node_modules",
+    "scripts",
+    "tests",
+    "src/features/documents/components",
+    "src/features/sharing",
+    "src/features/settings",
+    "src/features/account",
+    "src/features/documents/index.ts"
+  ]
 }

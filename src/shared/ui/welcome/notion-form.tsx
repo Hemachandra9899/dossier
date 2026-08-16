@@ -30,7 +30,7 @@ import {
 import { Button } from "@/shared/ui/button";
 import { Label } from "@/shared/ui/label";
 
-import Skeleton from "../Skeleton";
+import { Skeleton } from "../skeleton";
 
 export default function NotionForm() {
   const router = useRouter();

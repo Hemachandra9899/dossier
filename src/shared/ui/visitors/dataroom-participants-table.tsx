@@ -185,7 +185,7 @@ export function DataroomParticipantsTable({
                             <GlobeIcon className="h-4 w-4 text-muted-foreground" />
                           </div>
                         ) : (
-                          <VisitorAvatar viewerEmail={visitor.email} />
+                          <VisitorAvatar viewerEmail={visitor.email ?? null} />
                         )}
                         <div className="min-w-0 flex-1">
                           <p className="flex items-center gap-x-2 overflow-visible text-sm font-medium text-gray-800 dark:text-gray-200">
@@ -253,7 +253,7 @@ export function DataroomParticipantsTable({
                     {/* Status */}
                     <TableCell>
                       <VisitorStatusBadge
-                        status={visitor.status}
+                        status={visitor.status ?? "NONE"}
                         invitedAt={visitor.invitedAt}
                         invitationStatus={visitor.invitationStatus}
                         accessSources={visitor.accessSources}

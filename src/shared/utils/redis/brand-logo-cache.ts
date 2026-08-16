@@ -1,4 +1,4 @@
-export async function getCachedBrandLogo(_teamId: string) {
+export async function getCachedBrandLogo(..._args: any[]) {
   return null;
 }
 

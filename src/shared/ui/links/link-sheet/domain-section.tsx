@@ -13,7 +13,7 @@ import { useEntitlements } from "@/features/access";
 import { BLOCKED_PATHNAMES } from "@/shared/utils/constants";
 import { generateRandomSlug } from "@/shared/utils/utils";
 import { cn } from "@/shared/utils/utils";
-import { Domain, LinkType } from "@/shared/utils/types";
+import { Domain, LinkType } from "@prisma/client";
 import { DomainConfigurationModal } from "@/shared/ui/domains/domain-configuration-modal";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/shared/ui/select";
 import { BadgeTooltip } from "@/shared/ui/tooltip";
-import { DEFAULT_LINK_TYPE } from "..";
+import { DEFAULT_LINK_TYPE } from ".";
 
 function getDefaultDomain(): string {
   if (typeof window !== "undefined") {
@@ -256,9 +256,15 @@ export default function DomainSection({
             <BadgeTooltip
               content="Generate random slug"
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted"
-              onClick={generateAndSetSlug}
             >
-              🎲
+              <button
+                type="button"
+                onClick={generateAndSetSlug}
+                className="flex items-center justify-center"
+                aria-label="Generate random slug"
+              >
+                🎲
+              </button>
             </BadgeTooltip>
           </div>
         ) : null}

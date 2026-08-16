@@ -37,7 +37,9 @@ export function downloadCSV(data: any[], filename: string) {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    const formattedTime = new Date().toISOString().replace(/[-:Z]/g, "");
+    const formattedTime = new Date()
+      .toISOString()
+      .replace(/-|:|Z/g, "");
     link.setAttribute("download", `${filename}_${formattedTime}.csv`);
     document.body.appendChild(link);
     link.click();
