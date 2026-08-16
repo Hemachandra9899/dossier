@@ -12,6 +12,10 @@ export const signingKeys = {
       [...signingKeys.requests.all(), "detail", teamId, requestId] as const,
     activeForDocument: (teamId: string, documentId: string) =>
       [...signingKeys.requests.all(), "active-for-document", teamId, documentId] as const,
+    source: (teamId: string, requestId: string) =>
+      [...signingKeys.requests.all(), "source", teamId, requestId] as const,
+    fields: (teamId: string, requestId: string) =>
+      [...signingKeys.requests.all(), "fields", teamId, requestId] as const,
     artifact: (teamId: string, requestId: string) =>
       [...signingKeys.requests.all(), "artifact", teamId, requestId] as const,
   },

@@ -200,6 +200,7 @@
     "@types/mime-types": "^3.0.1",
     "@types/ms": "^2.1.0",
     "@types/node": "^24.12.3",
+    "@types/nodemailer": "^8.0.1",
     "@types/oidc-provider": "^9.5.0",
     "@types/react": "^18",
     "@types/react-dom": "^18",
