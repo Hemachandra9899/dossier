@@ -1,14 +1,18 @@
 import prisma from "@/platform/db";
+import { v4 as uuidv4 } from "uuid";
 
 export async function createFile(input: any) {
   const teamId = typeof input === "string" ? input : input.teamId;
   const name = typeof input === "string" ? "New File" : input.name || "New File";
   const clientName = typeof input === "object" ? input.clientName : undefined;
 
+  const pId = `dr_${uuidv4().substring(0, 8)}`;
+
   const dataroom = await prisma.dataroom.create({
     data: {
       teamId,
       name,
+      pId,
     } as any,
   });
 

@@ -11,6 +11,25 @@ export type FileStatus =
   | "READY_TO_CLOSE"
   | "COMPLETE";
 
+export type FileRequirementStatus = {
+  status: "OPEN" | "IN_PROGRESS" | "SUBMITTED" | "COMPLETED";
+  hasExternalAssignment: boolean;
+};
+
+export type FileSignatureStatus =
+  | "DRAFT"
+  | "PREPARING"
+  | "READY"
+  | "SENT"
+  | "VIEWED"
+  | "SIGNING"
+  | "PARTIALLY_SIGNED"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "FAILED"
+  | "DECLINED"
+  | "EXPIRED";
+
 export const FILE_STATUSES = [
   "NEW",
   "COLLECTING",
@@ -77,4 +96,110 @@ export function groupFilesByStatus(
   }
 
   return groups;
-};
+}
+
+/**
+ * Derive the authoritative FileStatus from the current state.
+ *
+ * This is the one pure derivation function for file status.
+ * It does NOT query Prisma, does NOT send email, does NOT call provider APIs.
+ *
+ * Input fields needed:
+ *   currentStatus: the file's current status
+ *   requirements: each requirement's status + whether it has an external assignment
+ *   requiresSignature: whether the file requires signatures
+ *   signatures: the signature requests associated with this file
+ *
+ * Rules are ordered from most specific to most general.
+ * Duplicate STATUS_CHANGED events must not be generated when status is unchanged.
+ */
+export function deriveFileStatus(
+  input: {
+    currentStatus: FileStatus;
+
+    requirements: FileRequirementStatus[];
+
+    requiresSignature: boolean;
+
+    signatures: FileSignatureStatus[];
+  },
+): FileStatus {
+  const {
+    currentStatus,
+    requirements,
+    requiresSignature,
+    signatures,
+  } = input;
+
+  // --- Terminal states stay sticky forever ---
+  if (currentStatus === "ARCHIVED") {
+    return "ARCHIVED";
+  }
+  if (currentStatus === "COMPLETE") {
+    return "COMPLETE";
+  }
+
+  // --- No requirements yet ---
+  if (requirements.length === 0) {
+    return "NEW";
+  }
+
+  // --- NEEDS_CORRECTION is sticky: once in correction mode, stay until
+  // explicitly moved out via syncFileStatus (e.g., after corrected upload).
+  if (currentStatus === "NEEDS_CORRECTION") {
+    return "NEEDS_CORRECTION";
+  }
+
+  // --- Check if all requirements are completed ---
+  const allCompleted = requirements.every((r) => r.status === "COMPLETED");
+  const hasSubmitted = requirements.some((r) => r.status === "SUBMITTED");
+  const hasIncomplete = requirements.some((r) => r.status !== "COMPLETED");
+  const waitingOnClient =
+    hasIncomplete &&
+    requirements.some((r) => r.status !== "COMPLETED" && r.hasExternalAssignment);
+
+  // --- Requirements not all completed ---
+  if (!allCompleted) {
+    if (hasSubmitted) {
+      return "REVIEWING";
+    }
+    if (waitingOnClient) {
+      return "WAITING_ON_CLIENT";
+    }
+    return "COLLECTING";
+  }
+
+  // --- All requirements completed ---
+  if (!requiresSignature) {
+    return "READY_TO_CLOSE";
+  }
+
+  // --- Signature required ---
+  // Filter out historical terminal requests that should not block status
+  const activeSignatures = signatures.filter(
+    (s) =>
+      !["CANCELLED", "FAILED", "DECLINED", "EXPIRED"].includes(s.status),
+  );
+
+  const completedSignature = signatures.find(
+    (s) => s.status === "COMPLETED",
+  );
+
+  if (completedSignature) {
+    return "READY_TO_CLOSE";
+  }
+
+  const activeSignature = signatures.find(
+    (s) =>
+      ["DRAFT", "PREPARING", "READY", "SENT", "VIEWED", "SIGNING", "PARTIALLY_SIGNED"].includes(
+        s.status,
+      ),
+  );
+
+  if (activeSignature) {
+    return "SIGNING";
+  }
+
+  // No active signature, but signing is required
+  return "READY_TO_SIGN";
+}

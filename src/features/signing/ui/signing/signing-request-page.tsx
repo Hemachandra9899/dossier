@@ -1,23 +1,20 @@
 // SigningRequestPage: the recipient-facing signing page for a Dossier
 // SignatureRequest. Renders the request summary, opens the Documenso signing
-// canvas in a sheet, and keeps the public request in a TanStack Query that
-// polls every 3s until the request reaches a terminal state so completion never
-// requires a reload. Access is proven by the HttpOnly recipient-access cookie
-// (set at page entry); the page itself holds no secrets.
+// canvas in a full-page view, and keeps the public request in a TanStack Query
+// that polls every 3s until the request reaches a terminal state so completion
+// never requires a reload. Access is proven by the HttpOnly recipient-access
+// cookie (set at page entry); the page itself holds no secrets.
 
 "use client";
 
 import { useState } from "react";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  AlertCircleIcon,
-  CheckCircle2Icon,
-  DownloadIcon,
-  FileSignatureIcon,
-  FileTextIcon,
-} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+
 import { toast } from "sonner";
+
+import { Badge } from "@/shared/ui/badge";
 
 import type { PublicRecipientStatus } from "@/features/signing/application/get-public-request";
 
@@ -28,16 +25,19 @@ import {
   type PublicSignedArtifactDTO,
   type SigningSessionDTO,
 } from "@/features/signing/api/signing-api";
+
 import { createSigningSessionOptions } from "@/features/signing/api/signing.mutations";
+
 import {
   publicSignatureRequestQuery,
   publicSignedArtifactQuery,
 } from "@/features/signing/api/signing.queries";
+
 import { SignatureStatusBadge } from "../signature-status-badge";
-import { SigningSheet } from "./signing-sheet";
+
+import { RecipientSigningView } from "./recipient-signing-view";
 
 const SIGNABLE_STATUSES: PublicRecipientStatus[] = [
-  "READY",
   "SENT",
   "VIEWED",
   "SIGNING",
@@ -53,7 +53,6 @@ const TERMINAL_NON_COMPLETED: PublicRecipientStatus[] = [
 export function SigningRequestPage({ requestId }: { requestId: string }) {
   const [session, setSession] = useState<SigningSessionDTO | null>(null);
   const [isPreparingSession, setIsPreparingSession] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
 
   const requestQuery = useQuery(publicSignatureRequestQuery(requestId));
@@ -80,7 +79,6 @@ export function SigningRequestPage({ requestId }: { requestId: string }) {
         requestId,
       });
       setSession(createdSession);
-      setSheetOpen(true);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -93,7 +91,6 @@ export function SigningRequestPage({ requestId }: { requestId: string }) {
   };
 
   const handleDocumentCompleted = () => {
-    setSheetOpen(false);
     setIsCompleting(true);
   };
 
@@ -183,22 +180,21 @@ export function SigningRequestPage({ requestId }: { requestId: string }) {
             onClick={() => void openSigning()}
             loading={isPreparingSession || isCompleting}
           >
-            {!isPreparingSession && !isCompleting ? (
-              <FileSignatureIcon className="h-4 w-4" />
-            ) : null}
+            <FileSignatureIcon className="h-4 w-4" />
             Review & Sign
           </Button>
         </footer>
       ) : null}
 
-      <SigningSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        session={session}
-        documentName={request.document.name}
-        onCompleted={handleDocumentCompleted}
-        onError={(message) => toast.error(message)}
-      />
+      {!isSignable || isExpired ? null : (
+        <RecipientSigningView
+          session={session ?? null}
+          recipientName={request.recipient.name ?? undefined}
+          documentName={request.document.name}
+          onCompleted={handleDocumentCompleted}
+          onError={(message) => toast.error(message)}
+        />
+      ) : null}
     </div>
   );
 }

@@ -44,13 +44,12 @@ const authoringCss = `
   .embed--Root,
   .embed--DocumentContainer,
   .embed--DocumentWidget,
-  .embed--DocumentWidgetContainer,
   .embed--DocumentViewer {
     border-radius: 0.5rem;
   }
 
   .embed--DocumentWidget,
-  .embed--DocumentWidgetContainer,
+  .embed--DocumentContainer,
   .embed--DocumentWidgetHeader,
   .embed--DocumentWidgetContent,
   .embed--DocumentWidgetFooter {

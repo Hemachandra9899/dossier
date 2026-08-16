@@ -51,10 +51,12 @@ const signingCssVars = {
 };
 
 // Injected into the Documenso iframe so the signing canvas sits cleanly inside
-// the Dossier sheet: hide the sidebar, keep the bottom widget, flatten shadows.
+// the Dossier sheet: keep the field widget visible (recipients need to see
+// field progress such as "4 Fields Remaining", field types, etc.), keep the
+// bottom widget area accessible, and maintain clean layout.
 const SIGNING_EMBED_CSS = `
     .embed--DocumentWidgetContainer {
-      display: none !important;
+      display: block !important;
     }
 
     .embed--DocumentViewer > .lg\\:hidden {

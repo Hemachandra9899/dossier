@@ -14,6 +14,34 @@ import { mapDocumensoRecipientStatusToStatus } from "../providers/documenso/mapp
 
 import prisma from "@/platform/db";
 
+function deriveRecipientStatus(
+  recipient: {
+    signingStatus?: string | null;
+    readStatus?: string | null;
+  },
+) {
+  if (
+    recipient.signingStatus === "SIGNED"
+  ) {
+    return "SIGNED";
+  }
+
+  if (
+    recipient.signingStatus === "REJECTED"
+  ) {
+    return "DECLINED";
+  }
+
+  if (
+    recipient.readStatus === "OPENED"
+  ) {
+    return "VIEWED";
+  }
+
+  return null;
+}
+
+
 export type ProviderEventEffect = {
   nextStatus: SignatureRequestStatus | null;
   timestampField: "completedAt" | "cancelledAt" | null;
@@ -91,7 +119,7 @@ export async function processProviderEvent(
             (r: any) => r.email?.toLowerCase() === provRecipient.email?.toLowerCase()
           );
           if (localRecipient) {
-            const nextRecipientStatus = mapDocumensoRecipientStatusToStatus((provRecipient as any).status);
+            const nextRecipientStatus = deriveRecipientStatus(provRecipient as any);
             if (nextRecipientStatus && nextRecipientStatus !== localRecipient.status) {
               const extra =
                 nextRecipientStatus === "SIGNED"

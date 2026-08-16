@@ -91,7 +91,17 @@ export function createSigningContext(overrides?: Partial<SigningContext>): Signi
     provider,
     mapEventToStatus,
     storage,
-    artifactMirror: null,
+    
+// Artifact mirror queue adapter using the Trigger.dev SDK.
+export const signatureArtifactMirrorQueueAdapter = {
+  async enqueue(requestId: string) {
+    // Use the installed Trigger.dev SDK's typed task-trigger API.
+    await triggerSignatureArtifactMirror({
+      requestId,
+    });
+  },
+};
+artifactMirror: signatureArtifactMirrorQueueAdapter,
     getDocumentFileBytes,
     deliverEmail: sendEmail,
     logger,
