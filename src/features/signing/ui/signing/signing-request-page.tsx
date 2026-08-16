@@ -12,6 +12,14 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
 
+import {
+  AlertCircleIcon,
+  CheckCircle2Icon,
+  DownloadIcon,
+  FileSignatureIcon,
+  FileTextIcon,
+} from "lucide-react";
+
 import { toast } from "sonner";
 
 import { Badge } from "@/shared/ui/badge";
@@ -114,6 +122,18 @@ export function SigningRequestPage({ requestId }: { requestId: string }) {
     !!request.expiresAt &&
     new Date(request.expiresAt).getTime() <= Date.now();
 
+  if (session) {
+    return (
+      <RecipientSigningView
+        session={session}
+        recipientName={request.recipient.name ?? undefined}
+        documentName={request.document.name}
+        onCompleted={handleDocumentCompleted}
+        onError={(message) => toast.error(message)}
+      />
+    );
+  }
+
   return (
     <div className="flex h-screen flex-col bg-secondary">
       <header className="flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6">
@@ -184,16 +204,6 @@ export function SigningRequestPage({ requestId }: { requestId: string }) {
             Review & Sign
           </Button>
         </footer>
-      ) : null}
-
-      {!isSignable || isExpired ? null : (
-        <RecipientSigningView
-          session={session ?? null}
-          recipientName={request.recipient.name ?? undefined}
-          documentName={request.document.name}
-          onCompleted={handleDocumentCompleted}
-          onError={(message) => toast.error(message)}
-        />
       ) : null}
     </div>
   );

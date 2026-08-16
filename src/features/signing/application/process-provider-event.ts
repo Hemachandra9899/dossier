@@ -10,7 +10,6 @@ import { toRequestDTO } from "./dto";
 import type { SignatureRequestStatus } from "../domain/signature-request";
 import { assertCanTransitionTo } from "../domain/state-machine";
 import { SigningNotFoundError } from "../domain/signing-errors";
-import { mapDocumensoRecipientStatusToStatus } from "../providers/documenso/mapper";
 
 import prisma from "@/platform/db";
 
@@ -19,22 +18,16 @@ function deriveRecipientStatus(
     signingStatus?: string | null;
     readStatus?: string | null;
   },
-) {
-  if (
-    recipient.signingStatus === "SIGNED"
-  ) {
+): "SIGNED" | "DECLINED" | "VIEWED" | "SIGNING" | null {
+  if (recipient.signingStatus === "SIGNED") {
     return "SIGNED";
   }
 
-  if (
-    recipient.signingStatus === "REJECTED"
-  ) {
+  if (recipient.signingStatus === "REJECTED") {
     return "DECLINED";
   }
 
-  if (
-    recipient.readStatus === "OPENED"
-  ) {
+  if (recipient.readStatus === "OPENED") {
     return "VIEWED";
   }
 
@@ -220,8 +213,18 @@ export async function processProviderEvent(
       ctx.logger.error("signing.deliver_completion_failed", { requestId: updated.id }, err);
     });
 
-    // 2. Durable handoff (Trigger.dev) for mirroring final signed PDF
-    await ctx.artifactMirror.enqueue(request.id);
+    // 2. Durable handoff (Trigger.dev) for mirroring final signed PDF.
+    //    Enqueue failure must not fail the already-committed COMPLETED
+    //    transition; log and let the mirror job catch up separately.
+    try {
+      await ctx.artifactMirror.enqueue(request.id);
+    } catch (error) {
+      ctx.logger.error(
+        "signing.artifact_mirror_enqueue_failed",
+        { requestId: request.id },
+        error,
+      );
+    }
   }
 
   const finalRefreshed = await ctx.requests.findByIdWithRecipients(request.id);
