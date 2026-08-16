@@ -101,6 +101,27 @@ export function publicSignedArtifactQuery(
   });
 }
 
+export function signatureSourceQuery(
+  teamId: string,
+  requestId: string,
+) {
+  return queryOptions({
+    queryKey: signingKeys.requests.source(teamId, requestId),
+    queryFn: () => signingApi.getSourcePdf({ teamId, requestId }),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function signatureFieldsQuery(
+  teamId: string,
+  requestId: string,
+) {
+  return queryOptions({
+    queryKey: signingKeys.requests.fields(teamId, requestId),
+    queryFn: () => signingApi.getSenderFields({ teamId, requestId }),
+  });
+}
+
 export function publicRecipientFieldsQuery(
   requestId: string,
   enabled: boolean,

@@ -11,6 +11,8 @@ import type { QueryClient } from "@tanstack/react-query";
 import { signingApi } from "./signing-api";
 import { signingKeys } from "./signing.keys";
 
+import type { RecipientFieldDTO } from "@/features/signing/api/signing-api";
+
 export function createSignatureDraftOptions(queryClient: QueryClient) {
   return {
     mutationFn: signingApi.createDraft,
@@ -129,6 +131,21 @@ export function remindSignatureRequestOptions(queryClient: QueryClient) {
 export function createSigningSessionOptions() {
   return {
     mutationFn: signingApi.createSigningSession,
+  };
+}
+
+export function saveSenderFieldsOptions(queryClient: QueryClient) {
+  return {
+    mutationFn: signingApi.saveSenderFields,
+    onSuccess: (
+      result: { fields: RecipientFieldDTO[] },
+      input: Parameters<typeof signingApi.saveSenderFields>[0],
+    ) => {
+      queryClient.setQueryData(
+        signingKeys.requests.fields(input.teamId, input.requestId),
+        result,
+      );
+    },
   };
 }
 

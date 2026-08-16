@@ -408,6 +408,37 @@ export const signingApi = {
       { public: true },
     );
   },
+
+  getSourcePdf(input: { teamId: string; requestId: string }) {
+    return request<{ url: string; versionId: string; sha256: string | null }>(
+      `/api/teams/${input.teamId}/signature-requests/${input.requestId}/source`,
+      undefined,
+      { public: true },
+    );
+  },
+
+  getSenderFields(input: { teamId: string; requestId: string }) {
+    return request<{ fields: RecipientFieldDTO[] }>(
+      `/api/teams/${input.teamId}/signature-requests/${input.requestId}/fields`,
+      undefined,
+      { public: true },
+    );
+  },
+
+  saveSenderFields(input: {
+    teamId: string;
+    requestId: string;
+    fields: RecipientFieldDTO[];
+  }) {
+    return request<{ fields: RecipientFieldDTO[] }>(
+      `/api/teams/${input.teamId}/signature-requests/${input.requestId}/fields`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ fields: input.fields }),
+      },
+      { public: true },
+    );
+  },
 };
 
 /**
