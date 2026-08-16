@@ -8,7 +8,7 @@ type RunStatus =
   ReturnType<typeof useRealtimeRunsWithTag>["runs"][number]["status"];
 
 interface IDocumentProgressStatus {
-  state: RunStatus;
+  state: RunStatus | "IDLE";
   progress: number;
   text: string;
 }
@@ -31,12 +31,15 @@ export function useDocumentProgressStatus(
   );
 
   const status: IDocumentProgressStatus = {
-    state: "QUEUED",
+    state: "IDLE",
     progress: 0,
-    text: "Initializing...",
+    text: "No processing run",
   };
 
-  // If we have no runs at all
+  // If we have no runs at all, the document is idle: no background processing
+  // has ever been enqueued for this version. This is distinct from QUEUED —
+  // zero runs means nothing is pending, so callers should not render a
+  // "processing" bar or treat the file as unavailable.
   if (runs.length === 0) {
     return { status, error, run: undefined };
   }

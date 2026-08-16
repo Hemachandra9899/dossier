@@ -15,9 +15,27 @@ export function createSignatureDraftOptions(queryClient: QueryClient) {
   return {
     mutationFn: signingApi.createDraft,
     onSuccess: (
-      _result: { request: { id: string; documentId: string } },
+      result: { request: { id: string; documentId: string } },
       input: Parameters<typeof signingApi.createDraft>[0],
     ) => {
+      queryClient.invalidateQueries({
+        queryKey: signingKeys.requests.activeForDocument(
+          input.teamId,
+          input.documentId,
+        ),
+      });
+      queryClient.setQueryData(
+        signingKeys.requests.detail(input.teamId, result.request.id),
+        result,
+      );
+    },
+    onError: (
+      _error: unknown,
+      input: Parameters<typeof signingApi.createDraft>[0],
+    ) => {
+      // The backend may have persisted the request as DRAFT -> FAILED before
+      // returning the error. Invalidate so reopening the dialog resolves the
+      // active request to null and the recipient form returns.
       queryClient.invalidateQueries({
         queryKey: signingKeys.requests.activeForDocument(
           input.teamId,

@@ -18,7 +18,7 @@ export default async function handler(
   const fileId = String(req.query.fileId || "");
 
   try {
-    const { userId } = await requireFileAccess(req, res, teamId, fileId);
+    await requireFileAccess(req, res, fileId);
 
     const file = await prisma.dossierFile.findUnique({
       where: { id: fileId, teamId },

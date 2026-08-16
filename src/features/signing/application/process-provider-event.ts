@@ -85,6 +85,17 @@ export async function processProviderEvent(
     );
   }
 
+  // Terminal requests are immutable history: stray or out-of-order provider
+  // events must never throw or change state. COMPLETED additionally re-drives
+  // the mirror handoff so a failed/retried delivery still lands the artifact.
+  const TERMINAL_STATUSES = ["COMPLETED", "DECLINED", "EXPIRED", "CANCELLED", "FAILED"];
+  if (TERMINAL_STATUSES.includes(request.status)) {
+    if (request.status === "COMPLETED") {
+      await ctx.artifactMirror.enqueue(request.id);
+    }
+    return toRequestDTO(request);
+  }
+
   const effect = planProviderEventEffect({
     event: input.event,
     currentStatus: request.status,
@@ -95,12 +106,8 @@ export async function processProviderEvent(
     ? (id: string) => (ctx.provider as any).getEnvelope(id)
     : async (_id: string) => null;
 
-  // Idempotent re-delivery / retry after a mirror handoff failure: the request
-  // is already COMPLETED, so re-drive the mirror handoff and return as-is.
-  if (request.status === "COMPLETED") {
-    await ctx.artifactMirror.enqueue(request.id);
-    return toRequestDTO(request);
-  }
+  // Idempotent re-delivery / retry after a mirror handoff failure is handled
+  // above: terminal requests return early and never re-plan state.
 
   // Fetch envelope to sync recipients
   if (request.providerEnvelopeId) {

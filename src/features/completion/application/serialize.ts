@@ -4,6 +4,15 @@ export function serializeCompletionRecord(record: any) {
   ));
 }
 
-export const toCompletionRecordDetailDTO = serializeCompletionRecord;
+export function toCompletionRecordDetailDTO(record: any) {
+  const serialized = serializeCompletionRecord(record);
+  if (Array.isArray(serialized?.artifacts)) {
+    serialized.artifacts = serialized.artifacts.map(
+      ({ storageKey: _storageKey, ...artifact }: { storageKey?: string }) =>
+        artifact,
+    );
+  }
+  return serialized;
+}
 export const toCompletionRecordSummaryDTO = serializeCompletionRecord;
 export const toCompletionRunDTO = serializeCompletionRecord;

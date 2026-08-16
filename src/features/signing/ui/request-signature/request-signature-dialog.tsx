@@ -29,7 +29,7 @@ import {
   type RecipientInput,
   type RequestDTO,
 } from "@/features/signing/api/signing-api";
-import { canExposeSigningLink } from "@/features/signing/domain/signature-request";
+import { canExposeSigningLink, isSignatureRequestTerminal } from "@/features/signing/domain/signature-request";
 import { SignatureStatusBadge } from "../signature-status-badge";
 import { useRecipientSigningUrl } from "../use-recipient-signing-url";
 import { RecipientStep } from "./recipient-step";
@@ -80,7 +80,15 @@ export function RequestSignatureDialog({
     staleTime: 0,
     enabled: open,
   });
-  const activeRequest = activeRequestQuery.data?.request;
+  // Defensive filter: a stale cache (or a race where the server flipped the
+  // request terminal after the fetch) must never surface a terminal request as
+  // "in progress". FAILED/CANCELLED/DECLINED/EXPIRED/COMPLETED always resolve
+  // to null so the recipient form stays usable.
+  const returnedRequest = activeRequestQuery.data?.request;
+  const activeRequest =
+    returnedRequest && !isSignatureRequestTerminal(returnedRequest.status)
+      ? returnedRequest
+      : null;
 
   if (!isDossierSigningEnabled || !isPdf || !open) {
     return null;

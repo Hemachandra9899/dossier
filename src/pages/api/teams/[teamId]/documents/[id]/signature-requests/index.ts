@@ -8,7 +8,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { requireTeamMember } from "@/shared/utils/api/require-team-member";
 import { errorhandler } from "@/shared/utils/errorHandler";
 import { createSigningContext } from "@/features/signing/application/context";
-import { getLatestRequest } from "@/features/signing/application/get-active-request";
+import { getActiveRequest } from "@/features/signing/application/get-active-request";
 import { isDossierSigningEnabled } from "@/features/signing/config";
 
 export default async function handle(
@@ -31,7 +31,7 @@ export default async function handle(
   if (!user) return;
 
   try {
-    const request = await getLatestRequest(createSigningContext(), {
+    const request = await getActiveRequest(createSigningContext(), {
       teamId,
       documentId,
     });

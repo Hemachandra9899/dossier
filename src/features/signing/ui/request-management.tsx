@@ -23,6 +23,7 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { SignatureStatusBadge } from "./signature-status-badge";
+import { isSignatureRequestTerminal } from "@/features/signing/domain/signature-request";
 import {
   signingApi,
   buildRecipientSigningUrl,
@@ -90,6 +91,11 @@ export function RequestManagement({ teamId, requestId, onStateChange }: RequestM
     request?.status === "DRAFT" ||
     request?.status === "PREPARING" ||
     request?.status === "READY";
+
+  // Terminal requests (FAILED/CANCELLED/DECLINED/EXPIRED/COMPLETED) are
+  // immutable history: no Remind, no Copy signing link, no Cancel, no
+  // Continue preparing.
+  const isTerminal = request ? isSignatureRequestTerminal(request.status) : false;
 
   if (requestQuery.isError) {
     return (
@@ -243,8 +249,8 @@ export function RequestManagement({ teamId, requestId, onStateChange }: RequestM
                                 : "Pending"}
                         </Badge>
 
-                        {/* Remind & Copy buttons (only when active) */}
-                        {request.status !== "CANCELLED" && request.status !== "COMPLETED" && recipient.status !== "SIGNED" && (
+                        {/* Remind & Copy buttons (only while the request is live) */}
+                        {!isTerminal && recipient.status !== "SIGNED" && (
                           <div className="flex items-center gap-1.5 ml-2">
                             <Button
                               variant="ghost"
@@ -296,7 +302,7 @@ export function RequestManagement({ teamId, requestId, onStateChange }: RequestM
             )}
 
             {/* Cancel operations */}
-            {request.status !== "CANCELLED" && request.status !== "COMPLETED" && (
+            {!isTerminal && (
               <div className="pt-4 border-t flex justify-end">
                 <Button
                   variant="destructive"
