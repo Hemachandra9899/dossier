@@ -866,7 +866,7 @@ export function DataroomLinkSheet({
                           <div className="space-y-2">
                             <DomainSection
                               {...{ data, setData, domains }}
-                              linkType={linkType}
+                              linkType={linkType as Omit<LinkType, "WORKFLOW_LINK">}
                               editLink={!!currentLink}
                             />
                           </div>
@@ -1014,7 +1014,7 @@ export function DataroomLinkSheet({
                           <div className="space-y-2">
                             <DomainSection
                               {...{ data, setData, domains }}
-                              linkType={linkType}
+                              linkType={linkType as Omit<LinkType, "WORKFLOW_LINK">}
                               editLink={!!currentLink}
                             />
                           </div>

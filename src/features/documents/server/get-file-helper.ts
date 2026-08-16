@@ -1,4 +1,4 @@
-import { getFile } from "@/features/files/file.service";
+import { getFile } from "@/shared/utils/files/get-file";
 import prisma from "@/platform/db";
 
 type GetFileForDocumentPageParams = {

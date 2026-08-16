@@ -57,7 +57,7 @@ const SIGNING_EMBED_CSS = `
     /* Never render the signing sidebar — the hovering bottom widget is the
        only signing surface we want the visitor to use. */
     .embed--DocumentWidgetContainer {
-      display: none !important;
+      display: block !important;
     }
 
     /* Force the fixed bottom widget to show even at the desktop breakpoint

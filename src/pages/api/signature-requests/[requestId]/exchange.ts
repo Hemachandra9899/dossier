@@ -13,7 +13,7 @@ import { ratelimit } from "@/shared/utils/redis";
 import { getIpAddress } from "@/shared/utils/utils/ip";
 import { createSigningContext } from "@/features/signing/application/context";
 import { exchangeRecipientAccessToken } from "@/features/signing/application/exchange-recipient-access-token";
-import { isDossierSigningRuntimeEnabled } from "@/features/signing/config";
+import { isDossierSigningEnabled } from "@/features/signing/config";
 import {
   buildRecipientAccessCookieHeader,
   computeRecipientAccessExpiry,
@@ -33,7 +33,7 @@ export default async function handle(
     res.setHeader("Allow", ["POST"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
-  if (!isDossierSigningRuntimeEnabled) {
+  if (!isDossierSigningEnabled) {
     return res.status(404).end();
   }
 

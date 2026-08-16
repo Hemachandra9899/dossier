@@ -59,6 +59,12 @@ export default function FileProcessStatusBar({
     };
   }, [progressStatus.state]);
 
+  // No processing run exists for this version: nothing is pending, so there is
+  // nothing to show. The raw file remains usable (previewable/signable).
+  if (progressStatus.state === "IDLE") {
+    return null;
+  }
+
   if (progressStatus.state === "QUEUED" && !progressError) {
     return (
       <Progress

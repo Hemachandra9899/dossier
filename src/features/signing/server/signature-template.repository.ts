@@ -25,7 +25,6 @@ export class SignatureTemplateRepository {
         status: "PREPARING",
       },
     });
-
     return template;
   }
 

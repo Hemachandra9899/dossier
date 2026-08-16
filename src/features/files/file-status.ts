@@ -1,42 +1,134 @@
-import {
-  DossierFileStatus,
-  SignatureRequestStatus,
-} from "@prisma/client";
+// File status lifecycle. These are the board column statuses.
 
-export type RequirementSnapshot = {
-  status: string;
+export type FileStatus =
+  | "NEW"
+  | "COLLECTING"
+  | "WAITING_ON_CLIENT"
+  | "REVIEWING"
+  | "NEEDS_CORRECTION"
+  | "READY_TO_SIGN"
+  | "SIGNING"
+  | "READY_TO_CLOSE"
+  | "COMPLETE"
+  | "ARCHIVED";
+
+export type FileRequirementStatus = {
+  status: "OPEN" | "IN_PROGRESS" | "SUBMITTED" | "COMPLETED";
   hasExternalAssignment: boolean;
 };
 
-export type SignatureSnapshot = {
-  status: SignatureRequestStatus;
+export type FileSignatureStatus =
+  | "DRAFT"
+  | "PREPARING"
+  | "READY"
+  | "SENT"
+  | "VIEWED"
+  | "SIGNING"
+  | "PARTIALLY_SIGNED"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "FAILED"
+  | "DECLINED"
+  | "EXPIRED";
+
+export const FILE_STATUSES = [
+  "NEW",
+  "COLLECTING",
+  "WAITING_ON_CLIENT",
+  "REVIEWING",
+  "NEEDS_CORRECTION",
+  "READY_TO_SIGN",
+  "SIGNING",
+  "READY_TO_CLOSE",
+  "COMPLETE",
+] as const;
+
+export const FILE_STATUS_LABEL: Record<FileStatus, string> = {
+  NEW: "new",
+  COLLECTING: "collecting",
+  WAITING_ON_CLIENT: "waiting on client",
+  REVIEWING: "reviewing",
+  NEEDS_CORRECTION: "needs correction",
+  READY_TO_SIGN: "ready to sign",
+  SIGNING: "signing",
+  READY_TO_CLOSE: "ready to close",
+  COMPLETE: "complete",
+  ARCHIVED: "archived",
 };
 
-const ACTIVE_SIGNATURE_STATUSES = new Set<SignatureRequestStatus>([
-  SignatureRequestStatus.DRAFT,
-  SignatureRequestStatus.PREPARING,
-  SignatureRequestStatus.READY,
-  SignatureRequestStatus.SENT,
-  SignatureRequestStatus.VIEWED,
-  SignatureRequestStatus.SIGNING,
-  SignatureRequestStatus.PARTIALLY_SIGNED,
+export const fileStatusLabels = {
+  NEW: "NEW",
+  COLLECTING: "COLLECTING",
+  WAITING_ON_CLIENT: "WAITING_ON_CLIENT",
+  REVIEWING: "REVIEWING",
+  NEEDS_CORRECTION: "NEEDS_CORRECTION",
+  READY_TO_SIGN: "READY_TO_SIGN",
+  SIGNING: "SIGNING",
+  READY_TO_CLOSE: "READY_TO_CLOSE",
+  COMPLETE: "COMPLETE",
+  ARCHIVED: "ARCHIVED",
+};
+
+// Statuses that can be manually moved by users on the board.
+export const MANUALLY_TRANSITIONABLE_STATUSES = new Set([
+  "NEW",
+  "COLLECTING",
+  "WAITING_ON_CLIENT",
 ]);
 
-// Terminal signature states that supersede older requests. A cancelled/failed/
-// declined/expired request must never block a later successfully completed one.
-const IGNORED_TERMINAL_SIGNATURE_STATUSES = new Set<SignatureRequestStatus>([
-  SignatureRequestStatus.CANCELLED,
-  SignatureRequestStatus.FAILED,
-  SignatureRequestStatus.DECLINED,
-  SignatureRequestStatus.EXPIRED,
+// Statuses that are controlled by the workflow (requirements, verification, signing, completion).
+export const WORKFLOW_CONTROLLED_STATUSES = new Set([
+  "REVIEWING",
+  "NEEDS_CORRECTION",
+  "READY_TO_SIGN",
+  "SIGNING",
+  "READY_TO_CLOSE",
+  "COMPLETE",
 ]);
 
-export function deriveFileStatus(input: {
-  currentStatus: DossierFileStatus;
-  requirements: RequirementSnapshot[];
-  requiresSignature: boolean;
-  signatures: SignatureSnapshot[];
-}): DossierFileStatus {
+export function groupFilesByStatus(
+  files: any[],
+): Record<(typeof FILE_STATUSES)[number], any[]> {
+  const groups = Object.fromEntries(
+    FILE_STATUSES.map((status) => [status, [] as any[]]),
+  ) as Record<(typeof FILE_STATUSES)[number], any[]>;
+
+  for (const file of files) {
+    const bucket = groups[file.status as (typeof FILE_STATUSES)[number]];
+    if (bucket) {
+      bucket.push(file);
+    }
+  }
+
+  return groups;
+}
+
+/**
+ * Derive the authoritative FileStatus from the current state.
+ *
+ * This is the one pure derivation function for file status.
+ * It does NOT query Prisma, does NOT send email, does NOT call provider APIs.
+ *
+ * Input fields needed:
+ *   currentStatus: the file's current status
+ *   requirements: each requirement's status + whether it has an external assignment
+ *   requiresSignature: whether the file requires signatures
+ *   signatures: the signature requests associated with this file
+ *
+ * Rules are ordered from most specific to most general.
+ * Duplicate STATUS_CHANGED events must not be generated when status is unchanged.
+ */
+export function deriveFileStatus(
+  input: {
+    currentStatus: FileStatus;
+
+    requirements: FileRequirementStatus[];
+
+    requiresSignature: boolean;
+
+    signatures: FileSignatureStatus[];
+  },
+): FileStatus {
   const {
     currentStatus,
     requirements,
@@ -44,66 +136,75 @@ export function deriveFileStatus(input: {
     signatures,
   } = input;
 
-  if (currentStatus === DossierFileStatus.ARCHIVED) {
-    return DossierFileStatus.ARCHIVED;
+  // --- Terminal states stay sticky forever ---
+  if (currentStatus === "ARCHIVED") {
+    return "ARCHIVED";
+  }
+  if (currentStatus === "COMPLETE") {
+    return "COMPLETE";
   }
 
-  // COMPLETE is sticky/legacy: only a future CP10 finalization service may
-  // move a file into COMPLETE. Sync never derives it automatically anymore.
-  if (currentStatus === DossierFileStatus.COMPLETE) {
-    return DossierFileStatus.COMPLETE;
-  }
-
-  // Explicit correction is sticky until a reviewer resolves/reopens it.
-  if (currentStatus === DossierFileStatus.NEEDS_CORRECTION) {
-    return DossierFileStatus.NEEDS_CORRECTION;
-  }
-
+  // --- No requirements yet ---
   if (requirements.length === 0) {
-    return DossierFileStatus.NEW;
+    return "NEW";
   }
 
-  const allRequirementsComplete = requirements.every(
-    (r) => r.status === "COMPLETED",
-  );
+  // --- NEEDS_CORRECTION is sticky: once in correction mode, stay until
+  // explicitly moved out via syncFileStatus (e.g., after corrected upload).
+  if (currentStatus === "NEEDS_CORRECTION") {
+    return "NEEDS_CORRECTION";
+  }
 
-  const anySubmitted = requirements.some(
-    (r) => r.status === "SUBMITTED",
-  );
+  // --- Check if all requirements are completed ---
+  const allCompleted = requirements.every((r) => r.status === "COMPLETED");
+  const hasSubmitted = requirements.some((r) => r.status === "SUBMITTED");
+  const hasIncomplete = requirements.some((r) => r.status !== "COMPLETED");
+  const waitingOnClient =
+    hasIncomplete &&
+    requirements.some((r) => r.status !== "COMPLETED" && r.hasExternalAssignment);
 
-  const incomplete = requirements.filter(
-    (r) => r.status !== "COMPLETED",
-  );
-
-  const anyWaitingOnExternalParty = incomplete.some(
-    (r) => r.hasExternalAssignment,
-  );
-
-  if (!allRequirementsComplete) {
-    if (anySubmitted) return DossierFileStatus.REVIEWING;
-    if (anyWaitingOnExternalParty) {
-      return DossierFileStatus.WAITING_ON_CLIENT;
+  // --- Requirements not all completed ---
+  if (!allCompleted) {
+    if (hasSubmitted) {
+      return "REVIEWING";
     }
-    return DossierFileStatus.COLLECTING;
+    if (waitingOnClient) {
+      return "WAITING_ON_CLIENT";
+    }
+    return "COLLECTING";
   }
 
+  // --- All requirements completed ---
   if (!requiresSignature) {
-    return DossierFileStatus.READY_TO_CLOSE;
+    return "READY_TO_CLOSE";
   }
 
-  // Only consider "relevant current" requests: ignore superseded terminal
-  // requests so a later successful request is not blocked by history.
-  const relevant = signatures.filter(
-    (s) => !IGNORED_TERMINAL_SIGNATURE_STATUSES.has(s.status),
+  // --- Signature required ---
+  // Filter out historical terminal requests that should not block status
+  const activeSignatures = signatures.filter(
+    (s) =>
+      !["CANCELLED", "FAILED", "DECLINED", "EXPIRED"].includes(s),
   );
 
-  if (relevant.some((s) => s.status === SignatureRequestStatus.COMPLETED)) {
-    return DossierFileStatus.READY_TO_CLOSE;
+  const completedSignature = signatures.find(
+    (s) => s === "COMPLETED",
+  );
+
+  if (completedSignature) {
+    return "READY_TO_CLOSE";
   }
 
-  if (relevant.some((s) => ACTIVE_SIGNATURE_STATUSES.has(s.status))) {
-    return DossierFileStatus.SIGNING;
+  const activeSignature = signatures.find(
+    (s) =>
+      ["DRAFT", "PREPARING", "READY", "SENT", "VIEWED", "SIGNING", "PARTIALLY_SIGNED"].includes(
+        s,
+      ),
+  );
+
+  if (activeSignature) {
+    return "SIGNING";
   }
 
-  return DossierFileStatus.READY_TO_SIGN;
+  // No active signature, but signing is required
+  return "READY_TO_SIGN";
 }

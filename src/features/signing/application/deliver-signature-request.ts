@@ -1,9 +1,8 @@
 import { computeRecipientAccessExpiry, mintRecipientAccessToken } from "../domain/recipient-access-token";
 import type { SigningContext } from "./context";
-import { sendEmail } from "@/shared/utils/resend";
 import SignatureInvitation from "@/shared/ui/emails/signature-invitation";
 import SignatureCompletion from "@/shared/ui/emails/signature-completion";
-import prisma from "@/platform/db";
+import { getPublicAppUrl } from "@/infrastructure/config/public-url";
 
 export interface DeliverRequestInput {
   requestId: string;
@@ -25,10 +24,7 @@ export async function deliverSignatureRequest(
   }
 
   // Load team/owner to get the sender's info
-  const team = await prisma.team.findUnique({
-    where: { id: request.teamId },
-    select: { name: true },
-  });
+  const team = await ctx.requests.findTeamName(request.teamId);
 
   const senderName = team?.name ?? "Dossier User";
   const senderEmail = "system@dossier.com";
@@ -52,18 +48,15 @@ export async function deliverSignatureRequest(
     expiresAt: tokenExpiry,
   });
 
-  const signingUrl = `${process.env.NEXT_PUBLIC_MARKETING_URL ?? "http://localhost:3000"}/signing/${request.id}?token=${encodeURIComponent(token)}`;
+  const signingUrl = `${getPublicAppUrl()}/signing/${request.id}?token=${encodeURIComponent(token)}`;
 
-  // Load document name
-  const doc = await prisma.document.findUnique({
-    where: { id: request.documentId },
-    select: { name: true },
-  });
-  const documentName = doc?.name ?? "Document";
+  const documentName = (await ctx.requests.findDocumentName(request.documentId))?.name ?? "Document";
+
+  const deliverEmail = ctx.deliverEmail;
 
   try {
     // 3. Send "Review & Sign" email
-    await sendEmail({
+    await deliverEmail({
       to: recipient.email,
       subject: `Review and sign: ${documentName}`,
       react: SignatureInvitation({
@@ -71,15 +64,14 @@ export async function deliverSignatureRequest(
         senderEmail: senderEmail,
         documentName: documentName,
         url: signingUrl,
-        customMessage: undefined,
       }) as any,
       system: true,
     });
 
     // 4. Update delivery to SENT & update recipient/request status if needed
-    await prisma.signatureDelivery.update({
-      where: { id: delivery.id },
-      data: { status: "SENT", lastAttemptAt: new Date() },
+    await ctx.requests.updateDeliveryStatus(delivery.id, {
+      status: "SENT",
+      lastAttemptAt: new Date(),
     });
 
     await ctx.requests.createActivity({
@@ -94,13 +86,10 @@ export async function deliverSignatureRequest(
     }
   } catch (error: any) {
     // 5. Update delivery to FAILED and log activity
-    await prisma.signatureDelivery.update({
-      where: { id: delivery.id },
-      data: {
-        status: "FAILED",
-        failedReason: error?.message ?? String(error),
-        lastAttemptAt: new Date(),
-      },
+    await ctx.requests.updateDeliveryStatus(delivery.id, {
+      status: "FAILED",
+      failedReason: error?.message ?? String(error),
+      lastAttemptAt: new Date(),
     });
 
     await ctx.requests.createActivity({
@@ -124,14 +113,13 @@ export async function deliverCompletionEmail(
   }
 
   // Load document name
-  const doc = await prisma.document.findUnique({
-    where: { id: request.documentId },
-    select: { name: true },
-  });
+  const doc = await ctx.requests.findDocumentName(request.documentId);
   const documentName = doc?.name ?? "Document";
 
   // Create completion URL (viewer link to download signed doc)
-  const downloadUrl = `${process.env.NEXT_PUBLIC_MARKETING_URL ?? "http://localhost:3000"}/signing/${request.id}`;
+  const downloadUrl = `${getPublicAppUrl()}/signing/${request.id}`;
+
+  const deliverEmail = ctx.deliverEmail;
 
   // Find all recipient emails
   const emails = request.recipients
@@ -144,12 +132,12 @@ export async function deliverCompletionEmail(
       const recipient = request.recipients.find((r: any) => r.email === email);
       const delivery = await ctx.requests.createDelivery({
         signatureRequestId: request.id,
-        recipientId: recipient?.id ?? null,
+        recipientId: recipient?.id,
         type: "COMPLETION",
         status: "PENDING",
       });
 
-      await sendEmail({
+      await deliverEmail({
         to: email,
         subject: `Completed: ${documentName}`,
         react: SignatureCompletion({
@@ -159,9 +147,9 @@ export async function deliverCompletionEmail(
         system: true,
       });
 
-      await prisma.signatureDelivery.update({
-        where: { id: delivery.id },
-        data: { status: "SENT", lastAttemptAt: new Date() },
+      await ctx.requests.updateDeliveryStatus(delivery.id, {
+        status: "SENT",
+        lastAttemptAt: new Date(),
       });
     } catch (error: any) {
       console.error(`Failed to send completion email to ${email}:`, error);

@@ -40,7 +40,7 @@ export interface RequestDTO {
   id: string;
   teamId: string;
   documentId: string;
-  templateId: string;
+  templateId: string | null;
   linkId: string | null;
   provider: SignatureProviderName;
   status: SignatureRequestStatus;

@@ -1,11 +1,13 @@
-// RequestSignatureDialog: single controller for the whole flow. Hosted as a
-// per-document dialog, it orchestrates recipients → prepare (template +
-// editor session) → review → success. If the document already has an active
-// request, a summary is shown instead of the wizard.
+// RequestSignatureDialog: recipients-only modal. Collects who signs (and
+// optional expiry), then creates a DRAFT request and navigates to the full-page
+// prepare screen where fields are placed. If the document already has an active
+// request, a summary is shown instead of the form.
 
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { isDossierSigningEnabled } from "@/features/signing/config";
 
@@ -19,23 +21,18 @@ import {
   DialogTitle,
 } from "@/shared/ui/dialog";
 import LoadingSpinner from "@/shared/ui/loading-spinner";
-import { useDocumentPreview } from "@/shared/utils/swr/use-document-preview";
 import { useCopyToClipboard } from "@/shared/utils/utils/use-copy-to-clipboard";
 
+import { activeSignatureRequestQuery } from "@/features/signing/api/signing.queries";
+import { createSignatureDraftOptions } from "@/features/signing/api/signing.mutations";
 import {
-  signingApi,
+  type RecipientInput,
   type RequestDTO,
-} from "../signing-api";
+} from "@/features/signing/api/signing-api";
+import { canExposeSigningLink, isSignatureRequestTerminal } from "@/features/signing/domain/signature-request";
 import { SignatureStatusBadge } from "../signature-status-badge";
 import { useRecipientSigningUrl } from "../use-recipient-signing-url";
-import { PrepareStep } from "./prepare-step";
-import {
-  RequestSignatureProvider,
-  useRequestSignature,
-} from "./request-signature-context";
 import { RecipientStep } from "./recipient-step";
-import { ReviewStep } from "./review-step";
-import { SuccessStep } from "./success-step";
 
 export function RequestSignatureDialog({
   open,
@@ -56,185 +53,82 @@ export function RequestSignatureDialog({
   onCreated?: (requestId: string) => void;
   dossierFileId?: string | null;
 }) {
+  const router = useRouter();
+  const [recipients, setRecipients] = useState<RecipientInput[]>([
+    { name: "", email: "", signingOrder: 1 },
+  ]);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const queryClient = useQueryClient();
+  const createDraftOptions = createSignatureDraftOptions(queryClient);
+  const createDraftMutation = useMutation({
+    ...createDraftOptions,
+    onSuccess: (result, input) => {
+      createDraftOptions.onSuccess?.(result, input);
+      const requestId = result.request.id;
+      onCreated?.(requestId);
+      void router.push(`/signing/prepare/${requestId}`);
+    },
+  });
+
+  // Active request lookup: staleTime 0 so reopening the dialog always reflects
+  // the current server state even if the page-level query stopped polling after
+  // a terminal state.
+  const activeRequestQuery = useQuery({
+    ...activeSignatureRequestQuery(teamId, documentId),
+    staleTime: 0,
+    enabled: open,
+  });
+  // Defensive filter: a stale cache (or a race where the server flipped the
+  // request terminal after the fetch) must never surface a terminal request as
+  // "in progress". FAILED/CANCELLED/DECLINED/EXPIRED/COMPLETED always resolve
+  // to null so the recipient form stays usable.
+  const returnedRequest = activeRequestQuery.data?.request;
+  const activeRequest =
+    returnedRequest && !isSignatureRequestTerminal(returnedRequest.status)
+      ? returnedRequest
+      : null;
+
   if (!isDossierSigningEnabled || !isPdf || !open) {
     return null;
   }
 
-  return (
-    <RequestSignatureProvider
-      documentId={documentId}
-      documentName={documentName}
-    >
-      <RequestSignatureDialogInner
-        open={open}
-        onOpenChange={onOpenChange}
-        teamId={teamId}
-        documentId={documentId}
-        documentName={documentName}
-        onCreated={onCreated}
-        dossierFileId={dossierFileId}
-      />
-    </RequestSignatureProvider>
-  );
-}
-
-function RequestSignatureDialogInner({
-  open,
-  onOpenChange,
-  teamId,
-  documentId,
-  documentName,
-  onCreated,
-  dossierFileId,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  teamId: string;
-  documentId: string;
-  documentName: string;
-  onCreated?: (requestId: string) => void;
-  dossierFileId?: string | null;
-}) {
-  const { state, dispatch } = useRequestSignature();
-  const { document: previewData } = useDocumentPreview(documentId, open);
-
-  const [activeRequest, setActiveRequest] = useState<
-    RequestDTO | null | undefined
-  >(undefined);
-  const [successRecipientId, setSuccessRecipientId] = useState<string | null>(
-    null,
-  );
-
-  useEffect(() => {
-    if (!open) return;
-
-    let cancelled = false;
-    setActiveRequest(undefined);
-
-    signingApi
-      .getActiveRequest({ teamId, documentId })
-      .then(({ request }) => {
-        if (!cancelled) setActiveRequest(request);
-      })
-      .catch(() => {
-        if (!cancelled) setActiveRequest(null);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [open, teamId, documentId]);
-
-  const prepareDocument = useCallback(async () => {
-    dispatch({ type: "SET_ERROR", message: null });
-    dispatch({ type: "CREATING_TEMPLATE", value: true });
+  const prepareDocument = async () => {
+    setError(null);
     try {
-      const { template } = await signingApi.createTemplate({
+      await createDraftMutation.mutateAsync({
         teamId,
         documentId,
-        name: documentName,
-      });
-      dispatch({ type: "SET_TEMPLATE", templateId: template.id });
-
-      const { session } = await signingApi.createEditorSession({
-        teamId,
-        templateId: template.id,
-      });
-      dispatch({ type: "SET_EDITOR_SESSION", session });
-    } catch (error) {
-      dispatch({
-        type: "SET_ERROR",
-        message: messageFromError(error),
-      });
-    } finally {
-      dispatch({ type: "CREATING_TEMPLATE", value: false });
-    }
-  }, [teamId, documentId, documentName, dispatch]);
-
-  useEffect(() => {
-    if (
-      state.step === "PREPARE" &&
-      !state.editorSession &&
-      !state.isCreatingTemplate &&
-      !state.error
-    ) {
-      void prepareDocument();
-    }
-  }, [
-    state.step,
-    state.editorSession,
-    state.isCreatingTemplate,
-    state.error,
-    prepareDocument,
-  ]);
-
-  const createRequest = async () => {
-    if (!state.draft.templateId) return;
-    dispatch({ type: "SET_ERROR", message: null });
-    dispatch({ type: "CREATING_REQUEST", value: true });
-    try {
-      const result = await signingApi.createRequest({
-        teamId,
-        documentId,
-        templateId: state.draft.templateId,
-        recipients: state.draft.recipients,
-        expiresAt: state.draft.expiresAt,
+        recipients,
+        expiresAt,
         dossierFileId,
       });
-      dispatch({
-        type: "SET_RESULT",
-        requestId: result.requestId,
-        status: result.status,
-      });
-      dispatch({ type: "GO_TO_STEP", step: "SUCCESS" });
-      onCreated?.(result.requestId);
-
-      try {
-        const { request } = await signingApi.getRequest({
-          teamId,
-          requestId: result.requestId,
-        });
-        setSuccessRecipientId(request.recipients[0]?.id ?? null);
-      } catch {
-        setSuccessRecipientId(null);
-      }
-    } catch (error) {
-      dispatch({
-        type: "SET_ERROR",
-        message: messageFromError(error),
-      });
-    } finally {
-      dispatch({ type: "CREATING_REQUEST", value: false });
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Something went wrong. Please try again.",
+      );
     }
-  };
-
-  const titles: Record<string, string> = {
-    RECIPIENTS: "Request signature",
-    PREPARE: "Prepare document",
-    REVIEW: "Review and send",
-    SUCCESS: "Done",
   };
 
   const title =
-    activeRequest !== null && activeRequest !== undefined
+    activeRequest != null
       ? "Signature request in progress"
-      : (titles[state.step] ?? "Request signature");
+      : "Request signature";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
-            {documentName}
-          </DialogDescription>
+          <DialogDescription>{documentName}</DialogDescription>
         </DialogHeader>
 
-        {activeRequest === undefined ? (
+        {activeRequestQuery.isLoading ? (
           <div className="flex min-h-[200px] items-center justify-center">
             <LoadingSpinner className="h-6 w-6" />
           </div>
-        ) : activeRequest !== null ? (
+        ) : activeRequest != null ? (
           <ActiveRequestSummary
             request={activeRequest}
             teamId={teamId}
@@ -242,62 +136,27 @@ function RequestSignatureDialogInner({
           />
         ) : (
           <>
-            {state.step === "RECIPIENTS" ? (
-              <RecipientStep
-                recipients={state.draft.recipients}
-                onChange={(recipients) =>
-                  dispatch({ type: "SET_RECIPIENTS", recipients })
-                }
-                expiresAt={state.draft.expiresAt}
-                onExpiresAtChange={(expiresAt) =>
-                  dispatch({ type: "SET_EXPIRATION", expiresAt })
-                }
-                onNext={() => dispatch({ type: "GO_TO_STEP", step: "PREPARE" })}
-              />
+            <RecipientStep
+              recipients={recipients}
+              onChange={setRecipients}
+              expiresAt={expiresAt}
+              onExpiresAtChange={setExpiresAt}
+              onNext={() => void prepareDocument()}
+            />
+
+            {createDraftMutation.isPending ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <LoadingSpinner className="h-4 w-4" />
+                Creating draft…
+              </div>
             ) : null}
 
-            {state.step === "PREPARE" ? (
-              <PrepareStep
-                session={state.editorSession}
-                editorReady={state.draft.editorReady}
-                isPreparing={state.isCreatingTemplate}
-                error={state.error}
-                previewData={previewData}
-                onEditorReady={() =>
-                  dispatch({ type: "SET_EDITOR_READY", ready: true })
-                }
-                onRetry={() => void prepareDocument()}
-                onBack={() => dispatch({ type: "GO_TO_STEP", step: "RECIPIENTS" })}
-                onNext={() => dispatch({ type: "GO_TO_STEP", step: "REVIEW" })}
-              />
-            ) : null}
-
-            {state.step === "REVIEW" ? (
-              <ReviewStep
-                documentName={documentName}
-                recipients={state.draft.recipients}
-                expiresAt={state.draft.expiresAt}
-                isCreating={state.isCreatingRequest}
-                onBack={() => dispatch({ type: "GO_TO_STEP", step: "PREPARE" })}
-                onCreate={() => void createRequest()}
-              />
-            ) : null}
-
-            {state.step === "SUCCESS" && state.result ? (
-              <SuccessStep
-                teamId={teamId}
-                requestId={state.result.requestId}
-                firstRecipientId={successRecipientId}
-                status={state.result.status}
-                onClose={() => onOpenChange(false)}
-              />
-            ) : null}
-
-            {state.error &&
-            state.step !== "PREPARE" &&
-            state.step !== "SUCCESS" ? (
-              <p className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
-                {state.error}
+            {error ? (
+              <p
+                className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive"
+                role="alert"
+              >
+                {error}
               </p>
             ) : null}
           </>
@@ -316,15 +175,12 @@ function ActiveRequestSummary({
   teamId: string;
   onClose: () => void;
 }) {
+  const router = useRouter();
   const { isCopied, copyToClipboard } = useCopyToClipboard({});
 
   const firstRecipient = request.recipients[0];
-  const linkable =
-    request.status === "READY" ||
-    request.status === "SENT" ||
-    request.status === "VIEWED" ||
-    request.status === "SIGNING" ||
-    request.status === "PARTIALLY_SIGNED";
+  const linkable = canExposeSigningLink(request.status);
+  const editable = request.status === "DRAFT" || request.status === "PREPARING" || request.status === "READY";
 
   const { url: signingUrl, isLoading, error } = useRecipientSigningUrl({
     teamId,
@@ -380,14 +236,17 @@ function ActiveRequestSummary({
         </div>
       ) : null}
 
-      <DialogFooter>
+      <DialogFooter className="gap-2 sm:justify-end">
+        {editable ? (
+          <Button
+            variant="outline"
+            onClick={() => void router.push(`/signing/prepare/${request.id}`)}
+          >
+            Continue preparing
+          </Button>
+        ) : null}
         <Button onClick={onClose}>Close</Button>
       </DialogFooter>
     </div>
   );
-}
-
-function messageFromError(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  return "Something went wrong. Please try again.";
 }

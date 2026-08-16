@@ -489,17 +489,24 @@ export default async function handle(
       // a fresh PDF upload never produces page previews.
       const initialVersion = document.versions[0];
       if (initialVersion) {
-        await triggerDocumentProcessing({
-          teamId,
-          documentId: document.id,
-          documentVersionId: initialVersion.id,
-          versionNumber: initialVersion.versionNumber,
-          type: document.type,
-          plan: team.plan,
-          url: fileUrl,
-          contentType: contentType ?? null,
-          fileSize,
-        });
+        try {
+          await triggerDocumentProcessing({
+            teamId,
+            documentId: document.id,
+            documentVersionId: initialVersion.id,
+            versionNumber: initialVersion.versionNumber,
+            type: document.type,
+            plan: team.plan,
+            url: fileUrl,
+            contentType: contentType ?? null,
+            fileSize,
+          });
+        } catch (processingErr) {
+          console.error(
+            "Document created but failed to enqueue processing:",
+            processingErr,
+          );
+        }
       }
 
       return res.status(201).json(serializeFileSize(document));

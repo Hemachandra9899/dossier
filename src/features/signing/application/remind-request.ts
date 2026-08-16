@@ -3,6 +3,7 @@ import type { SigningContext } from "./context";
 import { sendEmail } from "@/shared/utils/resend";
 import SignatureReminder from "@/shared/ui/emails/signature-reminder";
 import prisma from "@/platform/db";
+import { getPublicAppUrl } from "@/infrastructure/config/public-url";
 
 export interface RemindRequestInput {
   teamId: string;
@@ -55,7 +56,7 @@ export async function remindRequest(
     expiresAt: tokenExpiry,
   });
 
-  const signingUrl = `${process.env.NEXT_PUBLIC_MARKETING_URL ?? "http://localhost:3000"}/signing/${request.id}?token=${encodeURIComponent(token)}`;
+  const signingUrl = `${getPublicAppUrl()}/signing/${request.id}?token=${encodeURIComponent(token)}`;
 
   // Load document name
   const doc = await prisma.document.findUnique({
@@ -74,8 +75,6 @@ export async function remindRequest(
         senderEmail,
         documentName,
         url: signingUrl,
-        signingUrl,
-        customMessage: request.customMessage ?? undefined,
       }) as any,
       system: true,
     });

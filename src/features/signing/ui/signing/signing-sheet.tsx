@@ -12,10 +12,10 @@ import {
   SheetTitle,
 } from "@/shared/ui/sheet";
 
-import type { SigningSessionDTO } from "../signing-api";
+import type { SigningSessionDTO } from "@/features/signing/api/signing-api";
 
-const EmbedDirectTemplate = dynamic(
-  () => import("@documenso/embed-react").then((mod) => mod.EmbedDirectTemplate),
+const EmbedSignDocument = dynamic(
+  () => import("@documenso/embed-react").then((mod) => mod.EmbedSignDocument),
   { ssr: false },
 );
 
@@ -51,10 +51,12 @@ const signingCssVars = {
 };
 
 // Injected into the Documenso iframe so the signing canvas sits cleanly inside
-// the Dossier sheet: hide the sidebar, keep the bottom widget, flatten shadows.
+// the Dossier sheet: keep the field widget visible (recipients need to see
+// field progress such as "4 Fields Remaining", field types, etc.), keep the
+// bottom widget area accessible, and maintain clean layout.
 const SIGNING_EMBED_CSS = `
     .embed--DocumentWidgetContainer {
-      display: none !important;
+      display: block !important;
     }
 
     .embed--DocumentViewer > .lg\\:hidden {
@@ -107,15 +109,14 @@ export function SigningSheet({
         <div className="h-[calc(100%-96px)] px-4 pb-4 pt-2 sm:px-6">
           {session ? (
             <div className="h-full overflow-hidden rounded-lg border">
-              <EmbedDirectTemplate
+              <EmbedSignDocument
                 className="h-full w-full"
                 host={session.host}
                 token={session.token}
-                externalId={session.externalId}
                 darkModeDisabled
                 cssVars={signingCssVars}
                 css={SIGNING_EMBED_CSS}
-                onDocumentCompleted={onCompleted}
+                onDocumentCompleted={() => onCompleted()}
                 onDocumentError={onError}
               />
             </div>

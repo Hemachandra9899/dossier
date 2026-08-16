@@ -1,19 +1,19 @@
 // POST /api/teams/:teamId/signature-requests
-// Creates a signature request for a READY template + recipients (team member).
+// Creates a signature request DRAFT for a document + recipients (team member).
+// The sender then opens the full-page editor to place fields and sends.
 
 import { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
 
 import { requireTeamMember } from "@/shared/utils/api/require-team-member";
 import { errorhandler } from "@/shared/utils/errorHandler";
-import { createRequest } from "@/features/signing/application/create-request";
+import { createDraft } from "@/features/signing/application/create-draft";
 import { createSigningContext } from "@/features/signing/application/context";
 import { isDossierSigningEnabled } from "@/features/signing/config";
 import { signatureRecipientsInputSchema } from "@/features/signing/domain/recipient-validation";
 
 const bodySchema = z.object({
   documentId: z.string().min(1),
-  templateId: z.string().min(1),
   recipients: signatureRecipientsInputSchema,
   expiresAt: z
     .union([z.string(), z.date()])
@@ -57,10 +57,9 @@ export default async function handle(
       });
     }
 
-    const result = await createRequest(createSigningContext(), {
+    const result = await createDraft(createSigningContext(), {
       actor: { userId: user.id, teamId },
       documentId: parsed.data.documentId,
-      templateId: parsed.data.templateId,
       recipients: parsed.data.recipients,
       expiresAt: parsed.data.expiresAt,
       dossierFileId: parsed.data.dossierFileId,

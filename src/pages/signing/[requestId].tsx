@@ -10,7 +10,7 @@ import { useRouter } from "next/router";
 import { AlertCircleIcon } from "lucide-react";
 
 import LoadingSpinner from "@/shared/ui/loading-spinner";
-import { signingApi } from "@/features/signing/ui/signing-api";
+import { signingApi } from "@/features/signing/api/signing-api";
 
 import { SigningRequestPage } from "@/features/signing/ui/signing/signing-request-page";
 

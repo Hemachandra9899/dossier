@@ -82,7 +82,7 @@ test("deriveFileStatus status derivation rules", async (t) => {
       currentStatus: DossierFileStatus.READY_TO_SIGN,
       requirements: [{ status: "COMPLETED", hasExternalAssignment: true }],
       requiresSignature: true,
-      signatures: [{ status: SignatureRequestStatus.SENT }],
+      signatures: [SignatureRequestStatus.SENT],
     });
     assert.strictEqual(status, DossierFileStatus.SIGNING);
   });
@@ -92,7 +92,7 @@ test("deriveFileStatus status derivation rules", async (t) => {
       currentStatus: DossierFileStatus.SIGNING,
       requirements: [{ status: "COMPLETED", hasExternalAssignment: true }],
       requiresSignature: true,
-      signatures: [{ status: SignatureRequestStatus.COMPLETED }],
+      signatures: [SignatureRequestStatus.COMPLETED],
     });
     assert.strictEqual(status, DossierFileStatus.READY_TO_CLOSE);
   });
@@ -103,8 +103,8 @@ test("deriveFileStatus status derivation rules", async (t) => {
       requirements: [{ status: "COMPLETED", hasExternalAssignment: true }],
       requiresSignature: true,
       signatures: [
-        { status: SignatureRequestStatus.COMPLETED },
-        { status: SignatureRequestStatus.CANCELLED },
+        SignatureRequestStatus.COMPLETED,
+        SignatureRequestStatus.CANCELLED,
       ],
     });
     assert.strictEqual(status, DossierFileStatus.READY_TO_CLOSE);
@@ -115,7 +115,7 @@ test("deriveFileStatus status derivation rules", async (t) => {
       currentStatus: DossierFileStatus.SIGNING,
       requirements: [{ status: "COMPLETED", hasExternalAssignment: true }],
       requiresSignature: true,
-      signatures: [{ status: SignatureRequestStatus.FAILED }],
+      signatures: [SignatureRequestStatus.FAILED],
     });
     assert.strictEqual(status, DossierFileStatus.READY_TO_SIGN);
   });
@@ -126,8 +126,8 @@ test("deriveFileStatus status derivation rules", async (t) => {
       requirements: [{ status: "COMPLETED", hasExternalAssignment: true }],
       requiresSignature: true,
       signatures: [
-        { status: SignatureRequestStatus.DECLINED },
-        { status: SignatureRequestStatus.VIEWED },
+        SignatureRequestStatus.DECLINED,
+        SignatureRequestStatus.VIEWED,
       ],
     });
     assert.strictEqual(status, DossierFileStatus.SIGNING);

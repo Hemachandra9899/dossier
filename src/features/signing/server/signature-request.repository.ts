@@ -1,20 +1,38 @@
+import { Prisma } from "@prisma/client";
 import prisma from "@/platform/db";
 import { cuid } from "@/shared/utils/utils";
 import { buildRequestExternalId } from "../domain/external-id";
 import { SigningNotFoundError } from "../domain/signing-errors";
 
+// Every place that loads a request for a DTO or a use-case needs the full
+// relation set. `document`/`template`/`artifact` back the request itself;
+// `deliveries`/`activities` feed the activity timeline and DTO mapping.
+const REQUEST_DETAIL_INCLUDE = {
+  recipients: { orderBy: { signingOrder: "asc" } },
+  document: true,
+  template: true,
+  artifact: true,
+  deliveries: { orderBy: { createdAt: "asc" } },
+  activities: { orderBy: { timestamp: "asc" } },
+} satisfies Prisma.SignatureRequestInclude;
+
+export type SignatureRequestWithRecipients = Awaited<
+  ReturnType<SignatureRequestRepository["findByIdWithRecipients"]>
+>;
+
 export class SignatureRequestRepository {
   async createWithRecipients(input: {
     teamId: string;
     documentId: string;
-    templateId: string;
+    templateId?: string | null;
     linkId?: string;
-    dossierFileId?: string;
-    expiresAt?: Date;
+    dossierFileId?: string | null;
+    expiresAt?: Date | null;
+    status?: "DRAFT" | "PREPARING";
     recipients: Array<{
-      name?: string;
-      email?: string;
-      phone?: string;
+      name?: string | null;
+      email?: string | null;
+      phone?: string | null;
       signingOrder?: number;
     }>;
   }) {
@@ -34,7 +52,7 @@ export class SignatureRequestRepository {
         dossierFileId: input.dossierFileId,
         providerExternalId,
         expiresAt: input.expiresAt,
-        status: "PREPARING",
+        status: input.status ?? "PREPARING",
         recipients: {
           create: input.recipients.map((r, i) => ({
             name: r.name,
@@ -45,11 +63,7 @@ export class SignatureRequestRepository {
           })),
         },
       },
-      include: {
-        recipients: true,
-        document: true,
-        template: true,
-      },
+      include: REQUEST_DETAIL_INCLUDE,
     });
 
     return request;
@@ -64,12 +78,7 @@ export class SignatureRequestRepository {
           in: ["DRAFT", "PREPARING", "READY", "SENT", "VIEWED", "SIGNING", "PARTIALLY_SIGNED"],
         },
       },
-      include: {
-        recipients: { orderBy: { signingOrder: "asc" } },
-        document: true,
-        template: true,
-        artifact: true,
-      },
+      include: REQUEST_DETAIL_INCLUDE,
       orderBy: { createdAt: "desc" },
     });
   }
@@ -80,12 +89,7 @@ export class SignatureRequestRepository {
         teamId,
         documentId,
       },
-      include: {
-        recipients: { orderBy: { signingOrder: "asc" } },
-        document: true,
-        template: true,
-        artifact: true,
-      },
+      include: REQUEST_DETAIL_INCLUDE,
       orderBy: { createdAt: "desc" },
     });
   }
@@ -93,12 +97,7 @@ export class SignatureRequestRepository {
   async findByTeamAndIdWithRecipients(teamId: string, id: string) {
     const request = await prisma.signatureRequest.findFirst({
       where: { id, teamId },
-      include: {
-        recipients: { orderBy: { signingOrder: "asc" } },
-        document: true,
-        template: true,
-        artifact: true,
-      },
+      include: REQUEST_DETAIL_INCLUDE,
     });
 
     if (!request) {
@@ -111,12 +110,7 @@ export class SignatureRequestRepository {
   async findByIdWithRecipients(id: string) {
     const request = await prisma.signatureRequest.findUnique({
       where: { id },
-      include: {
-        recipients: { orderBy: { signingOrder: "asc" } },
-        document: true,
-        template: true,
-        artifact: true,
-      },
+      include: REQUEST_DETAIL_INCLUDE,
     });
 
     if (!request) {
@@ -133,12 +127,7 @@ export class SignatureRequestRepository {
   async findById(id: string) {
     const request = await prisma.signatureRequest.findUnique({
       where: { id },
-      include: {
-        recipients: true,
-        document: true,
-        template: true,
-        artifact: true,
-      },
+      include: REQUEST_DETAIL_INCLUDE,
     });
 
     if (!request) {
@@ -148,6 +137,30 @@ export class SignatureRequestRepository {
     return request;
   }
 
+  // Returns null instead of throwing; used by mirror/artifact jobs.
+  async findByIdForMirror(id: string) {
+    return prisma.signatureRequest.findUnique({
+      where: { id },
+      include: REQUEST_DETAIL_INCLUDE,
+    });
+  }
+
+  // Team-scoped find without throwing; used by artifact getter.
+  async findByTeamAndId(teamId: string, id: string) {
+    return prisma.signatureRequest.findFirst({
+      where: { id, teamId },
+      include: REQUEST_DETAIL_INCLUDE,
+    });
+  }
+
+  // Lookup by provider externalId + include recipients for webhook processing.
+  async findByProviderExternalIdWithRecipients(externalId: string) {
+    return prisma.signatureRequest.findUnique({
+      where: { providerExternalId: externalId },
+      include: REQUEST_DETAIL_INCLUDE,
+    });
+  }
+
   async updateStatus(id: string, status: any, extra: any = {}) {
     return prisma.signatureRequest.update({
       where: { id },
@@ -155,9 +168,7 @@ export class SignatureRequestRepository {
         status,
         ...extra,
       },
-      include: {
-        recipients: true,
-      },
+      include: REQUEST_DETAIL_INCLUDE,
     });
   }
 
@@ -170,12 +181,15 @@ export class SignatureRequestRepository {
 
   async updateRecipientProviderIds(
     recipientId: string,
-    data: { providerRecipientId?: string; providerDocumentId?: number },
+    data: { providerRecipientId?: string | number; providerDocumentId?: number },
   ) {
     return prisma.signatureRecipient.update({
       where: { id: recipientId },
       data: {
-        providerRecipientId: data.providerRecipientId,
+        providerRecipientId:
+          data.providerRecipientId != null
+            ? String(data.providerRecipientId)
+            : undefined,
         providerDocumentId: data.providerDocumentId,
       },
     });
@@ -188,6 +202,38 @@ export class SignatureRequestRepository {
         status,
         ...extra,
       },
+    });
+  }
+
+  async updateDeliveryStatus(
+    deliveryId: string,
+    data: {
+      status?: any;
+      failedReason?: string;
+      lastAttemptAt?: Date;
+    },
+  ) {
+    return prisma.signatureDelivery.update({
+      where: { id: deliveryId },
+      data: {
+        status: data.status,
+        failedReason: data.failedReason,
+        lastAttemptAt: data.lastAttemptAt,
+      },
+    });
+  }
+
+  async findTeamName(teamId: string) {
+    return prisma.team.findUnique({
+      where: { id: teamId },
+      select: { name: true },
+    });
+  }
+
+  async findDocumentName(documentId: string) {
+    return prisma.document.findUnique({
+      where: { id: documentId },
+      select: { name: true },
     });
   }
 

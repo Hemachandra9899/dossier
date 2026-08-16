@@ -1,6 +1,7 @@
 // CreateSigningSession: recipient-facing session creation. Enforces signability
 // (terminal states and expiry), binds the recipient identity to the request,
-// calls SigningProvider.createSigningSession and returns a generic session DTO.
+// calls SigningProvider.getRecipientSigningSession and returns a generic
+// session DTO.
 //
 // Rate limiting + continuity-token cookie handling live in the route layer
 // (mirrors the legacy `/agreements/signing/session` protections).
@@ -81,8 +82,7 @@ export async function createSigningSession(
     }
   }
 
-  const requestTemplate = await ctx.templates.findById(request.templateId);
-  if (!requestTemplate?.providerTemplateId || !request.providerEnvelopeId) {
+  if (!request.providerEnvelopeId || !recipient.providerRecipientId) {
     throw new SigningStateError(
       "The request has not been initialized with the signing provider.",
     );
@@ -103,15 +103,10 @@ export async function createSigningSession(
     type: "SIGNING_STARTED",
   });
 
-  const session = await ctx.provider.createSigningSession({
-    providerTemplateId: requestTemplate.providerTemplateId,
+  const session = await ctx.provider.getRecipientSigningSession({
     providerEnvelopeId: request.providerEnvelopeId,
-    providerDocumentId: recipient.providerDocumentId ?? request.providerDocumentId,
+    providerRecipientId: Number(recipient.providerRecipientId),
     externalId: request.providerExternalId,
-    recipient: {
-      email: recipient.email ?? input.email,
-      name: recipient.name ?? input.name,
-    },
   });
 
   ctx.logger.info("signing.signing_session_created", {

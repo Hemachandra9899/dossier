@@ -32,6 +32,7 @@ export const processSigningProviderEventTask = task({
       await processProviderEvent(ctx, {
         event: event.eventType,
         externalId: event.externalId,
+        envelopeId: event.providerDocumentId ? String(event.providerDocumentId) : undefined,
       });
       await ctx.events.markProcessed(event.id);
       return { processed: true };

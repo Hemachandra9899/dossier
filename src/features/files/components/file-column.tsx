@@ -1,48 +1,43 @@
-import { useDroppable } from "@dnd-kit/core";
+"use client";
 
-import type { FileBoardCard } from "@/features/files/ui/files-api";
-import { FileCard } from "./file-card";
+import React from "react";
 
-type Props = {
-  id: string;
-  label: string;
-  files: FileBoardCard[];
-};
+import { FILE_STATUSES, FILE_STATUS_LABEL } from "../file-status";
+import { FileCard } from "./FileCard";
 
-export function FileColumn({ id, label, files }: Props) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: `column-${id}`,
-    data: {
-      status: id,
-    },
-  });
+export function FileColumn({
+  status,
+  files,
+  onMove,
+  teamId,
+}: {
+  status: (typeof FILE_STATUSES)[number];
+  files: any[];
+  onMove: any;
+  teamId: string;
+}) {
+  // Filter files by status directly - this lets TypeScript infer any[]
+  const columnFiles = (files ?? []).filter((f: any) => f.status === status);
 
   return (
-    <section
-      ref={setNodeRef}
-      className={[
-        "w-[310px] shrink-0 rounded-xl border bg-muted/30 p-3",
-        isOver ? "ring-2 ring-primary/30" : "",
-      ].join(" ")}
+    <div
+      className="min-h-[300px] w-full rounded-xl border bg-background p-6"
+      aria-label={`Files ${FILE_STATUS_LABEL[status]} column`}
     >
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-semibold">{label}</h2>
-        <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-          {files.length}
-        </span>
-      </div>
+      {columnFiles.length > 0 && (
+        <FileCard
+          key={columnFiles[0].id}
+          file={columnFiles[0]}
+          onMove={onMove}
+          teamId={teamId}
+        />
+      )}
 
-      <div className="space-y-3">
-        {files.map((file) => (
-          <FileCard key={file.id} file={file} />
-        ))}
-
-        {files.length === 0 ? (
-          <div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-            Drop files here
-          </div>
-        ) : null}
-      </div>
-    </section>
+      {columnFiles.length === 0 && (
+        <p className="text-xs text-muted-foreground mt-4">
+          No client files
+        </p>
+      )}
+    </div>
   );
 }

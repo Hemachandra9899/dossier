@@ -81,6 +81,35 @@ export function seedDocument(
   });
 }
 
+/**
+ * Seeds a document with a primary version, matching how a real upload persists
+ * its file on a DocumentVersion. The signing application reads the signable
+ * file bytes from the primary version, so tests exercising createTemplate /
+ * createDraft must seed a version.
+ */
+export async function seedVersionedDocument(
+  teamId: string,
+  overrides: Partial<{
+    name: string;
+    file: string;
+    contentType: string;
+    storageType: string;
+  }> = {},
+) {
+  const document = await seedDocument(teamId, overrides);
+  await prisma.documentVersion.create({
+    data: {
+      documentId: document.id,
+      versionNumber: 1,
+      file: overrides.file ?? "s3://test/contract.pdf",
+      contentType: overrides.contentType ?? "application/pdf",
+      isPrimary: true,
+      storageType: (overrides.storageType ?? "S3_PATH") as never,
+    },
+  });
+  return document;
+}
+
 export function assertTestDatabaseReachable() {
   return prisma.$queryRaw`SELECT 1`;
 }

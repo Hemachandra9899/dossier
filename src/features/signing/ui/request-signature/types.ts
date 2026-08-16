@@ -1,25 +1,6 @@
-import type { RecipientInput } from "../signing-api";
+import type { RecipientInput } from "@/features/signing/api/signing-api";
 
-export type RequestSignatureStep = "RECIPIENTS" | "PREPARE" | "REVIEW" | "SUCCESS";
-
-export interface RecipientDraft extends RecipientInput {}
-
-/** Client-side wizard state (never persisted). */
-export interface RequestSignatureDraft {
-  documentId: string;
-  documentName: string;
-  recipients: RecipientDraft[];
-  templateId: string | null;
-  editorReady: boolean;
-  expiresAt: string | null;
-}
-
-export interface EditorSessionDraft {
-  host: string;
-  presignToken: string;
-  envelopeId: string;
-  externalId: string;
-}
+export type RecipientDraft = RecipientInput;
 
 export const EXPIRATION_OPTIONS: Array<{
   label: string;

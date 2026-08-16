@@ -7,7 +7,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { errorhandler } from "@/shared/utils/errorHandler";
 import { createSigningContext } from "@/features/signing/application/context";
 import { getPublicSignedArtifact } from "@/features/signing/application/get-public-signed-artifact";
-import { isDossierSigningRuntimeEnabled } from "@/features/signing/config";
+import { isDossierSigningEnabled } from "@/features/signing/config";
 import { readRecipientAccessFromCookies } from "@/features/signing/domain/recipient-access-token";
 
 export default async function handle(
@@ -18,7 +18,7 @@ export default async function handle(
     res.setHeader("Allow", ["GET"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
-  if (!isDossierSigningRuntimeEnabled) {
+  if (!isDossierSigningEnabled) {
     return res.status(404).end();
   }
 

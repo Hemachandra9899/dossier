@@ -6,8 +6,6 @@
 
 import dynamic from "next/dynamic";
 
-import { useEffect, useRef } from "react";
-
 import LoadingSpinner from "@/shared/ui/loading-spinner";
 
 const authoringCssVars = {
@@ -46,13 +44,12 @@ const authoringCss = `
   .embed--Root,
   .embed--DocumentContainer,
   .embed--DocumentWidget,
-  .embed--DocumentWidgetContainer,
   .embed--DocumentViewer {
     border-radius: 0.5rem;
   }
 
   .embed--DocumentWidget,
-  .embed--DocumentWidgetContainer,
+  .embed--DocumentContainer,
   .embed--DocumentWidgetHeader,
   .embed--DocumentWidgetContent,
   .embed--DocumentWidgetFooter {
@@ -69,7 +66,7 @@ const authoringFeatures = {
     allowConfigureEnvelopeTitle: false,
     allowUploadAndRecipientStep: false,
     allowAddFieldsStep: true,
-    allowPreviewStep: false,
+    allowPreviewStep: true,
     minimizeLeftSidebar: true,
   },
   settings: null,
@@ -85,8 +82,6 @@ const authoringFeatures = {
   },
   recipients: null,
 };
-
-const INITIAL_EMBED_EVENT_GUARD_MS = 3000;
 
 const EmbedUpdateEnvelope = dynamic(
   () =>
@@ -106,45 +101,19 @@ export function SignatureEditor({
   presignToken,
   externalId,
   envelopeId,
-  onReady,
 }: {
   host: string;
   presignToken: string;
   externalId?: string | null;
   envelopeId: string;
-  onReady?: () => void;
 }) {
-  const canHandleEnvelopeUpdatedRef = useRef(false);
-  const hasFiredReadyRef = useRef(false);
-  const onReadyRef = useRef(onReady);
-
-  useEffect(() => {
-    onReadyRef.current = onReady;
-  }, [onReady]);
-
-  useEffect(() => {
-    if (presignToken.startsWith("local_")) {
-      const timer = window.setTimeout(() => {
-        hasFiredReadyRef.current = true;
-        onReadyRef.current?.();
-      }, 500);
-      return () => window.clearTimeout(timer);
-    }
-
-    const timer = window.setTimeout(() => {
-      canHandleEnvelopeUpdatedRef.current = true;
-    }, INITIAL_EMBED_EVENT_GUARD_MS);
-
-    return () => window.clearTimeout(timer);
-  }, [presignToken]);
-
   if (presignToken.startsWith("local_")) {
     return (
       <div className="flex h-full min-h-[500px] w-full flex-col items-center justify-center gap-4 rounded-lg border bg-background p-8 text-center">
         <div className="max-w-md space-y-2">
-          <h3 className="text-lg font-semibold">Document Signature Ready</h3>
+          <h3 className="text-lg font-semibold">Signing editor is not configured.</h3>
           <p className="text-sm text-muted-foreground">
-            Document has been prepared for signature. Click below to continue to the review step and send the signing request to your recipients.
+            The signing provider is not configured for this environment.
           </p>
         </div>
       </div>
@@ -163,19 +132,6 @@ export function SignatureEditor({
         cssVars={authoringCssVars}
         css={authoringCss}
         features={authoringFeatures}
-        onEnvelopeUpdated={() => {
-          // The Documenso embed fires an update event during editor init. The
-          // 3s guard ignores it; the first update after the guard means the
-          // canvas is actually live, which is when the caller may proceed.
-          if (!canHandleEnvelopeUpdatedRef.current) {
-            return;
-          }
-          if (hasFiredReadyRef.current) {
-            return;
-          }
-          hasFiredReadyRef.current = true;
-          onReadyRef.current?.();
-        }}
       />
     </div>
   );

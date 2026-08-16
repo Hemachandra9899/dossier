@@ -10,6 +10,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/pages";
 
 import { EXCLUDED_PATHS } from "@/shared/utils/constants";
 import { useTrackLastVisited } from "@/shared/utils/hooks/use-last-visited";
+import { QueryProvider } from "@/platform/query/query-provider";
 
 import { PostHogGroupSync } from "@/shared/providers/posthog-group-sync";
 import { PostHogCustomProvider } from "@/shared/providers/posthog-provider";
@@ -79,22 +80,24 @@ export default function App({
         <PostHogCustomProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             <NuqsAdapter>
-              <main className={inter.className}>
-                <Toaster closeButton />
-                <TooltipProvider delayDuration={100}>
-                  {EXCLUDED_PATHS.includes(router.pathname) ? (
-                    <Component {...pageProps} />
-                  ) : (
-                    <TeamProvider>
-                      <PostHogGroupSync />
-                      <LastVisitedTracker />
-                      <UploadProgressProvider>
-                        <Component {...pageProps} />
-                      </UploadProgressProvider>
-                    </TeamProvider>
-                  )}
-                </TooltipProvider>
-              </main>
+              <QueryProvider>
+                <main className={inter.className}>
+                  <Toaster closeButton />
+                  <TooltipProvider delayDuration={100}>
+                    {EXCLUDED_PATHS.includes(router.pathname) ? (
+                      <Component {...pageProps} />
+                    ) : (
+                      <TeamProvider>
+                        <PostHogGroupSync />
+                        <LastVisitedTracker />
+                        <UploadProgressProvider>
+                          <Component {...pageProps} />
+                        </UploadProgressProvider>
+                      </TeamProvider>
+                    )}
+                  </TooltipProvider>
+                </main>
+              </QueryProvider>
             </NuqsAdapter>
           </ThemeProvider>
         </PostHogCustomProvider>

@@ -6,7 +6,7 @@ import { waitUntil } from "@vercel/functions";
 import { getServerSession } from "next-auth/next";
 
 import prisma from "@/platform/db";
-import { sendConversationMessageNotificationTask } from "@/shared/utils/trigger/conversation-message-notification";
+import { sendConversationMessageNotificationTask } from "@/ee/features/conversations/lib/trigger/conversation-message-notification";
 import { CustomUser } from "@/shared/utils/types";
 
 import {

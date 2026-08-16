@@ -10,9 +10,30 @@ import { toRequestDTO } from "./dto";
 import type { SignatureRequestStatus } from "../domain/signature-request";
 import { assertCanTransitionTo } from "../domain/state-machine";
 import { SigningNotFoundError } from "../domain/signing-errors";
-import { mapDocumensoRecipientStatusToStatus } from "../providers/documenso/mapper";
 
 import prisma from "@/platform/db";
+
+function deriveRecipientStatus(
+  recipient: {
+    signingStatus?: string | null;
+    readStatus?: string | null;
+  },
+): "SIGNED" | "DECLINED" | "VIEWED" | "SIGNING" | null {
+  if (recipient.signingStatus === "SIGNED") {
+    return "SIGNED";
+  }
+
+  if (recipient.signingStatus === "REJECTED") {
+    return "DECLINED";
+  }
+
+  if (recipient.readStatus === "OPENED") {
+    return "VIEWED";
+  }
+
+  return null;
+}
+
 
 export type ProviderEventEffect = {
   nextStatus: SignatureRequestStatus | null;
@@ -50,16 +71,29 @@ export function planProviderEventEffect(input: {
 
 export async function processProviderEvent(
   ctx: SigningContext,
-  input: { providerDocumentId?: string; externalId?: string; event: string },
+  input: { envelopeId?: string; externalId?: string; event: string },
 ): Promise<RequestDTO> {
-  const docId = input.providerDocumentId || input.externalId;
-  const request = docId
-    ? await ctx.requests.findByProviderDocumentIdWithRecipients(docId)
+  // The webhook payload carries the envelope externalId (request.providerExternalId).
+  // Fall back to envelopeId if externalId not present.
+  const lookupKey = input.externalId || input.envelopeId;
+  const request = lookupKey
+    ? await ctx.requests.findByProviderExternalIdWithRecipients(lookupKey)
     : null;
   if (!request) {
     throw new SigningNotFoundError(
-      `No signature request matches provider document "${docId}"`,
+      `No signature request matches provider externalId "${lookupKey}"`,
     );
+  }
+
+  // Terminal requests are immutable history: stray or out-of-order provider
+  // events must never throw or change state. COMPLETED additionally re-drives
+  // the mirror handoff so a failed/retried delivery still lands the artifact.
+  const TERMINAL_STATUSES = ["COMPLETED", "DECLINED", "EXPIRED", "CANCELLED", "FAILED"];
+  if (TERMINAL_STATUSES.includes(request.status)) {
+    if (request.status === "COMPLETED") {
+      await ctx.artifactMirror.enqueue(request.id);
+    }
+    return toRequestDTO(request);
   }
 
   const effect = planProviderEventEffect({
@@ -72,12 +106,8 @@ export async function processProviderEvent(
     ? (id: string) => (ctx.provider as any).getEnvelope(id)
     : async (_id: string) => null;
 
-  // Idempotent re-delivery / retry after a mirror handoff failure: the request
-  // is already COMPLETED, so re-drive the mirror handoff and return as-is.
-  if (request.status === "COMPLETED") {
-    await ctx.artifactMirror.enqueue(request.id);
-    return toRequestDTO(request);
-  }
+  // Idempotent re-delivery / retry after a mirror handoff failure is handled
+  // above: terminal requests return early and never re-plan state.
 
   // Fetch envelope to sync recipients
   if (request.providerEnvelopeId) {
@@ -89,7 +119,7 @@ export async function processProviderEvent(
             (r: any) => r.email?.toLowerCase() === provRecipient.email?.toLowerCase()
           );
           if (localRecipient) {
-            const nextRecipientStatus = mapDocumensoRecipientStatusToStatus((provRecipient as any).status);
+            const nextRecipientStatus = deriveRecipientStatus(provRecipient as any);
             if (nextRecipientStatus && nextRecipientStatus !== localRecipient.status) {
               const extra =
                 nextRecipientStatus === "SIGNED"
@@ -190,8 +220,18 @@ export async function processProviderEvent(
       ctx.logger.error("signing.deliver_completion_failed", { requestId: updated.id }, err);
     });
 
-    // 2. Durable handoff (Trigger.dev) for mirroring final signed PDF
-    await ctx.artifactMirror.enqueue(request.id);
+    // 2. Durable handoff (Trigger.dev) for mirroring final signed PDF.
+    //    Enqueue failure must not fail the already-committed COMPLETED
+    //    transition; log and let the mirror job catch up separately.
+    try {
+      await ctx.artifactMirror.enqueue(request.id);
+    } catch (error) {
+      ctx.logger.error(
+        "signing.artifact_mirror_enqueue_failed",
+        { requestId: request.id },
+        error,
+      );
+    }
   }
 
   const finalRefreshed = await ctx.requests.findByIdWithRecipients(request.id);

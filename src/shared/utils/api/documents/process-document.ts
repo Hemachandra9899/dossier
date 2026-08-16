@@ -6,7 +6,7 @@ import { nanoid } from "@/shared/utils/utils";
 export interface ProcessDocumentData {
   name: string;
   key: string;
-  storageType?: string;
+  storageType?: string | DocumentStorageType;
   numPages?: number;
   supportedFileType?: string;
   contentType?: string | null;
@@ -17,7 +17,7 @@ export interface ProcessDocumentData {
 export interface ProcessDocumentParams {
   documentData: ProcessDocumentData;
   teamId: string;
-  userId: string;
+  userId?: string;
   teamPlan?: string;
   createLink?: boolean;
   folderPathName?: string;

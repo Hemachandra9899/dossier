@@ -10,8 +10,20 @@ import type { SigningProvider } from "../providers/signing-provider";
 import { s3Storage } from "@/infrastructure/storage";
 import { signedArtifactStorage, SignedArtifactStorage } from "@/infrastructure/storage/signed-artifact-storage";
 import { getFile } from "@/shared/utils/files/get-file";
+import { sendEmail } from "@/shared/utils/resend";
 
 export type ProviderEventMapper = (event: string) => any;
+
+export type EmailDeliverer = (input: {
+  to: string;
+  subject: string;
+  react: any;
+  system?: boolean;
+}) => Promise<unknown>;
+
+export interface ArtifactMirrorQueue {
+  enqueue(requestId: string): Promise<void>;
+}
 
 export interface SigningContext {
   requests: SignatureRequestRepository;
@@ -21,8 +33,9 @@ export interface SigningContext {
   provider: SigningProvider;
   mapEventToStatus: ProviderEventMapper;
   storage: SignedArtifactStorage;
-  artifactMirror: any;
+  artifactMirror: ArtifactMirrorQueue;
   getDocumentFileBytes: (input: { file: string; storageType: any }) => Promise<Buffer>;
+  deliverEmail: EmailDeliverer;
   logger: {
     info: (...args: any[]) => void;
     warn: (...args: any[]) => void;
@@ -38,6 +51,15 @@ export function createSigningContext(overrides?: Partial<SigningContext>): Signi
   const provider = overrides?.provider ?? documensoSigningProvider;
   const mapEventToStatus = overrides?.mapEventToStatus ?? mapDocumensoEventToStatus;
   const storage = overrides?.storage ?? signedArtifactStorage;
+  const artifactMirror = overrides?.artifactMirror ?? {
+    async enqueue(requestId: string) {
+      // Lazy import breaks the static cycle (the job imports createSigningContext).
+      const { mirrorSignatureArtifactTask } = await import(
+        "@/features/signing/jobs/mirror-signed-document.job"
+      );
+      await mirrorSignatureArtifactTask.trigger({ requestId });
+    },
+  };
 
   const getDocumentFileBytes =
     overrides?.getDocumentFileBytes ??
@@ -82,8 +104,9 @@ export function createSigningContext(overrides?: Partial<SigningContext>): Signi
     provider,
     mapEventToStatus,
     storage,
-    artifactMirror: null,
+    artifactMirror,
     getDocumentFileBytes,
+    deliverEmail: sendEmail,
     logger,
   };
 }

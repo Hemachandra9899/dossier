@@ -28,7 +28,7 @@ import {
 } from "@/shared/ui/accordion";
 import { Button } from "@/shared/ui/button";
 
-import Skeleton from "../Skeleton";
+import { Skeleton } from "../skeleton";
 import { DEFAULT_LINK_PROPS, DEFAULT_LINK_TYPE } from "@/shared/ui/links/link-sheet";
 import { LinkOptions } from "@/shared/ui/links/link-sheet/link-options";
 

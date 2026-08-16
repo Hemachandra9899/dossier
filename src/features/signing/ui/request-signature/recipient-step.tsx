@@ -175,7 +175,7 @@ export function RecipientStep({
       <div className="flex justify-end">
         <Button onClick={handleContinue} disabled={!canContinue}>
           <UserPlusIcon className="h-4 w-4" />
-          Continue to prepare document
+          Prepare document
         </Button>
       </div>
     </div>

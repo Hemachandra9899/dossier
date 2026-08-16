@@ -282,7 +282,6 @@ export async function POST(
       documentData: updatedDocumentData,
       teamId: link.teamId,
       teamPlan: link.team?.plan ?? "free",
-      isExternalUpload: true,
     });
 
     // 2. Resolve the target dataroom folder.

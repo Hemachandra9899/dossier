@@ -31,9 +31,9 @@ import {
 import {
   closeTestDatabase,
   resetTestDatabase,
-  seedDocument,
   seedTeam,
   seedUser,
+  seedVersionedDocument,
   testPrisma,
 } from "../../helpers/test-db";
 import {
@@ -42,13 +42,12 @@ import {
   FakeSigningProvider,
   SIGNED_PDF_BYTES,
   buildTestSigningContext,
-  stopSignedPdfServer,
 } from "../../helpers/signing-fakes";
 async function setupTemplate() {
   const ctx = buildTestSigningContext({ runMirrorInline: true });
   const team = await seedTeam();
   const user = await seedUser();
-  const document = await seedDocument(team.id);
+  const document = await seedVersionedDocument(team.id);
 
   const { template } = await createTemplate(ctx, {
     actor: { userId: user.id, teamId: team.id },
@@ -92,7 +91,6 @@ describe("signing workflows (integration)", () => {
   });
 
   after(async () => {
-    await stopSignedPdfServer();
     await closeTestDatabase();
   });
 
@@ -111,7 +109,7 @@ describe("signing workflows (integration)", () => {
       const team = await seedTeam();
       const otherTeam = await seedTeam();
       const user = await seedUser();
-      const otherDocument = await seedDocument(otherTeam.id);
+      const otherDocument = await seedVersionedDocument(otherTeam.id);
 
       await assert.rejects(
         createTemplate(ctx, {
@@ -127,7 +125,7 @@ describe("signing workflows (integration)", () => {
       const ctx = buildTestSigningContext();
       const team = await seedTeam();
       const user = await seedUser();
-      const document = await seedDocument(team.id);
+      const document = await seedVersionedDocument(team.id);
       (ctx.provider as FakeSigningProvider).failCreateTemplate = true;
 
       await assert.rejects(
@@ -172,7 +170,7 @@ describe("signing workflows (integration)", () => {
 
     it("rejects a template that does not belong to the document", async () => {
       const { ctx, team, user, document, template } = await setupTemplate();
-      const otherDocument = await seedDocument(team.id);
+      const otherDocument = await seedVersionedDocument(team.id);
 
       await assert.rejects(
         createRequest(ctx, {
@@ -205,7 +203,7 @@ describe("signing workflows (integration)", () => {
       const ctx = buildTestSigningContext();
       const team = await seedTeam();
       const user = await seedUser();
-      const document = await seedDocument(team.id);
+      const document = await seedVersionedDocument(team.id);
       const { template } = await createTemplate(ctx, {
         actor: { userId: user.id, teamId: team.id },
         documentId: document.id,
@@ -512,7 +510,7 @@ describe("signing workflows (integration)", () => {
 
     async function setupRecipientRequest(overrides: { expiresAt?: string } = {}) {
       const ctx = buildTestSigningContext();
-      const document = await seedDocument(team.id);
+      const document = await seedVersionedDocument(team.id);
       const { template } = await createTemplate(ctx, {
         actor: { userId: user.id, teamId: team.id },
         documentId: document.id,
@@ -564,7 +562,7 @@ describe("signing workflows (integration)", () => {
 
       it("hides requests that never reached a recipient-visible state", async () => {
         const ctx = buildTestSigningContext();
-        const document = await seedDocument(team.id);
+        const document = await seedVersionedDocument(team.id);
         const { template } = await createTemplate(ctx, {
           actor: { userId: user.id, teamId: team.id },
           documentId: document.id,

@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { ChevronLeftIcon, ChevronRightIcon, RefreshCwIcon } from "lucide-react";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ExternalLinkIcon,
+  RefreshCwIcon,
+} from "lucide-react";
 
 import { DocumentPreviewData } from "@/shared/utils/types/document-preview";
 import { cn } from "@/shared/utils/utils";
@@ -11,6 +16,7 @@ const PRELOAD_RADIUS = 5;
 const MAX_AUTO_RETRIES = 2;
 const RETRY_BACKOFF_MS = 1500;
 const IMAGE_TIMEOUT_MS = 25_000;
+const NO_URL_TIMEOUT_MS = 10_000;
 
 interface PreviewPagesViewerProps {
   documentData: DocumentPreviewData;
@@ -39,8 +45,11 @@ export function PreviewPagesViewer({
   const refetchedRef = useRef<Set<number>>(new Set());
   const retryCountRef = useRef(0);
   const generationRef = useRef(0);
+  // Deduplicate in-flight requests by the exact page set they ask for, so the
+  // same window is never fetched twice (e.g. Strict Mode remounts).
+  const activeRequestsRef = useRef<Set<string>>(new Set());
 
-  const { numPages, documentName } = documentData;
+  const { numPages, documentName, fallbackFile } = documentData;
 
   useEffect(() => {
     pagesRef.current = pages;
@@ -57,38 +66,36 @@ export function PreviewPagesViewer({
     generationRef.current += 1;
   }, [documentData.pages]);
 
-  const ensurePagesLoaded = useCallback(
-    async (centerPage: number) => {
-      if (!pagesApiEndpoint) return;
+  const fetchPages = useCallback(
+    async (pageNumbers: number[], options?: { force?: boolean }) => {
+      if (!pagesApiEndpoint || pageNumbers.length === 0) return;
 
       const generation = generationRef.current;
-      const currentPages = pagesRef.current;
-      const start = Math.max(1, centerPage - PRELOAD_RADIUS);
-      const end = Math.min(numPages, centerPage + PRELOAD_RADIUS);
-      const needed: number[] = [];
+      const dedupeKey = [...pageNumbers].sort((a, b) => a - b).join(",");
+      if (activeRequestsRef.current.has(dedupeKey)) return;
+      activeRequestsRef.current.add(dedupeKey);
 
-      for (let i = start; i <= end; i++) {
-        if (!currentPages[i - 1]?.file && !pendingRef.current.has(i)) {
-          needed.push(i);
-        }
-      }
-
-      if (needed.length === 0) return;
-
-      needed.forEach((pn) => pendingRef.current.add(pn));
+      pageNumbers.forEach((pn) => pendingRef.current.add(pn));
       setPageError(null);
 
       try {
         const response = await fetch(pagesApiEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pageNumbers: needed }),
+          body: JSON.stringify({ pageNumbers }),
         });
 
         if (generationRef.current !== generation) return;
 
         if (!response.ok) {
-          throw new Error(`Failed to load page previews (${response.status})`);
+          const body = await response.json().catch(() => null);
+          const code =
+            body && typeof body.code === "string" ? body.code : null;
+          throw new Error(
+            code === "PAGES_NOT_READY"
+              ? "Page previews are not ready yet."
+              : `Failed to load page previews (${response.status})`,
+          );
         }
 
         const data = await response.json();
@@ -112,9 +119,11 @@ export function PreviewPagesViewer({
         if (generationRef.current !== generation) return;
 
         retryCountRef.current += 1;
-        if (retryCountRef.current <= MAX_AUTO_RETRIES) {
+        // Only auto-retry opportunistic preloads; an explicit refresh (image
+        // error / user retry) should surface the result immediately.
+        if (!options?.force && retryCountRef.current <= MAX_AUTO_RETRIES) {
           setTimeout(
-            () => ensurePagesLoaded(centerPage),
+            () => fetchPages(pageNumbers, options),
             RETRY_BACKOFF_MS * retryCountRef.current,
           );
         } else {
@@ -125,12 +134,47 @@ export function PreviewPagesViewer({
           );
         }
       } finally {
+        activeRequestsRef.current.delete(dedupeKey);
         if (generationRef.current === generation) {
-          needed.forEach((pn) => pendingRef.current.delete(pn));
+          pageNumbers.forEach((pn) => pendingRef.current.delete(pn));
         }
       }
     },
-    [pagesApiEndpoint, numPages],
+    [pagesApiEndpoint],
+  );
+
+  const ensurePagesLoaded = useCallback(
+    (centerPage: number) => {
+      if (!pagesApiEndpoint) return;
+
+      // Reads the cached ref; only fetches pages that have no URL yet and are
+      // not already pending.
+      const currentPages = pagesRef.current;
+      const start = Math.max(1, centerPage - PRELOAD_RADIUS);
+      const end = Math.min(numPages, centerPage + PRELOAD_RADIUS);
+      const needed: number[] = [];
+
+      for (let i = start; i <= end; i++) {
+        if (!currentPages[i - 1]?.file && !pendingRef.current.has(i)) {
+          needed.push(i);
+        }
+      }
+
+      if (needed.length === 0) return;
+      void fetchPages(needed);
+    },
+    [pagesApiEndpoint, numPages, fetchPages],
+  );
+
+  const forceRefreshPages = useCallback(
+    (pageNumbers: number[]) => {
+      if (!pagesApiEndpoint || pageNumbers.length === 0) return;
+      // Always fetches the requested pages, regardless of the currently cached
+      // file value. Used when an image errored or the user hit Retry, so a
+      // stale pagesRef can never suppress the refresh.
+      void fetchPages(pageNumbers, { force: true });
+    },
+    [pagesApiEndpoint, fetchPages],
   );
 
   useEffect(() => {
@@ -189,6 +233,19 @@ export function PreviewPagesViewer({
     return () => clearTimeout(timer);
   }, [currentPage, hasFileUrl, imageCache]);
 
+  // Never show an infinite "Loading page X…" spinner: if no page URL arrives
+  // within a bounded window, surface a Retry UI (with an escape hatch to the
+  // original PDF when available).
+  useEffect(() => {
+    if (hasFileUrl || pageError) return;
+
+    const timer = setTimeout(() => {
+      setPageError("Page preview is not ready yet.");
+    }, NO_URL_TIMEOUT_MS);
+
+    return () => clearTimeout(timer);
+  }, [currentPage, hasFileUrl, pageError]);
+
   const handleImageLoad = () => {
     setImageLoaded(true);
     setImageError(false);
@@ -208,7 +265,7 @@ export function PreviewPagesViewer({
         return updated;
       });
       pendingRef.current.delete(currentPage);
-      ensurePagesLoaded(currentPage);
+      forceRefreshPages([currentPage]);
       return;
     }
 
@@ -222,8 +279,15 @@ export function PreviewPagesViewer({
     setPageError(null);
     setImageError(false);
     setImageLoaded(false);
-    ensurePagesLoaded(currentPage);
+    pendingRef.current.delete(currentPage);
+    forceRefreshPages([currentPage]);
   };
+
+  const openOriginalPdf = useCallback(() => {
+    if (fallbackFile) {
+      window.open(fallbackFile, "_blank");
+    }
+  }, [fallbackFile]);
 
   if (!pages || pages.length === 0) {
     return (
@@ -304,14 +368,27 @@ export function PreviewPagesViewer({
           {!hasFileUrl && pageError && (
             <div className="text-center">
               <p className="text-gray-400">{pageError}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRetry}
-                className="mt-3 text-gray-200"
-              >
-                <RefreshCwIcon className="mr-1 h-3 w-3" /> Retry
-              </Button>
+              <div className="mt-3 flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRetry}
+                  className="text-gray-200"
+                >
+                  <RefreshCwIcon className="mr-1 h-3 w-3" /> Retry
+                </Button>
+                {fallbackFile && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={openOriginalPdf}
+                    className="text-gray-200"
+                  >
+                    <ExternalLinkIcon className="mr-1 h-3 w-3" /> Open original
+                    PDF
+                  </Button>
+                )}
+              </div>
             </div>
           )}
 
@@ -324,14 +401,27 @@ export function PreviewPagesViewer({
                       <p className="text-gray-400">
                         This page could not be loaded.
                       </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleRetry}
-                        className="mt-3 text-gray-200"
-                      >
-                        <RefreshCwIcon className="mr-1 h-3 w-3" /> Retry
-                      </Button>
+                      <div className="mt-3 flex items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleRetry}
+                          className="text-gray-200"
+                        >
+                          <RefreshCwIcon className="mr-1 h-3 w-3" /> Retry
+                        </Button>
+                        {fallbackFile && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={openOriginalPdf}
+                            className="text-gray-200"
+                          >
+                            <ExternalLinkIcon className="mr-1 h-3 w-3" />{" "}
+                            Open original PDF
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <div className="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent" />

@@ -1,13 +1,16 @@
 // SigningRequestPage: the recipient-facing signing page for a Dossier
 // SignatureRequest. Renders the request summary, opens the Documenso signing
-// canvas in a sheet, and polls the public API until the request reaches a
-// terminal state so completion never requires a reload. Access is proven by the
-// HttpOnly recipient-access cookie (set at page entry); the page itself holds
-// no secrets.
+// canvas in a full-page view, and keeps the public request in a TanStack Query
+// that polls every 3s until the request reaches a terminal state so completion
+// never requires a reload. Access is proven by the HttpOnly recipient-access
+// cookie (set at page entry); the page itself holds no secrets.
 
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
+
+import { useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 
 import {
   AlertCircleIcon,
@@ -16,7 +19,10 @@ import {
   FileSignatureIcon,
   FileTextIcon,
 } from "lucide-react";
+
 import { toast } from "sonner";
+
+import { Badge } from "@/shared/ui/badge";
 
 import type { PublicRecipientStatus } from "@/features/signing/application/get-public-request";
 
@@ -24,16 +30,22 @@ import { Button } from "@/shared/ui/button";
 import LoadingSpinner from "@/shared/ui/loading-spinner";
 
 import {
-  signingApi,
-  type PublicRequestDTO,
   type PublicSignedArtifactDTO,
   type SigningSessionDTO,
-} from "../signing-api";
+} from "@/features/signing/api/signing-api";
+
+import { createSigningSessionOptions } from "@/features/signing/api/signing.mutations";
+
+import {
+  publicSignatureRequestQuery,
+  publicSignedArtifactQuery,
+} from "@/features/signing/api/signing.queries";
+
 import { SignatureStatusBadge } from "../signature-status-badge";
-import { SigningSheet } from "./signing-sheet";
+
+import { RecipientSigningView } from "./recipient-signing-view";
 
 const SIGNABLE_STATUSES: PublicRecipientStatus[] = [
-  "READY",
   "SENT",
   "VIEWED",
   "SIGNING",
@@ -46,57 +58,35 @@ const TERMINAL_NON_COMPLETED: PublicRecipientStatus[] = [
   "CANCELLED",
 ];
 
-const POLL_INTERVAL_MS = 3000;
-const POLL_TIMEOUT_MS = 90000;
-
 export function SigningRequestPage({ requestId }: { requestId: string }) {
-  const [request, setRequest] = useState<PublicRequestDTO | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [session, setSession] = useState<SigningSessionDTO | null>(null);
   const [isPreparingSession, setIsPreparingSession] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
-  const [completionError, setCompletionError] = useState<string | null>(null);
-  const [artifact, setArtifact] = useState<PublicSignedArtifactDTO | null>(null);
-  const pollActiveRef = useRef(false);
 
-  const loadRequest = useCallback(async () => {
-    try {
-      const { request: loaded } = await signingApi.getPublicRequest({
-        requestId,
-      });
-      setRequest(loaded);
-      if (loaded.status === "COMPLETED") {
-        const artifactResult = await signingApi
-          .getPublicSignedArtifact({ requestId })
-          .catch(() => null);
-        setArtifact(artifactResult);
-      }
-    } catch (error) {
-      setLoadError(
-        error instanceof Error
-          ? error.message
-          : "This signature request could not be loaded.",
-      );
-    }
-  }, [requestId]);
+  const requestQuery = useQuery(publicSignatureRequestQuery(requestId));
+  const request = requestQuery.data?.request ?? null;
 
-  useEffect(() => {
-    if (!requestId) {
-      setLoadError("This signature request could not be loaded.");
-      return;
-    }
-    void loadRequest();
-  }, [requestId, loadRequest]);
+  const loadError = requestQuery.isError
+    ? requestQuery.error instanceof Error
+      ? requestQuery.error.message
+      : "This signature request could not be loaded."
+    : null;
+
+  const isCompleted = request?.status === "COMPLETED";
+  const artifactQuery = useQuery(
+    publicSignedArtifactQuery(requestId, isCompleted),
+  );
+  const artifact = artifactQuery.data ?? null;
+
+  const createSessionMutation = useMutation(createSigningSessionOptions());
 
   const openSigning = async () => {
     setIsPreparingSession(true);
     try {
-      const createdSession = await signingApi.createSigningSession({
+      const createdSession = await createSessionMutation.mutateAsync({
         requestId,
       });
       setSession(createdSession);
-      setSheetOpen(true);
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -109,54 +99,7 @@ export function SigningRequestPage({ requestId }: { requestId: string }) {
   };
 
   const handleDocumentCompleted = () => {
-    setSheetOpen(false);
-    void waitForCompletion(requestId);
-  };
-
-  const waitForCompletion = async (activeRequestId: string) => {
-    if (pollActiveRef.current) return;
-    pollActiveRef.current = true;
     setIsCompleting(true);
-    setCompletionError(null);
-
-    const deadline = Date.now() + POLL_TIMEOUT_MS;
-    try {
-      while (Date.now() < deadline) {
-        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-
-        const result = await signingApi
-          .getPublicRequest({ requestId: activeRequestId })
-          .catch(() => null);
-        if (!result) continue;
-        const latest = result.request;
-
-        if (latest.status === "COMPLETED") {
-          setRequest(latest);
-          const artifactResult = await signingApi
-            .getPublicSignedArtifact({ requestId: activeRequestId })
-            .catch(() => null);
-          setArtifact(artifactResult);
-          setIsCompleting(false);
-          return;
-        }
-
-        if (TERMINAL_NON_COMPLETED.includes(latest.status)) {
-          setRequest(latest);
-          setCompletionError(
-            `This signature request was ${latest.status.toLowerCase().replace("_", " ")}.`,
-          );
-          setIsCompleting(false);
-          return;
-        }
-      }
-
-      setCompletionError(
-        "Your signature is still being processed. Refresh the page in a moment to download the signed copy.",
-      );
-    } finally {
-      pollActiveRef.current = false;
-      setIsCompleting(false);
-    }
   };
 
   if (loadError) {
@@ -172,12 +115,24 @@ export function SigningRequestPage({ requestId }: { requestId: string }) {
   }
 
   const isSignable = SIGNABLE_STATUSES.includes(request.status);
-  const isCompleted = request.status === "COMPLETED";
+  const isCompletedFinal = request.status === "COMPLETED";
   const isTerminalFailed = TERMINAL_NON_COMPLETED.includes(request.status);
   const isExpired =
     request.status !== "EXPIRED" &&
     !!request.expiresAt &&
     new Date(request.expiresAt).getTime() <= Date.now();
+
+  if (session) {
+    return (
+      <RecipientSigningView
+        session={session}
+        recipientName={request.recipient.name ?? undefined}
+        documentName={request.document.name}
+        onCompleted={handleDocumentCompleted}
+        onError={(message) => toast.error(message)}
+      />
+    );
+  }
 
   return (
     <div className="flex h-screen flex-col bg-secondary">
@@ -192,16 +147,16 @@ export function SigningRequestPage({ requestId }: { requestId: string }) {
       </header>
 
       <main className="relative flex-1 overflow-hidden">
-        {isCompleted ? (
+        {isCompletedFinal ? (
           <CompletedState
             artifact={artifact}
-            onRefresh={() => void loadRequest()}
+            onRefresh={() => {
+              void requestQuery.refetch();
+              void artifactQuery.refetch();
+            }}
           />
         ) : isTerminalFailed ? (
-          <TerminalState
-            status={request.status}
-            message={completionError}
-          />
+          <TerminalState status={request.status} />
         ) : (
           <div className="flex h-full items-center justify-center px-6">
             <div className="flex w-full max-w-md flex-col items-center gap-4 rounded-xl border bg-background p-8 text-center shadow-sm">
@@ -236,34 +191,20 @@ export function SigningRequestPage({ requestId }: { requestId: string }) {
         <footer className="flex h-20 shrink-0 items-center justify-between border-t bg-background px-4 sm:px-6">
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">
-              {isCompleting ? "Completing your signature…" : "Awaiting your signature"}
+              {isCompleting
+                ? "Completing your signature…"
+                : "Awaiting your signature"}
             </p>
-            {completionError ? (
-              <p className="truncate text-xs text-destructive">
-                {completionError}
-              </p>
-            ) : null}
           </div>
           <Button
             onClick={() => void openSigning()}
             loading={isPreparingSession || isCompleting}
           >
-            {!isPreparingSession && !isCompleting ? (
-              <FileSignatureIcon className="h-4 w-4" />
-            ) : null}
+            <FileSignatureIcon className="h-4 w-4" />
             Review & Sign
           </Button>
         </footer>
       ) : null}
-
-      <SigningSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        session={session}
-        documentName={request.document.name}
-        onCompleted={handleDocumentCompleted}
-        onError={(message) => toast.error(message)}
-      />
     </div>
   );
 }
@@ -307,13 +248,7 @@ function CompletedState({
   );
 }
 
-function TerminalState({
-  status,
-  message,
-}: {
-  status: PublicRecipientStatus;
-  message: string | null;
-}) {
+function TerminalState({ status }: { status: PublicRecipientStatus }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 px-4 text-center">
       <AlertCircleIcon className="h-12 w-12 text-muted-foreground" />
@@ -321,7 +256,7 @@ function TerminalState({
         This signature request is {status.toLowerCase().replace("_", " ")}
       </h2>
       <p className="max-w-md text-sm text-muted-foreground">
-        {message ?? "This document is no longer available for signing."}
+        This document is no longer available for signing.
       </p>
     </div>
   );

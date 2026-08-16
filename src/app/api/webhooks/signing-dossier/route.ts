@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { createSigningContext } from "@/features/signing/application/context";
-import { isDossierSigningRuntimeEnabled } from "@/features/signing/config";
+import { isDossierSigningEnabled } from "@/features/signing/config";
 import { createProviderEventDedupeKey } from "@/features/signing/domain/signing-event";
 import { DOCUMENSO_SIGNING_EVENTS, mapDocumensoEventToStatus } from "@/features/signing/providers/documenso/mapper";
 import {
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   // Runtime kill switch: when signing is disabled at runtime, provider events
   // are acknowledged but never inboxed. The legacy Agreement webhook is
   // unaffected.
-  if (!isDossierSigningRuntimeEnabled) {
+  if (!isDossierSigningEnabled) {
     return NextResponse.json({ ok: true });
   }
 
@@ -55,10 +55,12 @@ export async function POST(req: NextRequest) {
 
     const {
       event,
-      payload: { id: documentId, externalId },
+      payload: { id: documentId, envelopeId, externalId },
     } = parseResult.data;
 
     // Only inbox events that map onto Dossier request state.
+    // externalId (our request.providerExternalId) is the stable key; envelopeId
+    // helps deduplicate when externalId is missing.
     if (!DOCUMENSO_SIGNING_EVENTS.has(event) || !externalId) {
       return NextResponse.json({ ok: true });
     }
@@ -68,7 +70,7 @@ export async function POST(req: NextRequest) {
     const dedupeKey = createProviderEventDedupeKey({
       event,
       externalId,
-      documentId,
+      documentId: envelopeId ?? documentId,
     });
 
     const { created, id } = await ctx.events.insertIfAbsent({
@@ -76,7 +78,7 @@ export async function POST(req: NextRequest) {
       dedupeKey,
       eventType: event,
       externalId,
-      providerDocumentId: documentId,
+      providerDocumentId: envelopeId ?? documentId,
       payload: parseResult.data,
     });
 

@@ -1,5 +1,6 @@
 import prisma from "@/platform/db";
 import { deriveFileStatus } from "../file-status";
+import type { FileSignatureStatus } from "../file-status";
 
 export async function syncDossierFileStatus(
   fileId: string,
@@ -36,7 +37,7 @@ export async function syncDossierFileStatus(
     requiresSignature: file.requiresSignature,
     requirements:
       file.requirementsTaskList?.tasks.map((task) => ({
-        status: task.status,
+        status: task.status as "OPEN" | "IN_PROGRESS" | "SUBMITTED" | "COMPLETED",
         hasExternalAssignment: task.assignments.some(
           (assignment) =>
             !!assignment.viewerId ||
@@ -45,9 +46,9 @@ export async function syncDossierFileStatus(
             !!assignment.email,
         ),
       })) ?? [],
-    signatures: file.signatureRequests.map((request) => ({
-      status: request.status,
-    })),
+    signatures: file.signatureRequests.map(
+      (request) => request.status as FileSignatureStatus,
+    ),
   });
 
   if (nextStatus === file.status) {

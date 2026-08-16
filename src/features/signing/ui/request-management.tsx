@@ -1,7 +1,8 @@
 "use client";
 
+import { useRouter } from "next/router";
 import { useState } from "react";
-import useSWR, { useSWRConfig } from "swr";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Clock,
@@ -15,13 +16,28 @@ import {
   Download,
   AlertCircle,
   ExternalLink,
+  PenLine,
 } from "lucide-react";
 
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { SignatureStatusBadge } from "./signature-status-badge";
-import { signingApi, buildRecipientSigningUrl, DeliveryDTO, ActivityDTO } from "./signing-api";
+import { isSignatureRequestTerminal } from "@/features/signing/domain/signature-request";
+import {
+  signingApi,
+  buildRecipientSigningUrl,
+  type DeliveryDTO,
+  type ActivityDTO,
+} from "@/features/signing/api/signing-api";
+import {
+  signatureRequestQuery,
+  signedArtifactQuery,
+} from "@/features/signing/api/signing.queries";
+import {
+  cancelSignatureRequestOptions,
+  remindSignatureRequestOptions,
+} from "@/features/signing/api/signing.mutations";
 import { useCopyToClipboard } from "@/shared/utils/utils/use-copy-to-clipboard";
 
 interface RequestManagementProps {
@@ -44,29 +60,44 @@ const ACTIVITY_LABELS: Record<string, string> = {
 };
 
 export function RequestManagement({ teamId, requestId, onStateChange }: RequestManagementProps) {
-  const { mutate } = useSWRConfig();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const { isCopied, copyToClipboard } = useCopyToClipboard({});
   const [copiedRecipientId, setCopiedRecipientId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Fetch the full signature request details
-  const { data: requestData, error: requestError, mutate: refreshRequest } = useSWR(
-    requestId ? [teamId, requestId, "details"] : null,
-    () => signingApi.getRequest({ teamId, requestId }),
-    { refreshInterval: 5000 } // Poll every 5s for real-time status updates
-  );
+  // Fetch the full signature request details; polls every 5s while the request
+  // is active (SENT/VIEWED/SIGNING/PARTIALLY_SIGNED), stops on terminal states.
+  const requestQuery = useQuery(signatureRequestQuery(teamId, requestId));
 
-  // Fetch signed artifact if completed
-  const isCompleted = requestData?.request?.status === "COMPLETED";
-  const { data: artifactData } = useSWR(
-    isCompleted ? [teamId, requestId, "artifact"] : null,
-    () => signingApi.getSignedArtifact({ teamId, requestId }),
-    { refreshInterval: isCompleted ? 0 : 5000 }
-  );
+  // Fetch the signed artifact once the request is completed.
+  const isCompleted = requestQuery.data?.request?.status === "COMPLETED";
+  const artifactQuery = useQuery(signedArtifactQuery(teamId, requestId, isCompleted));
 
-  const request = requestData?.request;
+  const cancelOptions = cancelSignatureRequestOptions(queryClient);
+  const cancelMutation = useMutation({
+    ...cancelOptions,
+    onSuccess: (data, input) => {
+      cancelOptions.onSuccess?.(data, input);
+      onStateChange?.();
+    },
+  });
 
-  if (requestError) {
+  const remindMutation = useMutation(remindSignatureRequestOptions(queryClient));
+
+  const request = requestQuery.data?.request;
+
+  const isEditable =
+    request?.status === "DRAFT" ||
+    request?.status === "PREPARING" ||
+    request?.status === "READY";
+
+  // Terminal requests (FAILED/CANCELLED/DECLINED/EXPIRED/COMPLETED) are
+  // immutable history: no Remind, no Copy signing link, no Cancel, no
+  // Continue preparing.
+  const isTerminal = request ? isSignatureRequestTerminal(request.status) : false;
+
+  if (requestQuery.isError) {
     return (
       <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive flex items-center gap-2">
         <AlertCircle className="h-4 w-4" />
@@ -103,9 +134,8 @@ export function RequestManagement({ teamId, requestId, onStateChange }: RequestM
   const handleSendReminder = async (recipientId: string, email: string) => {
     setActionLoading(`remind-${recipientId}`);
     try {
-      await signingApi.remindRequest({ teamId, requestId, recipientId });
+      await remindMutation.mutateAsync({ teamId, requestId, recipientId });
       toast.success(`Reminder sent to ${email}`);
-      void refreshRequest();
     } catch (err: any) {
       toast.error(err?.message ?? "Failed to send reminder.");
     } finally {
@@ -141,10 +171,8 @@ export function RequestManagement({ teamId, requestId, onStateChange }: RequestM
     }
     setActionLoading("cancel");
     try {
-      await signingApi.cancelRequest({ teamId, requestId });
+      await cancelMutation.mutateAsync({ teamId, requestId });
       toast.success("Signature request cancelled successfully.");
-      void refreshRequest();
-      if (onStateChange) onStateChange();
     } catch (err: any) {
       toast.error(err?.message ?? "Failed to cancel request.");
     } finally {
@@ -162,7 +190,18 @@ export function RequestManagement({ teamId, requestId, onStateChange }: RequestM
               <CardTitle className="text-xl font-bold tracking-tight">Signature Request</CardTitle>
               <CardDescription>Manage your document signing workflow.</CardDescription>
             </div>
-            <SignatureStatusBadge status={request.status} />
+            <div className="flex items-center gap-2">
+              {isEditable && (
+                <Button
+                  size="sm"
+                  onClick={() => void router.push(`/signing/prepare/${request.id}`)}
+                >
+                  <PenLine className="h-4 w-4 mr-1.5" />
+                  {request.status === "READY" ? "Preview & send" : "Continue preparing"}
+                </Button>
+              )}
+              <SignatureStatusBadge status={request.status} />
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Signers list */}
@@ -210,8 +249,8 @@ export function RequestManagement({ teamId, requestId, onStateChange }: RequestM
                                 : "Pending"}
                         </Badge>
 
-                        {/* Remind & Copy buttons (only when active) */}
-                        {request.status !== "CANCELLED" && request.status !== "COMPLETED" && recipient.status !== "SIGNED" && (
+                        {/* Remind & Copy buttons (only while the request is live) */}
+                        {!isTerminal && recipient.status !== "SIGNED" && (
                           <div className="flex items-center gap-1.5 ml-2">
                             <Button
                               variant="ghost"
@@ -246,9 +285,9 @@ export function RequestManagement({ teamId, requestId, onStateChange }: RequestM
                   <h4 className="font-semibold text-sm">Signed PDF ready</h4>
                   <p className="text-xs text-muted-foreground">The fully signed document is securely stored locally.</p>
                 </div>
-                {artifactData?.downloadUrl ? (
+                {artifactQuery.data?.downloadUrl ? (
                   <Button asChild className="gap-2">
-                    <a href={artifactData.downloadUrl} download={artifactData.artifact?.fileName ?? "signed.pdf"}>
+                    <a href={artifactQuery.data.downloadUrl} download={artifactQuery.data.artifact?.fileName ?? "signed.pdf"}>
                       <Download className="h-4 w-4" />
                       Download Signed PDF
                     </a>
@@ -263,7 +302,7 @@ export function RequestManagement({ teamId, requestId, onStateChange }: RequestM
             )}
 
             {/* Cancel operations */}
-            {request.status !== "CANCELLED" && request.status !== "COMPLETED" && (
+            {!isTerminal && (
               <div className="pt-4 border-t flex justify-end">
                 <Button
                   variant="destructive"
