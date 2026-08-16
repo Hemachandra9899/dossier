@@ -1,15 +1,18 @@
-// SendRequest: validates the request's fields against the provider envelope and
-// distributes the ONE envelope exactly once. This is the sender's final step:
+// SendRequest: validates the request's fields and distributes the request
+// exactly once. This is the sender's final step:
 //
-// 1. Load the request + recipients; the request must be DRAFT / PREPARING / READY
-//    and have a providerEnvelopeId.
+// 1. Load the request + recipients; the request must be DRAFT / PREPARING /
+//    READY.
 // 2. Server-side field validation (never trust the client): every signer must
-//    have at least one assigned field AND at least one SIGNATURE / FREE_SIGNATURE
-//    field on the provider envelope. Failures throw SigningSendError (409).
+//    have at least one assigned field AND at least one SIGNATURE / INITIALS
+//    field. Failures throw SigningSendError (409).
 // 3. Move the request to READY (from DRAFT or PREPARING) — READY still exposes
 //    no signing link.
-// 4. Distribute the envelope once via the provider (distributionMethod: "NONE"
-//    keeps Documenso from emailing; Dossier owns every invitation).
+// 4. Distribute the request:
+//    - NATIVE: nothing to call — fields already live in Dossier. Invitations
+//      are the only external action.
+//    - DOCUMENSO: distribute the ONE provider envelope exactly once
+//      (`distributionMethod: "NONE"` keeps Documenso from emailing).
 // 5. Deliver the Dossier invitations; the first delivery moves the request
 //    READY -> SENT.
 
@@ -17,9 +20,9 @@ import type { SigningContext } from "./context";
 import type { RequestDTO } from "./dto";
 import { toRequestDTO } from "./dto";
 import { deliverSignatureRequest } from "./deliver-signature-request";
+import { getActiveSigningProvider } from "../config";
 import { assertCanTransitionTo } from "../domain/state-machine";
 import {
-  SigningProviderError,
   SigningSendError,
   SigningStateError,
   SigningValidationError,
@@ -35,7 +38,9 @@ export interface SendRequestResult {
 }
 
 const SENDABLE_STATUSES = new Set(["DRAFT", "PREPARING", "READY"]);
-const SIGNATURE_FIELD_TYPES = new Set(["SIGNATURE", "FREE_SIGNATURE"]);
+// NATIVE field types that satisfy the "every signer needs a signature field"
+// requirement. Documenso's FREE_SIGNATURE maps to SIGNATURE conceptually.
+const SIGNATURE_FIELD_TYPES = new Set(["SIGNATURE", "INITIALS", "FREE_SIGNATURE"]);
 
 export async function sendRequest(
   ctx: SigningContext,
@@ -52,12 +57,6 @@ export async function sendRequest(
     );
   }
 
-  if (!request.providerEnvelopeId) {
-    throw new SigningStateError(
-      "Request has not been initialized with the signing provider.",
-    );
-  }
-
   const rawSigners = request.recipients;
   if (rawSigners.length === 0) {
     throw new SigningValidationError(
@@ -65,58 +64,81 @@ export async function sendRequest(
     );
   }
 
-  // After the guards below every signer provably has an email + provider id.
-  for (const recipient of rawSigners) {
-    if (!recipient.email) {
-      throw new SigningValidationError(
-        "Every signer must have an email address.",
-      );
-    }
-    if (!recipient.providerRecipientId) {
-      throw new SigningValidationError(
-        `Signer ${recipient.email} has not been assigned by the signing provider.`,
-      );
-    }
-  }
+  const engine = getActiveSigningProvider();
 
-  const signers: Array<{
-    id: string;
-    email: string;
-    name: string | null;
-    providerRecipientId: string;
-  }> = rawSigners.map((recipient) => ({
-    id: recipient.id,
-    email: recipient.email as string,
-    name: recipient.name ?? null,
-    providerRecipientId: recipient.providerRecipientId as string,
-  }));
-
-  // --- Server-side field validation against the provider envelope. ---
-  const envelope = await ctx.provider.getEnvelope(request.providerEnvelopeId);
-  const fields: Array<{
-    recipientId: number | string;
-    type: string;
-  }> = Array.isArray(envelope?.fields) ? envelope.fields : [];
-
+  // --- Server-side field validation. ---
+  // NATIVE validates against the Dossier-owned SignatureField layout.
+  // DOCUMENSO validates against the provider envelope fields.
   const missingFields: string[] = [];
   const missingSignature: string[] = [];
 
-  for (const recipient of signers) {
-    const providerRecipientId = Number(recipient.providerRecipientId);
-    const assigned = fields.filter(
-      (field) => Number(field.recipientId) === providerRecipientId,
-    );
-
-    if (assigned.length === 0) {
-      missingFields.push(recipient.email);
-      continue;
+  if (engine === "NATIVE" || request.provider === "NATIVE") {
+    const nativeFields = await ctx.fields.listByRequestId(request.id);
+    const fieldsByRecipient = new Map<string, typeof nativeFields>();
+    for (const f of nativeFields) {
+      const arr = fieldsByRecipient.get(f.recipientId) ?? [];
+      arr.push(f);
+      fieldsByRecipient.set(f.recipientId, arr);
     }
 
-    const hasSignatureField = assigned.some((field) =>
-      SIGNATURE_FIELD_TYPES.has(field.type),
-    );
-    if (!hasSignatureField) {
-      missingSignature.push(recipient.email);
+    for (const recipient of rawSigners) {
+      if (!recipient.email) {
+        throw new SigningValidationError(
+          "Every signer must have an email address.",
+        );
+      }
+      const assigned = fieldsByRecipient.get(recipient.id) ?? [];
+      if (assigned.length === 0) {
+        missingFields.push(recipient.email);
+        continue;
+      }
+      const hasSignatureField = assigned.some((f) =>
+        SIGNATURE_FIELD_TYPES.has(f.type),
+      );
+      if (!hasSignatureField) {
+        missingSignature.push(recipient.email);
+      }
+    }
+  } else {
+    // Documenso envelope-flow validation (legacy).
+    if (!request.providerEnvelopeId) {
+      throw new SigningStateError(
+        "Request has not been initialized with the signing provider.",
+      );
+    }
+
+    for (const recipient of rawSigners) {
+      if (!recipient.email) {
+        throw new SigningValidationError(
+          "Every signer must have an email address.",
+        );
+      }
+      if (!recipient.providerRecipientId) {
+        throw new SigningValidationError(
+          `Signer ${recipient.email} has not been assigned by the signing provider.`,
+        );
+      }
+    }
+
+    const envelope = await ctx.provider.getEnvelope(request.providerEnvelopeId);
+    const fields: Array<{ recipientId: number | string; type: string }> =
+      Array.isArray(envelope?.fields) ? envelope.fields : [];
+
+    for (const recipient of rawSigners) {
+      const providerRecipientId = Number(recipient.providerRecipientId);
+      const assigned = fields.filter(
+        (field) => Number(field.recipientId) === providerRecipientId,
+      );
+      if (assigned.length === 0) {
+        missingFields.push(recipient.email as string);
+        continue;
+      }
+      const hasSignatureField = assigned.some((field) =>
+        SIGNATURE_FIELD_TYPES.has(field.type),
+      );
+      if (!hasSignatureField) {
+        missingSignature.push(recipient.email as string);
+      }
     }
   }
 
@@ -131,10 +153,16 @@ export async function sendRequest(
   if (missingSignature.length > 0) {
     throw new SigningSendError(
       "SIGNATURE_REQUIRED",
-      "Every signer needs a signature field (SIGNATURE or FREE_SIGNATURE) assigned in the document.",
+      "Every signer needs a signature field (SIGNATURE or INITIALS) assigned in the document.",
       missingSignature,
     );
   }
+
+  const signers = rawSigners.map((recipient) => ({
+    id: recipient.id,
+    email: (recipient.email as string) ?? "",
+    name: recipient.name ?? null,
+  }));
 
   // --- READY (no signing link is exposed in this state). ---
   if (request.status !== "READY") {
@@ -142,13 +170,12 @@ export async function sendRequest(
     await ctx.requests.updateStatus(request.id, "READY");
   }
 
-  // --- Distribute the ONE envelope exactly once. ---
-  // `distributionMethod: "NONE"` keeps Documenso from emailing; Dossier
-  // delivers its own invitations. The application layer's state machine
-  // guarantees this runs exactly once (READY -> SENT transition).
-  await ctx.provider.distributeEnvelope({
-    providerEnvelopeId: request.providerEnvelopeId,
-  });
+  // --- Distribute exactly once. ---
+  if (engine !== "NATIVE" && request.provider !== "NATIVE" && request.providerEnvelopeId) {
+    await ctx.provider.distributeEnvelope({
+      providerEnvelopeId: request.providerEnvelopeId,
+    });
+  }
 
   // --- Deliver invitations; first delivery flips READY -> SENT. ---
   for (const recipient of signers) {

@@ -63,13 +63,24 @@ function makeRequest(status: string): FakeRow {
 
 function buildContext(options: {
   status?: string;
-  fields?: Array<{ recipientId: number | string; type: string }>;
+  fields?: Array<{ id: string; recipientId: string; type: string }>;
   request?: FakeRow;
 }): { ctx: SigningContext; provider: FakeProvider; requests: FakeRequests } {
   const requests = new FakeRequests(options.request ?? makeRequest(options.status ?? "PREPARING"));
   const provider = new FakeProvider(options.fields ?? []);
+  const fields = {
+    listByRequestId: async () => options.fields ?? [],
+  };
+  const deliveries = {
+    create: async () => ({ id: "delivery-1" }),
+    updateStatus: async () => ({}),
+  };
+  const activities = { create: async () => ({}) };
   const ctx = {
     requests: requests as any,
+    fields: fields as any,
+    deliveries: deliveries as any,
+    activities: activities as any,
     templates: {
       findById: async () => ({
         id: "template-1",
@@ -186,8 +197,8 @@ describe("sendRequest validation", () => {
     const { ctx } = buildContext({
       status: "PREPARING",
       fields: [
-        { recipientId: 1, type: "TEXT" },
-        { recipientId: 2, type: "SIGNATURE" },
+        { id: "f1", recipientId: "recipient-1", type: "TEXT" },
+        { id: "f2", recipientId: "recipient-2", type: "SIGNATURE" },
       ],
     });
     await assert.rejects(
@@ -205,8 +216,8 @@ describe("sendRequest validation", () => {
     const { ctx } = buildContext({
       status: "READY",
       fields: [
-        { recipientId: 1, type: "FREE_SIGNATURE" },
-        { recipientId: 2, type: "TEXT" },
+        { id: "f1", recipientId: "recipient-1", type: "FREE_SIGNATURE" },
+        { id: "f2", recipientId: "recipient-2", type: "TEXT" },
       ],
     });
     await assert.rejects(
@@ -220,12 +231,12 @@ describe("sendRequest validation", () => {
     );
   });
 
-  it("sends when every signer has an assigned signature field", async () => {
+  it("sends natively when every signer has an assigned signature field", async () => {
     const { ctx, provider, requests } = buildContext({
       status: "PREPARING",
       fields: [
-        { recipientId: 1, type: "SIGNATURE" },
-        { recipientId: 2, type: "FREE_SIGNATURE" },
+        { id: "f1", recipientId: "recipient-1", type: "SIGNATURE" },
+        { id: "f2", recipientId: "recipient-2", type: "FREE_SIGNATURE" },
       ],
     });
 
@@ -235,10 +246,10 @@ describe("sendRequest validation", () => {
     });
 
     assert.equal(result.request.status, "SENT");
-    assert.deepEqual(requests.updateStatusCalls, [
-      { status: "READY" },
-      { status: "SENT" },
-    ]);
-    assert.ok(provider.distributed);
+    // Native flow moves the request READY -> SENT via the first delivery; the
+    // provider is never contacted (no external envelope to distribute).
+    assert.ok(requests.updateStatusCalls.some((call) => call.status === "READY"));
+    assert.ok(requests.updateStatusCalls.some((call) => call.status === "SENT"));
+    assert.equal(provider.distributed, null);
   });
 });

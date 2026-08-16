@@ -30,6 +30,21 @@ const EmbedSignDocument = dynamic(
   { ssr: false },
 );
 
+const NativeRecipientSigningView = dynamic(
+  () =>
+    import("./native-recipient-signing-view").then(
+      (mod) => mod.NativeRecipientSigningView,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full items-center justify-center">
+        <LoadingSpinner className="h-8 w-8" />
+      </div>
+    ),
+  },
+);
+
 const signingCssVars = {
   background: "hsl(0 0% 100%)",
   foreground: "hsl(224 71.4% 4.1%)",
@@ -93,18 +108,33 @@ const recipientSigningCss = `
 `;
 
 export function RecipientSigningView({
+  requestId,
   session,
   recipientName,
   documentName,
   onCompleted,
   onError,
 }: {
+  requestId: string;
   session: SigningSessionDTO;
   recipientName?: string | null;
   documentName: string;
   onCompleted: () => void;
   onError: (message: string) => void;
 }) {
+  if (session.provider === "NATIVE") {
+    return (
+      <NativeRecipientSigningView
+        requestId={requestId}
+        session={session}
+        recipientName={recipientName}
+        documentName={documentName}
+        onCompleted={onCompleted}
+        onError={onError}
+      />
+    );
+  }
+
   return (
     <div className="flex h-screen flex-col bg-background">
       <header className="flex h-14 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6">

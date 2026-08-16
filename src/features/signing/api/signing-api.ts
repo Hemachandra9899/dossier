@@ -74,15 +74,14 @@ export interface EditorSessionDTO {
   externalId: string;
 }
 
-export interface SigningSessionDTO {
+export type SigningSessionDTO = {
   requestId: string;
   recipientId: string;
   status: string;
-  provider: "DOCUMENSO";
-  host: string;
-  token: string;
-  externalId: string;
-}
+} & (
+  | { provider: "NATIVE"; sourceUrl: string; sourceSha256: string | null }
+  | { provider: "DOCUMENSO"; host: string; token: string; externalId: string }
+);
 
 export interface PublicRequestDTO {
   id: string;
@@ -100,6 +99,33 @@ export interface PublicSignedArtifactDTO {
   downloadUrl?: string;
   fileName?: string;
   mimeType?: string;
+}
+
+export interface RecipientFieldDTO {
+  id: string;
+  type:
+    | "SIGNATURE"
+    | "INITIALS"
+    | "NAME"
+    | "EMAIL"
+    | "DATE"
+    | "TEXT"
+    | "NUMBER"
+    | "CHECKBOX"
+    | "RADIO"
+    | "DROPDOWN";
+  pageNumber: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  required: boolean;
+  label: string | null;
+  placeholder: string | null;
+  options: unknown;
+  value: unknown;
+  complete: boolean;
+  completedAt: string | null;
 }
 
 export interface RecipientAccessTokenDTO {
@@ -332,6 +358,52 @@ export const signingApi = {
   createSigningSession(input: { requestId: string }) {
     return request<SigningSessionDTO>(
       `/api/signature-requests/${input.requestId}/session`,
+      { method: "POST", body: JSON.stringify({}) },
+      { public: true },
+    );
+  },
+
+  getPublicFields(input: { requestId: string }) {
+    return request<{ fields: RecipientFieldDTO[] }>(
+      `/api/signature-requests/${input.requestId}/fields`,
+      undefined,
+      { public: true },
+    );
+  },
+
+  saveFieldResponse(input: {
+    requestId: string;
+    fieldId: string;
+    value?: unknown;
+    signatureStorageKey?: string | null;
+  }) {
+    return request<{ fieldId: string; complete: boolean }>(
+      `/api/signature-requests/${input.requestId}/fields/${input.fieldId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          value: input.value,
+          signatureStorageKey: input.signatureStorageKey,
+        }),
+      },
+      { public: true },
+    );
+  },
+
+  uploadSignatureImage(input: { requestId: string; data: string }) {
+    return request<{ signatureStorageKey: string }>(
+      `/api/signature-requests/${input.requestId}/signature`,
+      {
+        method: "POST",
+        body: JSON.stringify({ data: input.data }),
+      },
+      { public: true },
+    );
+  },
+
+  completeRecipient(input: { requestId: string }) {
+    return request<{ request: RequestDTO }>(
+      `/api/signature-requests/${input.requestId}/complete`,
       { method: "POST", body: JSON.stringify({}) },
       { public: true },
     );

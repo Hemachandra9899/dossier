@@ -7,7 +7,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
@@ -65,6 +65,14 @@ export function SigningRequestPage({ requestId }: { requestId: string }) {
 
   const requestQuery = useQuery(publicSignatureRequestQuery(requestId));
   const request = requestQuery.data?.request ?? null;
+
+  // When the request reaches a terminal state (native finalization completes
+  // synchronously), leave the signing canvas so the completed view takes over.
+  useEffect(() => {
+    if (request?.status === "COMPLETED") {
+      setSession(null);
+    }
+  }, [request?.status]);
 
   const loadError = requestQuery.isError
     ? requestQuery.error instanceof Error
@@ -125,6 +133,7 @@ export function SigningRequestPage({ requestId }: { requestId: string }) {
   if (session) {
     return (
       <RecipientSigningView
+        requestId={requestId}
         session={session}
         recipientName={request.recipient.name ?? undefined}
         documentName={request.document.name}

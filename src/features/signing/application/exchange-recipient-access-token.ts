@@ -78,7 +78,7 @@ export async function exchangeRecipientAccessToken(
   const recipient = request.recipients.find((r: any) => r.id === parsed.recipientId);
   if (recipient) {
     if (recipient.status === "PENDING") {
-      await ctx.requests.updateRecipientStatus(recipient.id, "VIEWED", { viewedAt: new Date() });
+      await ctx.recipients.updateStatus(recipient.id, "VIEWED", { viewedAt: new Date() });
       if (request.status === "SENT") {
         await ctx.requests.updateStatus(request.id, "VIEWED", { viewedAt: new Date() });
       }
@@ -93,7 +93,7 @@ export async function exchangeRecipientAccessToken(
       },
     });
     if (!exists) {
-      await ctx.requests.createActivity({
+      await ctx.activities.create({
         signatureRequestId: request.id,
         recipientId: recipient.id,
         type: "RECIPIENT_VIEWED",

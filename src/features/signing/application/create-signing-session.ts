@@ -1,12 +1,16 @@
 // CreateSigningSession: recipient-facing session creation. Enforces signability
 // (terminal states and expiry), binds the recipient identity to the request,
-// calls SigningProvider.getRecipientSigningSession and returns a generic
-// session DTO.
+// and returns a session the signing page uses to render the document.
+//
+// - NATIVE: returns the pinned source PDF url + sha256 (no external provider).
+// - DOCUMENSO: calls SigningProvider.getRecipientSigningSession and returns the
+//   provider embed host/token.
 //
 // Rate limiting + continuity-token cookie handling live in the route layer
 // (mirrors the legacy `/agreements/signing/session` protections).
 
 import type { SigningContext } from "./context";
+import { getActiveSigningProvider } from "../config";
 import { isSignatureRequestTerminal } from "../domain/signature-request";
 import { assertCanTransitionTo } from "../domain/state-machine";
 import {
@@ -22,15 +26,20 @@ export interface CreateSigningSessionInput {
   name?: string | null;
 }
 
-export interface SigningSessionDTO {
+export type SigningSessionDTO = {
   requestId: string;
   recipientId: string;
   status: string;
-  provider: "DOCUMENSO";
-  host: string;
-  token: string;
-  externalId: string;
-}
+  provider: "NATIVE" | "DOCUMENSO";
+} & (
+  | { provider: "NATIVE"; sourceUrl: string; sourceSha256: string | null }
+  | {
+      provider: "DOCUMENSO";
+      host: string;
+      token: string;
+      externalId: string;
+    }
+);
 
 export async function createSigningSession(
   ctx: SigningContext,
@@ -82,10 +91,15 @@ export async function createSigningSession(
     }
   }
 
-  if (!request.providerEnvelopeId || !recipient.providerRecipientId) {
-    throw new SigningStateError(
-      "The request has not been initialized with the signing provider.",
-    );
+  const engine = getActiveSigningProvider();
+
+  // DOCUMENSO requires provider initialization before signing.
+  if (engine !== "NATIVE" && request.provider !== "NATIVE") {
+    if (!request.providerEnvelopeId || !recipient.providerRecipientId) {
+      throw new SigningStateError(
+        "The request has not been initialized with the signing provider.",
+      );
+    }
   }
 
   // Move the request into SIGNING when it is not already signing.
@@ -95,23 +109,47 @@ export async function createSigningSession(
     status = "SIGNING";
   }
 
-  await ctx.requests.updateRecipientStatus(recipient.id, "SIGNING");
+  await ctx.recipients.updateStatus(recipient.id, "SIGNING");
 
-  await ctx.requests.createActivity({
+  await ctx.activities.create({
     signatureRequestId: request.id,
     recipientId: recipient.id,
     type: "SIGNING_STARTED",
   });
 
-  const session = await ctx.provider.getRecipientSigningSession({
-    providerEnvelopeId: request.providerEnvelopeId,
-    providerRecipientId: Number(recipient.providerRecipientId),
-    externalId: request.providerExternalId,
-  });
-
   ctx.logger.info("signing.signing_session_created", {
     requestId: request.id,
     recipientId: recipient.id,
+    engine,
+  });
+
+  if (engine === "NATIVE" || request.provider === "NATIVE") {
+    // Resolve the pinned source PDF url the signer page renders. The same
+    // version the sender pinned at draft creation.
+    const { version } = await ctx.documents.findVersionForRequest(
+      request.teamId,
+      request.documentId,
+      request.documentVersionId,
+    );
+    const sourceUrl = await ctx.getSourceUrl({
+      file: version.file,
+      storageType: version.storageType,
+    });
+
+    return {
+      requestId: request.id,
+      recipientId: recipient.id,
+      status,
+      provider: "NATIVE",
+      sourceUrl,
+      sourceSha256: request.sourceSha256,
+    };
+  }
+
+  const session = await ctx.provider.getRecipientSigningSession({
+    providerEnvelopeId: request.providerEnvelopeId as string,
+    providerRecipientId: Number(recipient.providerRecipientId),
+    externalId: request.providerExternalId,
   });
 
   return {

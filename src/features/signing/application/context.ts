@@ -2,7 +2,11 @@ import { DocumentStorageType } from "@prisma/client";
 
 import { DocumentRepository } from "../server/document.repository";
 import { ProviderEventRepository } from "../server/provider-event.repository";
+import { SignatureActivityRepository } from "../server/signature-activity.repository";
+import { SignatureArtifactRepository } from "../server/signature-artifact.repository";
+import { SignatureDeliveryRepository } from "../server/signature-delivery.repository";
 import { SignatureFieldRepository } from "../server/signature-field.repository";
+import { SignatureRecipientRepository } from "../server/signature-recipient.repository";
 import { SignatureRequestRepository } from "../server/signature-request.repository";
 import { SignatureTemplateRepository } from "../server/signature-template.repository";
 import { documensoSigningProvider } from "../providers/documenso/provider";
@@ -10,6 +14,7 @@ import { mapDocumensoEventToStatus } from "../providers/documenso/mapper";
 import type { SigningProvider } from "../providers/signing-provider";
 import { s3Storage } from "@/infrastructure/storage";
 import { signedArtifactStorage, SignedArtifactStorage } from "@/infrastructure/storage/signed-artifact-storage";
+import { signatureImageStorage } from "@/infrastructure/storage/signature-image-storage";
 import { getFile } from "@/shared/utils/files/get-file";
 import { sendEmail } from "@/shared/utils/resend";
 export type ProviderEventMapper = (event: string) => any;
@@ -27,6 +32,10 @@ export interface ArtifactMirrorQueue {
 
 export interface SigningContext {
   requests: SignatureRequestRepository;
+  recipients: SignatureRecipientRepository;
+  activities: SignatureActivityRepository;
+  deliveries: SignatureDeliveryRepository;
+  artifacts: SignatureArtifactRepository;
   documents: DocumentRepository;
   events: ProviderEventRepository;
   templates: SignatureTemplateRepository;
@@ -37,6 +46,7 @@ export interface SigningContext {
   artifactMirror: ArtifactMirrorQueue;
   getDocumentFileBytes: (input: { file: string; storageType: any }) => Promise<Buffer>;
   getSourceUrl: (input: { file: string; storageType: any }) => Promise<string>;
+  getSignatureImageBytes: (storageKey: string) => Promise<Buffer | null>;
   deliverEmail: EmailDeliverer;
   logger: {
     info: (...args: any[]) => void;
@@ -47,6 +57,10 @@ export interface SigningContext {
 
 export function createSigningContext(overrides?: Partial<SigningContext>): SigningContext {
   const requests = overrides?.requests ?? new SignatureRequestRepository();
+  const recipients = overrides?.recipients ?? new SignatureRecipientRepository();
+  const activities = overrides?.activities ?? new SignatureActivityRepository();
+  const deliveries = overrides?.deliveries ?? new SignatureDeliveryRepository();
+  const artifacts = overrides?.artifacts ?? new SignatureArtifactRepository();
   const documents = overrides?.documents ?? new DocumentRepository();
   const events = overrides?.events ?? new ProviderEventRepository();
   const templates = overrides?.templates ?? new SignatureTemplateRepository();
@@ -102,6 +116,10 @@ export function createSigningContext(overrides?: Partial<SigningContext>): Signi
         expiresIn: 60 * 60 * 1000,
       }));
 
+  const getSignatureImageBytes =
+    overrides?.getSignatureImageBytes ??
+    ((storageKey: string) => signatureImageStorage.getSignatureImage(storageKey));
+
   const logger = overrides?.logger ?? {
     info: (msg: string, ...args: any[]) => console.log(`[SIGNING:INFO] ${msg}`, ...args),
     warn: (msg: string, ...args: any[]) => console.warn(`[SIGNING:WARN] ${msg}`, ...args),
@@ -110,6 +128,10 @@ export function createSigningContext(overrides?: Partial<SigningContext>): Signi
 
   return {
     requests,
+    recipients,
+    activities,
+    deliveries,
+    artifacts,
     documents,
     events,
     templates,
@@ -120,6 +142,7 @@ export function createSigningContext(overrides?: Partial<SigningContext>): Signi
     artifactMirror,
     getDocumentFileBytes,
     getSourceUrl,
+    getSignatureImageBytes,
     deliverEmail: sendEmail,
     logger,
   };

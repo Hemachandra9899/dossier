@@ -14,6 +14,19 @@ export const storageKeys = {
   },
 
   /**
+   * Generates object key for a recipient's drawn/uploaded signature image:
+   * `signatures/${teamId}/${requestId}/sig-${recipientId}-${fieldId}.png`
+   */
+  signatureImage: (
+    teamId: string,
+    requestId: string,
+    recipientId: string,
+    fieldId: string,
+  ) => {
+    return `signatures/${teamId}/${requestId}/sig-${recipientId}-${fieldId}.png`;
+  },
+
+  /**
    * Generates object key for closing binder / completion runs: `completions/${teamId}/${fileId}/${runId}/${name}`
    */
   completion: (teamId: string, fileId: string, runId: string, name: string) => {

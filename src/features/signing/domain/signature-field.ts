@@ -160,3 +160,78 @@ export function getRemainingRequiredFields(
 ): Array<Pick<SignatureField, "id" | "type" | "value" | "signatureStorageKey" | "required" | "options">> {
   return fields.filter((field) => field.required && !isFieldComplete(field));
 }
+
+/**
+ * Recipient-safe view of a stored field. Exposes the schema-derived `value` for
+ * text-like / checkbox / radio / dropdown fields and a `complete` flag for every
+ * type, but NEVER exposes the signature image storage key (the recipient already
+ * has the value; the finalizer reads the image server-side).
+ */
+export interface RecipientFieldDTO {
+  id: string;
+  type: SignatureFieldType;
+  pageNumber: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  required: boolean;
+  label: string | null;
+  placeholder: string | null;
+  options: unknown;
+  value: unknown;
+  complete: boolean;
+  completedAt: string | null;
+}
+
+export function toRecipientFieldDTO(
+  field: Pick<
+    SignatureField,
+    | "id"
+    | "type"
+    | "pageNumber"
+    | "x"
+    | "y"
+    | "width"
+    | "height"
+    | "required"
+    | "label"
+    | "placeholder"
+    | "options"
+    | "value"
+    | "signatureStorageKey"
+    | "completedAt"
+  >,
+): RecipientFieldDTO {
+  const complete = isFieldComplete({
+    type: field.type,
+    value: field.value,
+    signatureStorageKey: field.signatureStorageKey,
+    options: field.options,
+  });
+
+  // Don't leak the signature storage key; only whether it's filled.
+  const value =
+    field.type === "SIGNATURE" || field.type === "INITIALS"
+      ? complete
+        ? "signed"
+        : null
+      : field.value;
+
+  return {
+    id: field.id,
+    type: field.type,
+    pageNumber: field.pageNumber,
+    x: field.x,
+    y: field.y,
+    width: field.width,
+    height: field.height,
+    required: field.required,
+    label: field.label,
+    placeholder: field.placeholder,
+    options: field.options,
+    value,
+    complete,
+    completedAt: field.completedAt ? field.completedAt.toISOString() : null,
+  };
+}

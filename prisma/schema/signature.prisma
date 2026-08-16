@@ -114,6 +114,7 @@ model SignatureRequest {
 
   team        Team              @relation(fields: [teamId], references: [id], onDelete: Cascade)
   document    Document          @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentVersion DocumentVersion? @relation(fields: [documentVersionId], references: [id], onDelete: Restrict)
   template    SignatureTemplate? @relation(fields: [templateId], references: [id], onDelete: Restrict)
   link        Link?             @relation(fields: [linkId], references: [id], onDelete: SetNull)
   dossierFile DossierFile?      @relation(fields: [dossierFileId], references: [id], onDelete: SetNull)
@@ -126,6 +127,7 @@ model SignatureRequest {
 
   @@unique([provider, providerEnvelopeId])
   @@index([teamId, status, createdAt(sort: Desc)])
+  @@index([teamId, documentId, status])
   @@index([documentId, createdAt(sort: Desc)])
   @@index([documentVersionId])
   @@index([linkId])

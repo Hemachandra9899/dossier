@@ -445,7 +445,7 @@ describe("signing workflows (integration)", () => {
       await happyPathEvents(ctx, before.providerExternalId);
 
       await assert.rejects(
-        ctx.requests.createArtifact({
+        ctx.artifacts.create({
           signatureRequestId: requestId,
           storageKey: "s3://another-key.pdf",
           fileName: "another.pdf",

@@ -22,7 +22,7 @@ export async function getSignedArtifact(
     throw new SigningNotFoundError("Signature request was not found.");
   }
 
-  const artifact = await ctx.requests.findArtifactByRequestId(input.requestId);
+  const artifact = await ctx.artifacts.findByRequestId(input.requestId);
   if (!artifact) return pendingArtifactDTO(input.requestId);
 
   const downloadUrl = await getFile({

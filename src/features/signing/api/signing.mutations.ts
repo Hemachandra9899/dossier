@@ -131,3 +131,43 @@ export function createSigningSessionOptions() {
     mutationFn: signingApi.createSigningSession,
   };
 }
+
+export function saveFieldResponseOptions(queryClient: QueryClient) {
+  return {
+    mutationFn: signingApi.saveFieldResponse,
+    onSuccess: (
+      _result: { fieldId: string; complete: boolean },
+      input: Parameters<typeof signingApi.saveFieldResponse>[0],
+    ) => {
+      queryClient.invalidateQueries({
+        queryKey: signingKeys.public.fields(input.requestId),
+      });
+    },
+  };
+}
+
+export function uploadSignatureImageOptions() {
+  return {
+    mutationFn: signingApi.uploadSignatureImage,
+  };
+}
+
+export function completeRecipientOptions(queryClient: QueryClient) {
+  return {
+    mutationFn: signingApi.completeRecipient,
+    onSuccess: (
+      _data: { request: { id: string } },
+      input: Parameters<typeof signingApi.completeRecipient>[0],
+    ) => {
+      queryClient.invalidateQueries({
+        queryKey: signingKeys.public.request(input.requestId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: signingKeys.public.fields(input.requestId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: signingKeys.public.artifact(input.requestId),
+      });
+    },
+  };
+}

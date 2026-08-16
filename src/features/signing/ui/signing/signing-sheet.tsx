@@ -19,6 +19,14 @@ const EmbedSignDocument = dynamic(
   { ssr: false },
 );
 
+const NativeRecipientSigningView = dynamic(
+  () =>
+    import("./native-recipient-signing-view").then(
+      (mod) => mod.NativeRecipientSigningView,
+    ),
+  { ssr: false },
+);
+
 const signingCssVars = {
   background: "hsl(0 0% 100%)",
   foreground: "hsl(224 71.4% 4.1%)",
@@ -109,16 +117,26 @@ export function SigningSheet({
         <div className="h-[calc(100%-96px)] px-4 pb-4 pt-2 sm:px-6">
           {session ? (
             <div className="h-full overflow-hidden rounded-lg border">
-              <EmbedSignDocument
-                className="h-full w-full"
-                host={session.host}
-                token={session.token}
-                darkModeDisabled
-                cssVars={signingCssVars}
-                css={SIGNING_EMBED_CSS}
-                onDocumentCompleted={() => onCompleted()}
-                onDocumentError={onError}
-              />
+              {session.provider === "NATIVE" ? (
+                <NativeRecipientSigningView
+                  requestId={session.requestId}
+                  session={session}
+                  documentName={documentName}
+                  onCompleted={() => onCompleted()}
+                  onError={onError}
+                />
+              ) : (
+                <EmbedSignDocument
+                  className="h-full w-full"
+                  host={session.host}
+                  token={session.token}
+                  darkModeDisabled
+                  cssVars={signingCssVars}
+                  css={SIGNING_EMBED_CSS}
+                  onDocumentCompleted={() => onCompleted()}
+                  onDocumentError={onError}
+                />
+              )}
             </div>
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">

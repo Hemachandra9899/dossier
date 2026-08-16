@@ -107,7 +107,7 @@ export async function createRequest(
           "The signing provider returned fewer documents than recipients.",
         );
       }
-      await ctx.requests.updateRecipientProviderIds(
+      await ctx.recipients.updateProviderIds(
         request.recipients[index].id,
         providerIds,
       );
@@ -115,7 +115,7 @@ export async function createRequest(
 
     const ready = await ctx.requests.updateStatus(request.id, "READY");
 
-    await ctx.requests.createActivity({
+    await ctx.activities.create({
       signatureRequestId: ready.id,
       type: "REQUEST_CREATED",
     });
