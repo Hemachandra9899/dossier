@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 
-import { FILE_STATUSES, FILE_STATUS_LABEL, groupFilesByStatus } from "../file-status";
+import { FILE_STATUSES, FILE_STATUS_LABEL } from "../file-status";
 import { FileCard } from "./FileCard";
 
 export function FileColumn({
@@ -16,22 +16,14 @@ export function FileColumn({
   onMove: any;
   teamId: string;
 }) {
-  const columnFiles = useMemo(
-    () => groupFilesByStatus(files ?? [])[status] ?? [],
-    [files, status],
-  );
+  // Filter files by status directly - this lets TypeScript infer any[]
+  const columnFiles = (files ?? []).filter((f: any) => f.status === status);
 
   return (
     <div
       className="min-h-[300px] w-full rounded-xl border bg-background p-6"
       aria-label={`Files ${FILE_STATUS_LABEL[status]} column`}
     >
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-muted-foreground">
-          {FILE_STATUS_LABEL[status]}
-        </h3>
-      </div>
-
       {columnFiles.length > 0 && (
         <FileCard
           key={columnFiles[0].id}

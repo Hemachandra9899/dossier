@@ -5,6 +5,7 @@ import { apiRequest } from "@/platform/query/api-client";
 import type {
   FileBoardItem,
   FileDetail,
+  FileActivity,
   CreateFileInput,
   MoveFileInput,
 } from "../file.types";
@@ -60,6 +61,19 @@ export const filesApi = {
       {
         method: "PATCH",
         body: JSON.stringify(input),
+      },
+    );
+  },
+
+  activity(
+    teamId: string,
+    fileId: string,
+    signal?: AbortSignal,
+  ) {
+    return apiRequest<FileActivity[]>(
+      `/api/teams/${teamId}/files/${fileId}/activity`,
+      {
+        signal,
       },
     );
   },

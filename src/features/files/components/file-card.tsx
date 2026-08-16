@@ -20,6 +20,9 @@ export function FileCard({
       ? FILE_STATUS_LABEL[FILE_STATUSES[statusIndex as any]]
       : String(file.status);
 
+  const diffMs = new Date(file.dueAt).getTime() - new Date().getTime();
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
   return (
     <div
       className={`rounded-lg border bg-card p-4 hover:bg-card-hover cursor-pointer transition-colors ${isDragging ? "opacity-50" : ""}`}
@@ -43,9 +46,21 @@ export function FileCard({
         {statusLabel}
       </p>
 
-      {file.dueAt && (
+      {file.dueAt && diffDays <= 0 && (
+        <p className="text-xs text-danger mt-1">
+          Overdue
+        </p>
+      )}
+
+      {file.dueAt && diffDays === 1 && (
         <p className="text-xs text-muted-foreground mt-1">
-          Due {formatDueDate(file.dueAt)}
+          Due tomorrow
+        </p>
+      )}
+
+      {file.dueAt && diffDays > 1 && (
+        <p className="text-xs text-muted-foreground mt-1">
+          Due in {diffDays} days
         </p>
       )}
 
@@ -62,19 +77,4 @@ export function FileCard({
       )}
     </div>
   );
-}
-
-function formatDueDate(dueAt: string) {
-  const date = new Date(dueAt);
-  const today = new Date();
-  const diffMs = date.getTime() - today.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays <= 0) {
-    return "Overdue";
-  }
-  if (diffDays === 1) {
-    return "Due tomorrow";
-  }
-  return `Due in ${diffDays} days`;
 }

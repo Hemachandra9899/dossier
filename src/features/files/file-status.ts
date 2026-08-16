@@ -24,15 +24,27 @@ export const FILE_STATUSES = [
 ] as const;
 
 export const FILE_STATUS_LABEL: Record<FileStatus, string> = {
-  NEW: "New",
-  COLLECTING: "Collecting",
-  WAITING_ON_CLIENT: "Waiting on client",
-  REVIEWING: "Review",
-  NEEDS_CORRECTION: "Needs correction",
-  READY_TO_SIGN: "Ready to sign",
-  SIGNING: "Signing",
-  READY_TO_CLOSE: "Ready to close",
-  COMPLETE: "Complete",
+  NEW: "new",
+  COLLECTING: "collecting",
+  WAITING_ON_CLIENT: "waiting on client",
+  REVIEWING: "reviewing",
+  NEEDS_CORRECTION: "needs correction",
+  READY_TO_SIGN: "ready to sign",
+  SIGNING: "signing",
+  READY_TO_CLOSE: "ready to close",
+  COMPLETE: "complete",
+};
+
+export const fileStatusLabels = {
+  NEW: "NEW",
+  COLLECTING: "COLLECTING",
+  WAITING_ON_CLIENT: "WAITING_ON_CLIENT",
+  REVIEWING: "REVIEWING",
+  NEEDS_CORRECTION: "NEEDS_CORRECTION",
+  READY_TO_SIGN: "READY_TO_SIGN",
+  SIGNING: "SIGNING",
+  READY_TO_CLOSE: "READY_TO_CLOSE",
+  COMPLETE: "COMPLETE",
 };
 
 // Statuses that can be manually moved by users on the board.

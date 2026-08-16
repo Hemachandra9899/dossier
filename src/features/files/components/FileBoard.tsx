@@ -59,6 +59,8 @@ export function FileBoard({
             <FileCard
               key={status}
               file={groups[status][0]}
+              onMove={() => {}}
+              teamId={teamId}
             />
           )}
 
