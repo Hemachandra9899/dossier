@@ -9,6 +9,7 @@ import { authOptions } from "@/shared/utils/auth/auth-options";
 import prisma from "@/shared/utils/prisma";
 
 import { SignaturePreparePage } from "@/features/signing/ui/signature-prepare-page";
+import { NativeSignaturePreparePage } from "@/features/signing/ui/native-signature-prepare-page";
 
 const EDITABLE_STATUSES = ["DRAFT", "PREPARING", "READY"];
 
@@ -37,6 +38,7 @@ export const getServerSideProps = async (
       teamId: true,
       documentId: true,
       status: true,
+      provider: true,
       document: { select: { name: true } },
     },
   });
@@ -69,6 +71,7 @@ export const getServerSideProps = async (
       requestId: request.id,
       documentId: request.documentId,
       documentName: request.document?.name ?? "Document",
+      provider: request.provider,
     },
   };
 };
@@ -78,12 +81,25 @@ export default function SignaturePreparePageWrapper({
   requestId,
   documentId,
   documentName,
+  provider,
 }: {
   teamId: string;
   requestId: string;
   documentId: string;
   documentName: string;
+  provider: "NATIVE" | "DOCUMENSO";
 }) {
+  if (provider === "NATIVE") {
+    return (
+      <NativeSignaturePreparePage
+        teamId={teamId}
+        requestId={requestId}
+        documentId={documentId}
+        documentName={documentName}
+      />
+    );
+  }
+
   return (
     <SignaturePreparePage
       teamId={teamId}
