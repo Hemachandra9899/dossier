@@ -9,7 +9,8 @@ export type FileStatus =
   | "READY_TO_SIGN"
   | "SIGNING"
   | "READY_TO_CLOSE"
-  | "COMPLETE";
+  | "COMPLETE"
+  | "ARCHIVED";
 
 export type FileRequirementStatus = {
   status: "OPEN" | "IN_PROGRESS" | "SUBMITTED" | "COMPLETED";
@@ -52,6 +53,7 @@ export const FILE_STATUS_LABEL: Record<FileStatus, string> = {
   SIGNING: "signing",
   READY_TO_CLOSE: "ready to close",
   COMPLETE: "complete",
+  ARCHIVED: "archived",
 };
 
 export const fileStatusLabels = {
@@ -64,6 +66,7 @@ export const fileStatusLabels = {
   SIGNING: "SIGNING",
   READY_TO_CLOSE: "READY_TO_CLOSE",
   COMPLETE: "COMPLETE",
+  ARCHIVED: "ARCHIVED",
 };
 
 // Statuses that can be manually moved by users on the board.
@@ -86,13 +89,15 @@ export const WORKFLOW_CONTROLLED_STATUSES = new Set([
 export function groupFilesByStatus(
   files: any[],
 ): Record<(typeof FILE_STATUSES)[number], any[]> {
-  const groups =
-    Object.fromEntries(
-      FILE_STATUSES.map((status) => [status, []]),
-    ) as Record<(typeof FILE_STATUSES)[number], any[]>;
+  const groups = Object.fromEntries(
+    FILE_STATUSES.map((status) => [status, [] as any[]]),
+  ) as Record<(typeof FILE_STATUSES)[number], any[]>;
 
   for (const file of files) {
-    groups[file.status].push(file);
+    const bucket = groups[file.status as (typeof FILE_STATUSES)[number]];
+    if (bucket) {
+      bucket.push(file);
+    }
   }
 
   return groups;
@@ -178,11 +183,11 @@ export function deriveFileStatus(
   // Filter out historical terminal requests that should not block status
   const activeSignatures = signatures.filter(
     (s) =>
-      !["CANCELLED", "FAILED", "DECLINED", "EXPIRED"].includes(s.status),
+      !["CANCELLED", "FAILED", "DECLINED", "EXPIRED"].includes(s),
   );
 
   const completedSignature = signatures.find(
-    (s) => s.status === "COMPLETED",
+    (s) => s === "COMPLETED",
   );
 
   if (completedSignature) {
@@ -192,7 +197,7 @@ export function deriveFileStatus(
   const activeSignature = signatures.find(
     (s) =>
       ["DRAFT", "PREPARING", "READY", "SENT", "VIEWED", "SIGNING", "PARTIALLY_SIGNED"].includes(
-        s.status,
+        s,
       ),
   );
 

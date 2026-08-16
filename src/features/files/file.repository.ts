@@ -2,7 +2,8 @@
 
 import { prisma } from "@/platform/db";
 
-import type { FileStatus, FileBoardItem } from "../file.types";
+import type { FileBoardItem } from "./file.types";
+import type { FileStatus } from "./file-status";
 
 export async function getFilesForBoard(
   teamId: string,

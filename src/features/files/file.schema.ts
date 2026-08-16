@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { FileStatus } from "./file-status";
+import { FILE_STATUSES } from "./file-status";
 
 export const CreateFileSchema = z.object({
   clientName: z.string().min(1),
@@ -28,7 +28,7 @@ export const FileBoardItemSchema = z.object({
   title: z.string(),
   clientName: z.string().nullable(),
   caseType: z.string().nullable(),
-  status: z.nativeEnum(FileStatus),
+  status: z.enum(FILE_STATUSES),
   priority: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]),
   owner: z.object({
     id: z.string(),

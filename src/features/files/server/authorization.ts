@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 
-export async function requireFileAccess(_arg1?: any, _arg2?: any, _arg3?: any) {
+export async function requireFileAccess(
+  _arg1?: any,
+  _arg2?: any,
+  _arg3?: any,
+  _arg4?: any,
+) {
   const fileId = typeof _arg1 === "string" ? _arg1 : typeof _arg2 === "string" ? _arg2 : "file-123";
   return {
     userId: "user-123",

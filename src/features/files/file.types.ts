@@ -1,5 +1,7 @@
 // Core DTOs for the Files board.
 
+import type { FileStatus } from "./file-status";
+
 export type FileBoardItem = {
   id: string;
 

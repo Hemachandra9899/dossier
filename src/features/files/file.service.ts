@@ -1,7 +1,9 @@
 // Service layer for Files board operations.
 
-import { getFileBoard } from "./file.repository";
+import { getFilesForBoard } from "./file.repository";
 import { useInvalidateFileState } from "./api/files.mutations";
+
+import type { FileBoardItem } from "./file.types";
 
 export async function getFileBoardService(
   actor: {
@@ -9,7 +11,7 @@ export async function getFileBoardService(
     teamId: string;
   },
 ): Promise<FileBoardItem[]> {
-  return await getFileBoard(actor.teamId);
+  return await getFilesForBoard(actor.teamId);
 }
 
 export function useInvalidateFileStateService(
